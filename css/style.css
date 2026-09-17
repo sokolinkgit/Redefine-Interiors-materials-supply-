@@ -2508,8 +2508,6 @@ table.price-table tbody strong { font-family: var(--f-display); font-size: 1.02r
   }
   .nav__link::after { display: none; }
   .nav__link.is-active { color: var(--gold-deep); }
-  .nav__cta { margin-top: 1.4rem; width: 100%; }
-  .nav__cta .btn { width: 100%; }
 }
 
 @media (max-width: 900px) {
@@ -2537,9 +2535,9 @@ table.price-table tbody strong { font-family: var(--f-display); font-size: 1.02r
     gap: .75rem !important;
   }
   .form-grid { grid-template-columns: 1fr; }
+  /* header keeps only the quote-list and menu buttons — WhatsApp/Call live in
+     the floating pair (and the mobile action bar) so they are never duplicated */
   .header__cta { gap: .45rem; }
-  .header__cta .btn--wa span, .header__cta .btn--call span { display: none; }
-  .header__cta .btn--wa, .header__cta .btn--call { padding: .7rem .8rem; }
   .brand__text span { display: none; }
   .footer__grid { grid-template-columns: 1fr; }
   .media-stack__badge { right: 10px; bottom: -10px; }

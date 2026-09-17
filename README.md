@@ -75,10 +75,15 @@ phonePrimaryDial: '+254703142874',  // tel: links
 waPrimary:        '254703142874',   // wa.me format (no +, no spaces)
 ```
 
-Change it once in `data.js` **and** in the static `tel:` links inside the HTML header,
+Change it once in `data.js` **and** in the static `tel:` links inside the HTML top bar,
 hero, quote bands, footer and mobile bar (search for `+254703142874`). A gold **Call**
-button sits next to every WhatsApp action (header, mobile nav, hero, quote bands,
-footer, floating pair, mobile action bar) — all dialling the same line.
+button sits next to every WhatsApp action (hero, quote bands, footer, floating pair,
+mobile action bar) — all dialling the same line.
+
+The sticky header itself carries **no** WhatsApp/Call buttons — it holds only the brand,
+the nav links, the quote-list button and the menu toggle. Those two actions live solely in
+the floating pair injected by `buildChrome()` in `js/main.js` (`.float-wa` + `.float-call`),
+plus the mobile action bar on phones, so the top of the page is never a duplicate set.
 
 ---
 
