@@ -38,7 +38,7 @@ Cloudflare Pages, an Apache/Nginx box). Nothing needs compiling.
 ├── css/style.css          ← single stylesheet (design tokens at the top)
 ├── js/data.js             ← ALL content: services, designs, materials, 50 reviews, areas, FAQs
 ├── js/main.js             ← slideshows, quotation list, filters, modal, forms, animations
-├── assets/img/            ← photography + logo (logo.svg, logo-mark.svg) + favicon
+├── assets/img/            ← photography + logo (REDLOGO.png master, redlogo-512.png web cut) + favicon
 │   └── sm/                ← auto-generated 480px & 760px copies used by srcset on phones
 ├── robots.txt, sitemap.xml
 └── README.md
@@ -179,7 +179,11 @@ legibility scrim, large dots/arrows and a visible slide counter.
   spacing for notched iPhones, filter chips that scroll sideways instead of stacking,
   bottom-sheet modal, horizontally scrolling price table, sticky-hover effects removed on
   touch devices, and no tap highlight flash
-* **Logo** — premium gold-on-espresso monogram (`logo-mark.svg` in the header/footer, `logo.svg` full lockup, matching `favicon.svg`)
+* **Logo** — the gold house-and-check mark of `REDLOGO.png` (master artwork). The site renders
+  `redlogo-512.png`, a transparent-background 512px web cut of it, in the header/footer brand slot
+  (`.brand__logo`). Regenerate the cut after swapping the master: key out the near-white background
+  with PIL and resize to 512px. `logo.svg`/`logo-mark.svg` remain as the old monogram fallbacks;
+  `favicon.svg` is unchanged.
 * Accessibility — skip link, focus-visible outlines, ARIA labels on carousels/accordions, keyboard support, reduced-motion support
 * SEO — per-page titles/descriptions/OG tags, `LocalBusiness` + `AggregateRating` JSON-LD, semantic headings, `sitemap.xml`, `robots.txt`
 

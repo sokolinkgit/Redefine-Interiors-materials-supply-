@@ -190,7 +190,7 @@
 
       '<a class="float-call" href="tel:' + BUSINESS.phonePrimaryDial + '" aria-label="Call Redefine Interiors now">',
       '  <span class="float-call__icon">' + ICONS.phone + '</span>',
-      '  <span class="float-call__label"><strong>Call ' + BUSINESS.phonePrimary + '</strong><small>Mon \u2013 Sat, 8am \u2013 6pm</small></span>',
+      '  <span class="float-call__label"><strong>Call ' + BUSINESS.phonePrimary + '</strong></span>',
       '</a>',
 
       '<button class="back-top" type="button" data-back-top aria-label="Back to top">' + ICONS.arrowUp + '</button>',

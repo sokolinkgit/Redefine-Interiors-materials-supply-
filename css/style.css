@@ -425,18 +425,16 @@ h1, h2, h3, h4 {
   border-radius: 15px;
   opacity: .35;
 }
-/* premium logo mark (assets/img/logo-mark.svg) */
+/* brand logo (assets/img/redlogo-512.png — transparent web cut of REDLOGO.png) */
 .brand__logo {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   flex: none;
-  border-radius: 14px;
-  box-shadow: 0 10px 22px -12px rgba(20, 17, 14, .55);
-  transition: transform .3s var(--ease), box-shadow .3s var(--ease);
+  object-fit: contain;
+  transition: transform .3s var(--ease);
 }
 .brand:hover .brand__logo {
   transform: translateY(-1px) scale(1.02);
-  box-shadow: 0 14px 28px -12px rgba(20, 17, 14, .6);
 }
 .brand__text { display: flex; flex-direction: column; line-height: 1.15; }
 .brand__text strong {
