@@ -38,7 +38,7 @@ Cloudflare Pages, an Apache/Nginx box). Nothing needs compiling.
 ├── css/style.css          ← single stylesheet (design tokens at the top)
 ├── js/data.js             ← ALL content: services, designs, materials, 50 reviews, areas, FAQs
 ├── js/main.js             ← slideshows, quotation list, filters, modal, forms, animations
-├── assets/img/            ← photography + logo (logo.svg, logo-mark.svg) + favicon
+├── assets/img/            ← photography + logo (REDLOGO.png master, redlogo-512.png web cut) + favicon
 │   └── sm/                ← auto-generated 480px & 760px copies used by srcset on phones
 ├── robots.txt, sitemap.xml
 └── README.md
@@ -75,10 +75,15 @@ phonePrimaryDial: '+254703142874',  // tel: links
 waPrimary:        '254703142874',   // wa.me format (no +, no spaces)
 ```
 
-Change it once in `data.js` **and** in the static `tel:` links inside the HTML header,
+Change it once in `data.js` **and** in the static `tel:` links inside the HTML top bar,
 hero, quote bands, footer and mobile bar (search for `+254703142874`). A gold **Call**
-button sits next to every WhatsApp action (header, mobile nav, hero, quote bands,
-footer, floating pair, mobile action bar) — all dialling the same line.
+button sits next to every WhatsApp action (hero, quote bands, footer, floating pair,
+mobile action bar) — all dialling the same line.
+
+The sticky header itself carries **no** WhatsApp/Call buttons — it holds only the brand,
+the nav links, the quote-list button and the menu toggle. Those two actions live solely in
+the floating pair injected by `buildChrome()` in `js/main.js` (`.float-wa` + `.float-call`),
+plus the mobile action bar on phones, so the top of the page is never a duplicate set.
 
 ---
 
@@ -174,7 +179,11 @@ legibility scrim, large dots/arrows and a visible slide counter.
   spacing for notched iPhones, filter chips that scroll sideways instead of stacking,
   bottom-sheet modal, horizontally scrolling price table, sticky-hover effects removed on
   touch devices, and no tap highlight flash
-* **Logo** — premium gold-on-espresso monogram (`logo-mark.svg` in the header/footer, `logo.svg` full lockup, matching `favicon.svg`)
+* **Logo** — the gold house-and-check mark of `REDLOGO.png` (master artwork). The site renders
+  `redlogo-512.png`, a transparent-background 512px web cut of it, in the header/footer brand slot
+  (`.brand__logo`). Regenerate the cut after swapping the master: key out the near-white background
+  with PIL and resize to 512px. `logo.svg`/`logo-mark.svg` remain as the old monogram fallbacks;
+  `favicon.svg` is unchanged.
 * Accessibility — skip link, focus-visible outlines, ARIA labels on carousels/accordions, keyboard support, reduced-motion support
 * SEO — per-page titles/descriptions/OG tags, `LocalBusiness` + `AggregateRating` JSON-LD, semantic headings, `sitemap.xml`, `robots.txt`
 
