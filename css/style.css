@@ -282,6 +282,17 @@ h1, h2, h3, h4 {
 .btn--wa { --btn-bg: var(--wa); --btn-fg: #fff; --btn-bd: var(--wa); }
 .btn--wa:hover { --btn-bg: var(--wa-dark); --btn-bd: var(--wa-dark); }
 
+.btn--call {
+  --btn-bg: linear-gradient(140deg, #C69C46 0%, var(--gold-deep) 92%);
+  --btn-fg: #fff;
+  --btn-bd: #8A6428;
+  box-shadow: 0 12px 26px -14px rgba(138, 100, 40, .7);
+}
+.btn--call:hover {
+  --btn-bg: linear-gradient(140deg, var(--gold-deep) 0%, #6E4E1D 92%);
+  --btn-bd: #6E4E1D;
+}
+
 .btn--sm { padding: .7rem 1.15rem; font-size: .75rem; }
 .btn--lg { padding: 1.1rem 2.1rem; font-size: .92rem; }
 .btn--block { width: 100%; }
@@ -413,6 +424,19 @@ h1, h2, h3, h4 {
   border: 1px solid var(--gold);
   border-radius: 15px;
   opacity: .35;
+}
+/* premium logo mark (assets/img/logo-mark.svg) */
+.brand__logo {
+  width: 48px;
+  height: 48px;
+  flex: none;
+  border-radius: 14px;
+  box-shadow: 0 10px 22px -12px rgba(20, 17, 14, .55);
+  transition: transform .3s var(--ease), box-shadow .3s var(--ease);
+}
+.brand:hover .brand__logo {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 14px 28px -12px rgba(20, 17, 14, .6);
 }
 .brand__text { display: flex; flex-direction: column; line-height: 1.15; }
 .brand__text strong {
@@ -693,7 +717,7 @@ h1, h2, h3, h4 {
   inset: 0;
   background: var(--gold-soft);
   transform-origin: left;
-  animation: heroProgress 1s linear forwards;
+  animation: heroProgress 5s linear forwards;
 }
 .hero__timer { display: flex; align-items: center; gap: .8rem; }
 .hero__count {
@@ -724,73 +748,101 @@ h1, h2, h3, h4 {
   .hero__meta-item strong { font-size: 1.02rem; }
 }
 
-/* stack the halves: copy first, then a full-width slideshow — FULL DASHBOARD ON MOBILE */
+/* FULL-SCREEN DASHBOARD ON PHONES: the slideshow fills the whole hero and the
+   copy floats over it — never a small window under the text. */
 @media (max-width: 900px) {
   .hero {
-    /* remove any clipping so the frame can bleed edge-to-edge */
-    overflow: visible;
-  }
-  .hero .container {
-    padding-inline: 0;
-    max-width: none;
+    overflow: hidden;
+    display: flex;
+    min-height: 620px;
+    min-height: calc(100svh - var(--header-h));
   }
   .hero__grid {
     grid-template-columns: 1fr;
-    text-align: left;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: stretch;
+    flex: 1;
+    max-width: none;
+    padding-inline: 0;
     padding-block: 0;
     gap: 0;
+    text-align: left;
   }
-  .hero__copy {
-    max-width: none;
-    padding: 2.2rem var(--gutter) 2rem;
-  }
-  .hero__bg img { object-position: 70% 38%; }
-  .hero__scrim {
-    background:
-      linear-gradient(180deg, rgba(10, 8, 6, .94) 0%, rgba(10, 8, 6, .90) 52%, rgba(10, 8, 6, .82) 100%);
-  }
+  /* the plain dark backdrop is redundant behind a full-bleed slideshow, so it
+     is hidden on phones (and no longer preloaded there) */
+  .hero__bg { display: none; }
   .hero__stage {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
     gap: 0;
     padding: 0;
   }
   .hero__frame {
-    width: 100vw;
-    max-width: 100vw;
-    margin-inline: calc(50% - 50vw);
-    aspect-ratio: 16 / 10;
-    min-height: 62vw;
-    max-height: 68vh;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    aspect-ratio: auto;
+    min-height: 100%;
+    margin: 0;
+    border: 0;
     border-radius: 0;
-    border-left: 0;
-    border-right: 0;
-    border-top: 1px solid rgba(255,255,255,.14);
-    border-bottom: 1px solid rgba(255,255,255,.14);
     box-shadow: none;
+    background: #0d0b09;
   }
+  /* legibility scrim over the slideshow — darkest where the copy sits */
+  .hero__frame::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background: linear-gradient(180deg,
+      rgba(8, 6, 4, .80) 0%,
+      rgba(8, 6, 4, .44) 30%,
+      rgba(8, 6, 4, .30) 48%,
+      rgba(8, 6, 4, .86) 80%,
+      rgba(8, 6, 4, .94) 100%);
+  }
+  .hero__slide { transition: opacity .8s var(--ease), visibility .8s; }
+  /* static, full-bleed images stay tack-sharp — no ken-burns zoom on phones */
   .hero__media img {
-    filter: saturate(1.08) brightness(1.04) contrast(1.02);
+    transform: none;
+    filter: saturate(1.07) brightness(1.03) contrast(1.02);
+  }
+  .hero__slide.is-active .hero__media img { animation: none; transform: none; }
+  .hero__copy {
+    position: relative;
+    z-index: 5;
+    max-width: 34rem;
+    margin-top: auto;
+    padding: clamp(4.5rem, 13vh, 7rem) var(--gutter) calc(5.75rem + env(safe-area-inset-bottom));
   }
   .hero__controls {
-    padding: 1rem var(--gutter) 1.15rem;
-    background: rgba(0,0,0,.22);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    border-top: 1px solid rgba(255,255,255,.08);
+    position: relative;
+    z-index: 5;
+    padding: 0 var(--gutter) calc(1.25rem + env(safe-area-inset-bottom));
+    background: none;
+    border: 0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
+  .hero__count { display: block; }
 }
 
 @media (max-width: 760px) {
-  .hero__copy { padding: 1.8rem var(--gutter) 1.6rem; }
   .hero__meta { gap: 1rem 1.2rem; }
   .hero__meta-item { flex: 1 1 44%; }
-  .hero__count { display: none; }
-  .hero__frame {
-    aspect-ratio: 4 / 3.1;
-    min-height: 74vw;
-    max-height: 72vh;
-  }
-  .hero__arrows .arrow-btn { width: 42px; height: 42px; }
-  .hero__dot { height: 4px; }
+  .hero__arrows .arrow-btn { width: 46px; height: 46px; }
+  .hero__dot { width: 38px; height: 5px; }
+  .hero__dot.is-active { width: 58px; }
 }
 
 @media (max-width: 560px) {
@@ -798,17 +850,11 @@ h1, h2, h3, h4 {
   .hero__actions { gap: .6rem; }
   .hero__actions .btn { width: 100%; justify-content: center; }
   .hero__eyebrow { font-size: .62rem; letter-spacing: .14em; }
-  .hero__frame {
-    aspect-ratio: 4 / 3.2;
-    min-height: 88vw;
-    max-height: 78vh;
-  }
+  .hero__copy { padding-top: clamp(3.5rem, 10vh, 5rem); }
   .hero__controls { justify-content: space-between; }
-  .hero__dot { width: 28px; height: 4px; }
-  .hero__dot.is-active { width: 44px; }
-  .hero__media img {
-    object-position: center center;
-  }
+  .hero__dot { width: 30px; height: 5px; }
+  .hero__dot.is-active { width: 48px; }
+  .hero__media img { object-position: center center; }
 }
 
 /* ==========================================================================
@@ -2021,10 +2067,42 @@ h1, h2, h3, h4 {
 .float-wa__label { display: flex; flex-direction: column; line-height: 1.1; }
 .float-wa__label small { font-size: .66rem; font-weight: 500; opacity: .82; }
 
-.back-top {
+/* floating call button — stacked directly above the WhatsApp float */
+.float-call {
   position: fixed;
   right: clamp(1rem, 3vw, 2rem);
   bottom: calc(clamp(1rem, 3vw, 2rem) + 74px);
+  z-index: 110;
+  display: inline-flex;
+  align-items: center;
+  gap: .7rem;
+  padding: .8rem 1.25rem .8rem .8rem;
+  border-radius: 100px;
+  background: linear-gradient(140deg, #C69C46, var(--gold-deep));
+  color: #fff;
+  font-size: .84rem;
+  font-weight: 600;
+  box-shadow: 0 18px 40px -16px rgba(20, 17, 14, .5);
+  transition: transform .35s var(--ease), box-shadow .35s var(--ease), filter .35s var(--ease);
+}
+.float-call:hover { transform: translateY(-3px) scale(1.02); filter: brightness(1.07); }
+.float-call__icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .22);
+}
+.float-call__icon svg { width: 20px; height: 20px; }
+.float-call__label { display: flex; flex-direction: column; line-height: 1.15; }
+.float-call__label small { font-size: .66rem; font-weight: 500; opacity: .85; }
+
+.back-top {
+  position: fixed;
+  right: clamp(1rem, 3vw, 2rem);
+  bottom: calc(clamp(1rem, 3vw, 2rem) + 148px);
   z-index: 109;
   width: 44px;
   height: 44px;
@@ -2071,6 +2149,7 @@ h1, h2, h3, h4 {
   position: relative;
 }
 .mobile-bar svg { width: 19px; height: 19px; }
+.mobile-bar > a:first-child { color: var(--gold-deep); }
 .mobile-bar .is-wa { color: var(--wa-dark); }
 .mobile-bar .is-quote { color: var(--gold-deep); }
 .mobile-bar__count {
@@ -2458,8 +2537,9 @@ table.price-table tbody strong { font-family: var(--f-display); font-size: 1.02r
     gap: .75rem !important;
   }
   .form-grid { grid-template-columns: 1fr; }
-  .header__cta .btn--wa span { display: none; }
-  .header__cta .btn--wa { padding: .7rem .8rem; }
+  .header__cta { gap: .45rem; }
+  .header__cta .btn--wa span, .header__cta .btn--call span { display: none; }
+  .header__cta .btn--wa, .header__cta .btn--call { padding: .7rem .8rem; }
   .brand__text span { display: none; }
   .footer__grid { grid-template-columns: 1fr; }
   .media-stack__badge { right: 10px; bottom: -10px; }
@@ -2468,7 +2548,9 @@ table.price-table tbody strong { font-family: var(--f-display); font-size: 1.02r
   .mobile-bar { display: grid; }
   .float-wa { bottom: 84px; padding: .7rem; }
   .float-wa__label { display: none; }
-  .back-top { bottom: 140px; right: calc(clamp(1rem, 3vw, 2rem)); width: 40px; height: 40px; }
+  .float-call { bottom: 142px; padding: .7rem; }
+  .float-call__label { display: none; }
+  .back-top { bottom: 200px; right: calc(clamp(1rem, 3vw, 2rem)); width: 40px; height: 40px; }
   body { padding-bottom: 74px; }
   .stat { padding: 1.2rem 1rem; }
   .card__quick { opacity: 1; transform: none; }
@@ -2529,6 +2611,9 @@ table.price-table tbody strong { font-family: var(--f-display); font-size: 1.02r
 }
 
 @media (max-width: 520px) {
+  /* icon-only header on small phones: premium mark + WhatsApp + Call + quote + menu */
+  .brand__logo { width: 42px; height: 42px; border-radius: 12px; }
+  .brand__text { display: none; }
   .rating-summary { flex-direction: column; align-items: flex-start; gap: .6rem; width: 100%; }
   .card__quick span { display: none; }
   .reviews-controls { justify-content: center; }
@@ -2630,7 +2715,8 @@ a, button, [role="tab"], .filter, .nav__link, .card__quick { touch-action: manip
   body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
   .mobile-bar { padding-bottom: calc(.5rem + env(safe-area-inset-bottom)); }
   .float-wa { bottom: calc(88px + env(safe-area-inset-bottom)); }
-  .back-top { bottom: calc(146px + env(safe-area-inset-bottom)); }
+  .float-call { bottom: calc(148px + env(safe-area-inset-bottom)); }
+  .back-top { bottom: calc(208px + env(safe-area-inset-bottom)); }
   .toast-stack { bottom: calc(92px + env(safe-area-inset-bottom)); }
 
   /* side menu clears the notch and scrolls independently */
@@ -2683,29 +2769,10 @@ a, button, [role="tab"], .filter, .nav__link, .card__quick { touch-action: manip
    and that every catalogue grid is 2 columns to cut long scrolling.
    ========================================================================== */
 @media (max-width: 900px) {
-  /* hero dashboard: full width, no small window, clear images */
-  .hero {
-    min-height: auto;
-  }
-  .hero__grid {
-    /* already full-bleed via .hero .container override, keep it */
-  }
-  .hero__frame {
-    /* make the slideshow feel like a dashboard, not a card */
-    background: #0e0c0a;
-  }
+  /* hero dashboard is handled in section 6 (full-screen overlay on phones) —
+     just hint the compositor for buttery cross-fades */
   .hero__slide {
-    /* ensure active slide is always crisp */
     will-change: opacity;
-  }
-  .hero__media img {
-    /* override kenburns scale on mobile for clarity — less zoom = sharper */
-    transform: scale(1.02);
-  }
-  .hero__slide.is-active .hero__media img {
-    animation: none;
-    transform: scale(1.06);
-    transition: transform 8s ease-out;
   }
 }
 
@@ -2773,11 +2840,6 @@ a, button, [role="tab"], .filter, .nav__link, .card__quick { touch-action: manip
   .card__price-row .card__price {
     width: 100%;
   }
-  /* hero dashboard full height on very small screens */
-  .hero__frame {
-    min-height: 92vw;
-    max-height: 80vh;
-  }
 }
 
 @media (max-width: 360px) {
@@ -2793,6 +2855,6 @@ a, button, [role="tab"], .filter, .nav__link, .card__quick { touch-action: manip
 }
 
 @media print {
-  .site-header, .topbar, .float-wa, .mobile-bar, .back-top, .drawer, .overlay, .toast-stack { display: none !important; }
+  .site-header, .topbar, .float-wa, .float-call, .mobile-bar, .back-top, .drawer, .overlay, .toast-stack { display: none !important; }
   body { background: #fff; }
 }

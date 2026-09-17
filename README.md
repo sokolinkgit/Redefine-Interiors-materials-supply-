@@ -38,7 +38,7 @@ Cloudflare Pages, an Apache/Nginx box). Nothing needs compiling.
 ├── css/style.css          ← single stylesheet (design tokens at the top)
 ├── js/data.js             ← ALL content: services, designs, materials, 50 reviews, areas, FAQs
 ├── js/main.js             ← slideshows, quotation list, filters, modal, forms, animations
-├── assets/img/            ← photography + favicon
+├── assets/img/            ← photography + logo (logo.svg, logo-mark.svg) + favicon
 │   └── sm/                ← auto-generated 480px & 760px copies used by srcset on phones
 ├── robots.txt, sitemap.xml
 └── README.md
@@ -67,18 +67,18 @@ message (name, phone, location, service, budget, timeline, details) and opens Wh
 
 ### Phone numbers
 
-Both numbers live in `js/data.js` → `BUSINESS`:
+One number for everything — it lives in `js/data.js` → `BUSINESS`:
 
 ```js
-phonePrimary:   '0751 261 032',   // primary  (WhatsApp + calls)
-phonePrimaryDial: '+254751261032',
-waPrimary:      '254751261032',   // wa.me format (no +, no spaces)
-phoneSecondary: '+254 703 142874',
-waSecondary:    '254703142874',
+phonePrimary:     '0703 142 874',   // display format
+phonePrimaryDial: '+254703142874',  // tel: links
+waPrimary:        '254703142874',   // wa.me format (no +, no spaces)
 ```
 
-Change them once in `data.js` **and** in the static `tel:` links inside the HTML header,
-footer and mobile bar (search for `+254751261032` / `+254703142874`).
+Change it once in `data.js` **and** in the static `tel:` links inside the HTML header,
+hero, quote bands, footer and mobile bar (search for `+254703142874`). A gold **Call**
+button sits next to every WhatsApp action (header, mobile nav, hero, quote bands,
+footer, floating pair, mobile action bar) — all dialling the same line.
 
 ---
 
@@ -152,12 +152,14 @@ convert "$base.jpg" -strip -resize '480x480>' -quality 70 "sm/$base-480.jpg"
 
 | Slideshow | Behaviour | Where |
 | --- | --- | --- |
-| Hero | 5 interiors, **3 second** auto-refresh, progress bar per slide, arrows, dots, swipe, pauses on hover/tab-hidden/off-screen. Sits in the **right 50%** of the hero with no caption text over it; the left 50% holds the copy over one plain dark background photo (`assets/img/hero-bg-dark.jpg`) | `index.html` (`data-hero`) |
+| Hero | 5 interiors, **5 second** auto-refresh, progress bar per slide, arrows, dots, swipe, pauses on hover/tab-hidden/off-screen. Sits in the **right 50%** of the hero with no caption text over it; the left 50% holds the copy over one plain dark background photo (`assets/img/hero-bg-dark.jpg`) | `index.html` (`data-hero`) |
 | Reviews | **3 reviews per batch, 5 second** refresh, 17 batches covering all 50 reviews, dots, arrows, progress bar, counter, pause on hover | every page (`data-reviews`) |
 
 Both respect `prefers-reduced-motion`, both pause when scrolled out of view (phones: battery
 and data), and the review carousel drops to 1 card per batch and becomes swipeable on
-screens ≤ 900px.
+screens ≤ 900px. On phones the hero becomes a **full-screen dashboard**: the slideshow
+fills the whole hero behind the copy (static, tack-sharp images — no zoom), with a
+legibility scrim, large dots/arrows and a visible slide counter.
 
 ---
 
@@ -172,6 +174,7 @@ screens ≤ 900px.
   spacing for notched iPhones, filter chips that scroll sideways instead of stacking,
   bottom-sheet modal, horizontally scrolling price table, sticky-hover effects removed on
   touch devices, and no tap highlight flash
+* **Logo** — premium gold-on-espresso monogram (`logo-mark.svg` in the header/footer, `logo.svg` full lockup, matching `favicon.svg`)
 * Accessibility — skip link, focus-visible outlines, ARIA labels on carousels/accordions, keyboard support, reduced-motion support
 * SEO — per-page titles/descriptions/OG tags, `LocalBusiness` + `AggregateRating` JSON-LD, semantic headings, `sitemap.xml`, `robots.txt`
 

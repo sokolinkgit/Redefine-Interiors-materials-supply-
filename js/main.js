@@ -6,7 +6,7 @@
    A. Helpers, icons & WhatsApp links
    B. Site chrome (floating actions, quote drawer, toasts)
    C. Header, mobile nav & scroll UI
-   D. Hero slideshow (5 interiors, 1 second refresh)
+   D. Hero slideshow (5 interiors, 5 second refresh)
    E. Review carousel (batches of 3, 5 second refresh)
    F. Catalogue rendering, filters & detail modal
    G. Quotation list (localStorage)
@@ -188,6 +188,11 @@
       '  <span class="float-wa__label"><strong>Chat on WhatsApp</strong><small>Reply in minutes</small></span>',
       '</a>',
 
+      '<a class="float-call" href="tel:' + BUSINESS.phonePrimaryDial + '" aria-label="Call Redefine Interiors now">',
+      '  <span class="float-call__icon">' + ICONS.phone + '</span>',
+      '  <span class="float-call__label"><strong>Call ' + BUSINESS.phonePrimary + '</strong><small>Mon \u2013 Sat, 8am \u2013 6pm</small></span>',
+      '</a>',
+
       '<button class="back-top" type="button" data-back-top aria-label="Back to top">' + ICONS.arrowUp + '</button>',
 
       '<div class="toast-stack" data-toasts aria-live="polite"></div>'
@@ -277,7 +282,7 @@
   }
 
   /* ======================================================================
-     D. HERO SLIDESHOW — 5 interiors, 1 second refresh (automated)
+     D. HERO SLIDESHOW — 5 interiors, 5 second refresh (automated)
      ====================================================================== */
   function initHero() {
     const hero = $('[data-hero]');
@@ -286,7 +291,7 @@
     const slides = $$('.hero__slide', hero);
     const dots = $$('.hero__dot', hero);
     const count = $('[data-hero-count]', hero);
-    const INTERVAL = 1000;
+    const INTERVAL = 5000;
     let index = 0;
     let timer = null;
     let onScreen = true;
@@ -296,14 +301,13 @@
       slides.forEach((s, n) => s.classList.toggle('is-active', n === index));
       dots.forEach((d, n) => {
         const active = n === index;
+        /* re-adding the class restarts the ::after progress-bar animation */
+        if (active && resetProgress && d.classList.contains('is-active')) {
+          d.classList.remove('is-active');
+          void d.offsetWidth;
+        }
         d.classList.toggle('is-active', active);
         d.setAttribute('aria-selected', String(active));
-        if (active && resetProgress) {
-          /* restart the 1s progress animation on the active bar */
-          d.style.animation = 'none';
-          void d.offsetWidth;
-          d.style.animation = '';
-        }
       });
       if (count) count.innerHTML = '<b>' + String(index + 1).padStart(2, '0') + '</b> / ' + String(slides.length).padStart(2, '0');
     };
