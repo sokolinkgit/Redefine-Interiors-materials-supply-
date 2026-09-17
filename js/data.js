@@ -284,6 +284,7 @@ const SERVICES = [
     slug: 'kitchen-cabinets',
     title: 'Kitchen Cabinets',
     icon: 'kitchen',
+    image: 'assets/img/d-kitchen-ushape.jpg',
     from: 185000,
     text: 'Bespoke kitchens — carcasses, doors, worktops, sinks and appliance housing, built to your exact measurements.'
   },
@@ -291,6 +292,7 @@ const SERVICES = [
     slug: 'wardrobes',
     title: 'Wardrobes & Closets',
     icon: 'wardrobe',
+    image: 'assets/img/d-wardrobe-sliding.jpg',
     from: 96000,
     text: 'Sliding, hinged, walk-in and combined wardrobe-plus-desk units with fittings that last.'
   },
@@ -298,6 +300,7 @@ const SERVICES = [
     slug: 'aluminium-works',
     title: 'Aluminium Works',
     icon: 'aluminium',
+    image: 'assets/img/hero-5-aluminum.jpg',
     from: 9500,
     text: 'Windows, sliding doors, shop fronts, glass partitions, balustrades and burglar proofing.'
   },
@@ -305,6 +308,7 @@ const SERVICES = [
     slug: 'gypsum-works',
     title: 'Gypsum Works',
     icon: 'gypsum',
+    image: 'assets/img/hero-3-living-gypsum.jpg',
     from: 3200,
     text: 'Ceilings, cove lighting, cornices, partitions, TV feature walls and decorative curves.'
   },
@@ -312,6 +316,7 @@ const SERVICES = [
     slug: 'shop-renovation',
     title: 'Shop Renovation',
     icon: 'shop',
+    image: 'assets/img/hero-4-shop.jpg',
     from: 380000,
     text: 'Retail, salon, barbershop, clinic and office fit-outs — shelving, counters, lighting and branding surfaces.'
   },
@@ -319,6 +324,7 @@ const SERVICES = [
     slug: 'fittings',
     title: 'All Fittings Work',
     icon: 'fittings',
+    image: 'assets/img/hero-1-kitchen.jpg',
     from: 4500,
     text: 'Doors, locks, handles, hinges, sinks, taps, sanitary ware, lighting and finishing — supplied and installed.'
   }
