@@ -25,9 +25,9 @@ Cloudflare Pages, an Apache/Nginx box). Nothing needs compiling.
 
 | File | Purpose |
 | --- | --- |
-| `index.html` | Home — hero slideshow (5 interiors, 3s), services, featured designs, featured materials, stats, process, 50-review slideshow (3 per batch, 5s), FAQ, quotation form |
+| `index.html` | Home — 50/50 hero (copy left, slideshow right), services, featured designs, featured materials, stats, process, 50-review slideshow (3 per batch, 5s), FAQ, quotation form |
 | `designs.html` | Full design portfolio with category filters, prices and a "view details" modal |
-| `materials.html` | Material catalogue with swatch tiles, full price-list table, delivery & coverage |
+| `materials.html` | Material catalogue with product photos, full price-list table (with thumbnails), delivery & coverage |
 | `services.html` | The six services in detail (kitchens, wardrobes, aluminium, gypsum, shop renovation, fittings) |
 | `about.html` | Story, values, quality standards, coverage, reviews |
 | `contact.html` | Contact cards, quotation form, what-happens-next, coverage, FAQ |
@@ -39,6 +39,7 @@ Cloudflare Pages, an Apache/Nginx box). Nothing needs compiling.
 ├── js/data.js             ← ALL content: services, designs, materials, 50 reviews, areas, FAQs
 ├── js/main.js             ← slideshows, quotation list, filters, modal, forms, animations
 ├── assets/img/            ← photography + favicon
+│   └── sm/                ← auto-generated 480px & 760px copies used by srcset on phones
 ├── robots.txt, sitemap.xml
 └── README.md
 ```
@@ -109,14 +110,41 @@ Everything lives in **`js/data.js`** — no HTML editing needed:
 }
 ```
 
-### Material swatches (no photo required)
+### Materials: photo first, swatch as fallback
 
-Materials are rendered as **designed CSS swatch tiles** rather than stock photos, so the
-catalogue stays sharp and licence-free. Available `swatch` values:
-`mdf`, `laminate`, `hardware`, `steel`, `gypsum`, `aluminium`, `tile`, `fluted`,
-`quartz`, `led` (defined in `css/style.css`). Add a new one by copying a `.swatch--xxx`
-block and changing the gradient/texture. If a material later gets a real photograph, add
-an `image` field — the card, modal and quotation drawer all prefer `image` automatically.
+Every material now carries an `image` pointing at a real product photograph in
+`assets/img/` — the home-page preview, the materials catalogue and the price-list
+thumbnail column all render it via `responsiveImg()`:
+
+```js
+{
+  id: 'm11',
+  image: 'assets/img/mat-led-lighting.jpg',   // ← add this and the card switches to photo
+  name: 'LED Spotlight & Cove Strip Pack',
+  category: 'Lighting',
+  swatch: 'led', icon: 'bulb',                // kept as the graceful fallback
+  price: 3400, unit: 'per pack', badge: 'Warm / cool', note: '…'
+}
+```
+
+If `image` is missing or removed, `materialCard()` falls back to the original **designed
+CSS swatch tile** (`.swatch--mdf`, `--laminate`, `--hardware`, `--steel`, `--gypsum`,
+`--aluminium`, `--tile`, `--fluted`, `--quartz`, `--led`), so nothing ever renders as a
+broken image.
+
+### Responsive images (phones first)
+
+Every catalogue photo also exists as `assets/img/sm/<name>-480.jpg` and
+`assets/img/sm/<name>-760.jpg`. Markup uses `srcset` + `sizes`, so a phone downloads the
+480–760px file (15–60 KB) instead of the 1200–1376px original (110–190 KB). When you add a
+new photo, generate the two small copies:
+
+```bash
+cd assets/img
+base="mat-led-lighting"
+convert "$base.jpg" -strip -resize '760x760>' -quality 72 "sm/$base-760.jpg"
+convert "$base.jpg" -strip -resize '480x480>' -quality 70 "sm/$base-480.jpg"
+```
 
 ---
 
@@ -124,10 +152,11 @@ an `image` field — the card, modal and quotation drawer all prefer `image` aut
 
 | Slideshow | Behaviour | Where |
 | --- | --- | --- |
-| Hero | 5 interiors, **3 second** auto-refresh, progress bar per slide, arrows, dots, swipe, pauses on hover/tab-hidden | `index.html` (`data-hero`) |
+| Hero | 5 interiors, **3 second** auto-refresh, progress bar per slide, arrows, dots, swipe, pauses on hover/tab-hidden/off-screen. Sits in the **right 50%** of the hero with no caption text over it; the left 50% holds the copy over one plain dark background photo (`assets/img/hero-bg-dark.jpg`) | `index.html` (`data-hero`) |
 | Reviews | **3 reviews per batch, 5 second** refresh, 17 batches covering all 50 reviews, dots, arrows, progress bar, counter, pause on hover | every page (`data-reviews`) |
 
-Both respect `prefers-reduced-motion`, and the review carousel drops to 1 card per batch on
+Both respect `prefers-reduced-motion`, both pause when scrolled out of view (phones: battery
+and data), and the review carousel drops to 1 card per batch and becomes swipeable on
 screens ≤ 900px.
 
 ---
@@ -138,6 +167,11 @@ screens ≤ 900px.
 * **Type** — Playfair Display (display) + Inter (UI), loaded from Google Fonts
 * **Tokens** — colours, radii, shadows, spacing and easing are CSS variables at the top of `css/style.css`
 * Mobile-first responsive at 1140 / 1024 / 900 / 760 / 520px, with a slide-in mobile nav and a fixed bottom action bar (Call · WhatsApp · Quote list)
+* **Phone refinements** (section 20 of the stylesheet — most traffic is mobile):
+  16px form fields so iOS never zooms on focus, 44–48px tap targets, `env(safe-area-inset-*)`
+  spacing for notched iPhones, filter chips that scroll sideways instead of stacking,
+  bottom-sheet modal, horizontally scrolling price table, sticky-hover effects removed on
+  touch devices, and no tap highlight flash
 * Accessibility — skip link, focus-visible outlines, ARIA labels on carousels/accordions, keyboard support, reduced-motion support
 * SEO — per-page titles/descriptions/OG tags, `LocalBusiness` + `AggregateRating` JSON-LD, semantic headings, `sitemap.xml`, `robots.txt`
 
@@ -149,15 +183,18 @@ All photography is of **interiors and materials only — no people appear in any
 (no workers, no homeowners, no shoppers), in line with the brief.
 
 Current files (`assets/img/`): 5 hero interiors (kitchen, walk-in closet, gypsum living room,
-boutique shop, aluminium sliding doors) + 5 design interiors (3 kitchens, 2 wardrobes).
+boutique shop, aluminium sliding doors) + 5 design interiors (3 kitchens, 2 wardrobes)
++ 1 hero background (`hero-bg-dark.jpg`, deliberately dark so headline text stays legible)
++ 9 material product shots (`mat-*.jpg`: MDF, laminate, hardware, sink & tap, gypsum,
+aluminium profiles, porcelain tile, fluted panel, quartz).
 
 **To swap in Redefine's own project photos**, simply drop a JPG into `assets/img/` and point
 the `image` field in `data.js` at it. Recommended: 1600×900 for hero slides, 1200×900 (4:3)
 for cards, under ~250 KB each.
 
 Suggested next shots (site already supports them — just add entries in `data.js`):
-gypsum TV feature wall, aluminium & glass office partition, minimart fit-out, quartz
-countertop close-up, and a fittings/hardware flat-lay.
+LED lighting pack (wire up `image: 'assets/img/mat-led-lighting.jpg'` on `m10`),
+gypsum TV feature wall, aluminium & glass office partition, and a minimart fit-out.
 
 ---
 

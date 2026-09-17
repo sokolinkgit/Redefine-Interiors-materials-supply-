@@ -2,7 +2,7 @@
 <html lang="en-KE">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Redefine Interiors &amp; Materials Supply | Kitchen Cabinets, Wardrobes &amp; Fittings in Kenya</title>
 <meta name="description" content="Redefine Interiors &amp; Materials Supply designs and installs kitchen cabinets, wardrobes, aluminium works, gypsum ceilings, shop renovations and all fittings in Kenya. Materials supply at affordable prices. Request a quotation on WhatsApp — 0751 261 032.">
 <meta name="keywords" content="interior designer Kenya, kitchen cabinets Nairobi, wardrobes Kenya, aluminium works, gypsum ceiling, shop renovation, materials supply, Nakuru, Naivasha, Ngong, Juja, Ruiru, Thika">
@@ -18,6 +18,10 @@
 
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/img/favicon.svg">
+
+<!-- hero background: preload the exact file each breakpoint will use -->
+<link rel="preload" as="image" href="assets/img/sm/hero-bg-dark-480.jpg" media="(max-width: 760px)" fetchpriority="high">
+<link rel="preload" as="image" href="assets/img/hero-bg-dark.jpg" media="(min-width: 761px)" fetchpriority="high">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -98,45 +102,20 @@
 
 <main id="main">
 
-  <!-- ===================== HERO SLIDESHOW (5 interiors · 3s) ===================== -->
-  <section class="hero" data-hero aria-label="Featured interior projects">
-    <div class="hero__slides">
-      <div class="hero__slide is-active">
-        <div class="hero__media">
-          <img src="assets/img/hero-1-kitchen.jpg" alt="Modern kitchen with walnut and white cabinets installed by Redefine Interiors in Kilimani, Nairobi" fetchpriority="high" decoding="async">
-        </div>
-        <div class="hero__slide-caption"><b>Kitchen cabinets</b><p>Handleless walnut &amp; matte white with a quartz waterfall island — Kilimani, Nairobi.</p></div>
-      </div>
-      <div class="hero__slide">
-        <div class="hero__media">
-          <img src="assets/img/hero-2-wardrobe.jpg" alt="Walk-in wardrobe with lit shelving fitted by Redefine Interiors in Lavington, Nairobi" loading="eager" decoding="async">
-        </div>
-        <div class="hero__slide-caption"><b>Walk-in closets</b><p>Lit hanging rails, glass display doors and an oak island unit — Lavington, Nairobi.</p></div>
-      </div>
-      <div class="hero__slide">
-        <div class="hero__media">
-          <img src="assets/img/hero-3-living-gypsum.jpg" alt="Living room with gypsum ceiling and cove lighting completed in Nakuru" loading="eager" decoding="async">
-        </div>
-        <div class="hero__slide-caption"><b>Gypsum ceilings</b><p>Curved feature wall with hidden cove lighting and recessed spots — Milimani, Nakuru.</p></div>
-      </div>
-      <div class="hero__slide">
-        <div class="hero__media">
-          <img src="assets/img/hero-4-shop.jpg" alt="Boutique shop interior renovated by Redefine Interiors in Thika" loading="eager" decoding="async">
-        </div>
-        <div class="hero__slide-caption"><b>Shop renovation</b><p>Fluted panels, brass display rails and track lighting — Thika town centre.</p></div>
-      </div>
-      <div class="hero__slide">
-        <div class="hero__media">
-          <img src="assets/img/hero-5-aluminum.jpg" alt="Aluminium sliding doors and balcony railings installed in Naivasha" loading="eager" decoding="async">
-        </div>
-        <div class="hero__slide-caption"><b>Aluminium works</b><p>Slim black-frame sliding doors and glass balustrade — Naivasha.</p></div>
-      </div>
+  <!-- ===================== HERO — 50/50 SPLIT: COPY LEFT · SLIDESHOW RIGHT ===================== -->
+  <section class="hero hero--split" data-hero aria-label="Featured interior projects">
+    <!-- single, deliberately plain background image: dark enough that the text never has to fight it -->
+    <div class="hero__bg" aria-hidden="true">
+      <picture>
+        <source media="(max-width: 760px)" srcset="assets/img/sm/hero-bg-dark-480.jpg">
+        <img src="assets/img/hero-bg-dark.jpg" alt="" fetchpriority="high" decoding="async" width="1240" height="826">
+      </picture>
+      <span class="hero__scrim"></span>
+      <span class="hero__grain"></span>
     </div>
 
-    <span class="hero__grain" aria-hidden="true"></span>
-
-    <div class="container hero__inner">
-      <div class="hero__content">
+    <div class="container hero__grid">
+      <div class="hero__copy">
         <span class="hero__eyebrow"><span class="dot" aria-hidden="true"></span> Interiors · Fittings · <b>Materials supply</b></span>
         <h1 class="display-xl">Spaces that feel<br>expensive. Prices that<br>feel <em>fair.</em></h1>
         <p class="hero__sub">
@@ -156,22 +135,68 @@
           <div class="hero__meta-item"><span class="i" data-icon="shield"></span><div><strong>1 year</strong><span>Workmanship guarantee</span></div></div>
         </div>
       </div>
-    </div>
 
-    <div class="hero__controls">
-      <div class="container hero__controls-inner">
-        <div class="hero__dots" role="tablist" aria-label="Choose a featured project">
-          <button class="hero__dot is-active" type="button" role="tab" aria-selected="true" aria-label="Show project 1"></button>
-          <button class="hero__dot" type="button" role="tab" aria-selected="false" aria-label="Show project 2"></button>
-          <button class="hero__dot" type="button" role="tab" aria-selected="false" aria-label="Show project 3"></button>
-          <button class="hero__dot" type="button" role="tab" aria-selected="false" aria-label="Show project 4"></button>
-          <button class="hero__dot" type="button" role="tab" aria-selected="false" aria-label="Show project 5"></button>
+      <div class="hero__stage">
+        <div class="hero__frame">
+          <div class="hero__slides">
+            <div class="hero__slide is-active">
+              <div class="hero__media">
+                <img src="assets/img/hero-1-kitchen.jpg"
+                     srcset="assets/img/sm/hero-1-kitchen-480.jpg 480w, assets/img/sm/hero-1-kitchen-760.jpg 760w, assets/img/hero-1-kitchen.jpg 1376w"
+                     sizes="(max-width: 900px) 92vw, 46vw"
+                     alt="Kitchen cabinets — handleless walnut and matte white with a quartz island, installed in Kilimani, Nairobi"
+                     fetchpriority="high" decoding="async">
+              </div>
+            </div>
+            <div class="hero__slide">
+              <div class="hero__media">
+                <img src="assets/img/hero-2-wardrobe.jpg"
+                     srcset="assets/img/sm/hero-2-wardrobe-480.jpg 480w, assets/img/sm/hero-2-wardrobe-760.jpg 760w, assets/img/hero-2-wardrobe.jpg 1376w"
+                     sizes="(max-width: 900px) 92vw, 46vw"
+                     alt="Walk-in wardrobe with lit shelving fitted in Lavington, Nairobi" loading="eager" decoding="async">
+              </div>
+            </div>
+            <div class="hero__slide">
+              <div class="hero__media">
+                <img src="assets/img/hero-3-living-gypsum.jpg"
+                     srcset="assets/img/sm/hero-3-living-gypsum-480.jpg 480w, assets/img/sm/hero-3-living-gypsum-760.jpg 760w, assets/img/hero-3-living-gypsum.jpg 1376w"
+                     sizes="(max-width: 900px) 92vw, 46vw"
+                     alt="Living room with gypsum ceiling and cove lighting completed in Milimani, Nakuru" loading="eager" decoding="async">
+              </div>
+            </div>
+            <div class="hero__slide">
+              <div class="hero__media">
+                <img src="assets/img/hero-4-shop.jpg"
+                     srcset="assets/img/sm/hero-4-shop-480.jpg 480w, assets/img/sm/hero-4-shop-760.jpg 760w, assets/img/hero-4-shop.jpg 1376w"
+                     sizes="(max-width: 900px) 92vw, 46vw"
+                     alt="Boutique shop interior with fluted panels and display rails, renovated in Thika" loading="eager" decoding="async">
+              </div>
+            </div>
+            <div class="hero__slide">
+              <div class="hero__media">
+                <img src="assets/img/hero-5-aluminum.jpg"
+                     srcset="assets/img/sm/hero-5-aluminum-480.jpg 480w, assets/img/sm/hero-5-aluminum-760.jpg 760w, assets/img/hero-5-aluminum.jpg 1376w"
+                     sizes="(max-width: 900px) 92vw, 46vw"
+                     alt="Aluminium sliding doors and glass balustrade installed in Naivasha" loading="eager" decoding="async">
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="hero__timer">
-          <span class="hero__count" data-hero-count><b>01</b> / 05</span>
-          <div class="hero__arrows">
-            <button class="arrow-btn" type="button" data-hero-prev aria-label="Previous project"><span class="i" data-icon="arrowLeft"></span></button>
-            <button class="arrow-btn" type="button" data-hero-next aria-label="Next project"><span class="i" data-icon="arrowRight"></span></button>
+
+        <div class="hero__controls">
+          <div class="hero__dots" role="tablist" aria-label="Choose a featured project">
+            <button class="hero__dot is-active" type="button" role="tab" aria-selected="true" aria-label="Show kitchen cabinets project"></button>
+            <button class="hero__dot" type="button" role="tab" aria-selected="false" aria-label="Show walk-in wardrobe project"></button>
+            <button class="hero__dot" type="button" role="tab" aria-selected="false" aria-label="Show gypsum ceiling project"></button>
+            <button class="hero__dot" type="button" role="tab" aria-selected="false" aria-label="Show shop renovation project"></button>
+            <button class="hero__dot" type="button" role="tab" aria-selected="false" aria-label="Show aluminium works project"></button>
+          </div>
+          <div class="hero__timer">
+            <span class="hero__count" data-hero-count><b>01</b> / 05</span>
+            <div class="hero__arrows">
+              <button class="arrow-btn" type="button" data-hero-prev aria-label="Previous project"><span class="i" data-icon="arrowLeft"></span></button>
+              <button class="arrow-btn" type="button" data-hero-next aria-label="Next project"><span class="i" data-icon="arrowRight"></span></button>
+            </div>
           </div>
         </div>
       </div>
