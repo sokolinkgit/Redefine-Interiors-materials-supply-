@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Redefine Interiors logo">
+  <defs>
+    <linearGradient id="ri-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#262016"/>
+      <stop offset=".55" stop-color="#14100A"/>
+      <stop offset="1" stop-color="#42321B"/>
+    </linearGradient>
+    <linearGradient id="ri-gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7EAC9"/>
+      <stop offset=".48" stop-color="#DDB468"/>
+      <stop offset="1" stop-color="#96712C"/>
+    </linearGradient>
+    <linearGradient id="ri-sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".20"/>
+      <stop offset=".42" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="92" height="92" rx="24" fill="url(#ri-bg)"/>
+  <rect x="2" y="2" width="92" height="92" rx="24" fill="url(#ri-sheen)"/>
+  <rect x="8.5" y="8.5" width="79" height="79" rx="19" fill="none" stroke="url(#ri-gold)" stroke-width="1.6" opacity=".9"/>
+  <path d="M35 29.5 48 21.5 61 29.5" fill="none" stroke="url(#ri-gold)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="48" y="69" text-anchor="middle" font-family="'Playfair Display', Georgia, 'Times New Roman', serif" font-size="44" font-weight="700" fill="url(#ri-gold)" letter-spacing=".5">R</text>
+  <rect x="30" y="75.4" width="36" height="1.6" rx=".8" fill="url(#ri-gold)" opacity=".85"/>
+  <path d="M48 72.2l3.6 3.6-3.6 3.6-3.6-3.6Z" fill="#100C07" stroke="url(#ri-gold)" stroke-width="1.2"/>
+</svg>
