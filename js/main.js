@@ -504,7 +504,7 @@
       '<article class="card reveal" data-cat="' + escapeHtml(d.category) + '">',
       '  <div class="card__media">',
       '    ' + responsiveImg(d.image, d.title + ' — ' + d.category + ' by Redefine Interiors',
-        '(max-width: 620px) 92vw, (max-width: 1024px) 46vw, 380px'),
+        '(max-width: 760px) 46vw, (max-width: 1024px) 46vw, 380px'),
       '    <div class="card__badges">',
       (d.badge ? '      <span class="badge">' + escapeHtml(d.badge) + '</span>' : ''),
       '    </div>',
@@ -543,7 +543,7 @@
     const media = m.image
       ? '  <div class="card__media card__media--photo">' +
         '    ' + responsiveImg(m.image, m.name + ' supplied by Redefine Interiors Kenya',
-          '(max-width: 620px) 92vw, (max-width: 1024px) 46vw, 380px') +
+          '(max-width: 760px) 46vw, (max-width: 1024px) 46vw, 380px') +
         '    <span class="card__cat">' + ICONS[ m.icon || 'box' ] + escapeHtml(m.category) + '</span>' +
         '  </div>'
       : '  <div class="card__media card__media--swatch">' +
@@ -573,7 +573,7 @@
 
   function serviceCard(s) {
     const media = s.image
-      ? '<div class="service-card__media">' + responsiveImg(s.image, s.title + ' by Redefine Interiors — ' + s.text, '(max-width: 620px) 92vw, (max-width: 1024px) 46vw, 380px') + '<span class="service-card__cat">' + ICONS[SERVICE_ICON[s.slug]] + escapeHtml(s.title) + '</span></div>'
+      ? '<div class="service-card__media">' + responsiveImg(s.image, s.title + ' by Redefine Interiors — ' + s.text, '(max-width: 760px) 46vw, (max-width: 1024px) 46vw, 380px') + '<span class="service-card__cat">' + ICONS[SERVICE_ICON[s.slug]] + escapeHtml(s.title) + '</span></div>'
       : '';
     return [
       '<article class="service-card reveal' + (s.image ? ' service-card--with-media' : '') + '">',

@@ -724,31 +724,73 @@ h1, h2, h3, h4 {
   .hero__meta-item strong { font-size: 1.02rem; }
 }
 
-/* stack the halves: copy first, then a full-width slideshow */
+/* stack the halves: copy first, then a full-width slideshow — FULL DASHBOARD ON MOBILE */
 @media (max-width: 900px) {
+  .hero {
+    /* remove any clipping so the frame can bleed edge-to-edge */
+    overflow: visible;
+  }
+  .hero .container {
+    padding-inline: 0;
+    max-width: none;
+  }
   .hero__grid {
     grid-template-columns: 1fr;
     text-align: left;
-    padding-block: 2.4rem 2.6rem;
-    gap: 2rem;
+    padding-block: 0;
+    gap: 0;
   }
-  .hero__copy { max-width: 640px; }
-  .hero__bg img { object-position: 70% 40%; }
+  .hero__copy {
+    max-width: none;
+    padding: 2.2rem var(--gutter) 2rem;
+  }
+  .hero__bg img { object-position: 70% 38%; }
   .hero__scrim {
     background:
-      linear-gradient(180deg, rgba(10, 8, 6, .93) 0%, rgba(10, 8, 6, .88) 55%, rgba(10, 8, 6, .8) 100%);
+      linear-gradient(180deg, rgba(10, 8, 6, .94) 0%, rgba(10, 8, 6, .90) 52%, rgba(10, 8, 6, .82) 100%);
   }
-  .hero__frame { aspect-ratio: 16 / 10; max-height: none; border-radius: var(--radius); }
-  .hero__controls { padding-inline: 0; }
+  .hero__stage {
+    gap: 0;
+    padding: 0;
+  }
+  .hero__frame {
+    width: 100vw;
+    max-width: 100vw;
+    margin-inline: calc(50% - 50vw);
+    aspect-ratio: 16 / 10;
+    min-height: 62vw;
+    max-height: 68vh;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    border-top: 1px solid rgba(255,255,255,.14);
+    border-bottom: 1px solid rgba(255,255,255,.14);
+    box-shadow: none;
+  }
+  .hero__media img {
+    filter: saturate(1.08) brightness(1.04) contrast(1.02);
+  }
+  .hero__controls {
+    padding: 1rem var(--gutter) 1.15rem;
+    background: rgba(0,0,0,.22);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-top: 1px solid rgba(255,255,255,.08);
+  }
 }
 
 @media (max-width: 760px) {
-  .hero__grid { padding-block: 1.8rem 2.2rem; gap: 1.6rem; }
+  .hero__copy { padding: 1.8rem var(--gutter) 1.6rem; }
   .hero__meta { gap: 1rem 1.2rem; }
   .hero__meta-item { flex: 1 1 44%; }
   .hero__count { display: none; }
-  .hero__frame { aspect-ratio: 3 / 2; }
-  .hero__arrows .arrow-btn { width: 40px; height: 40px; }
+  .hero__frame {
+    aspect-ratio: 4 / 3.1;
+    min-height: 74vw;
+    max-height: 72vh;
+  }
+  .hero__arrows .arrow-btn { width: 42px; height: 42px; }
+  .hero__dot { height: 4px; }
 }
 
 @media (max-width: 560px) {
@@ -756,10 +798,17 @@ h1, h2, h3, h4 {
   .hero__actions { gap: .6rem; }
   .hero__actions .btn { width: 100%; justify-content: center; }
   .hero__eyebrow { font-size: .62rem; letter-spacing: .14em; }
-  .hero__frame { aspect-ratio: 4 / 3; }
+  .hero__frame {
+    aspect-ratio: 4 / 3.2;
+    min-height: 88vw;
+    max-height: 78vh;
+  }
   .hero__controls { justify-content: space-between; }
-  .hero__dot { width: 26px; }
-  .hero__dot.is-active { width: 40px; }
+  .hero__dot { width: 28px; height: 4px; }
+  .hero__dot.is-active { width: 44px; }
+  .hero__media img {
+    object-position: center center;
+  }
 }
 
 /* ==========================================================================
@@ -2399,7 +2448,15 @@ table.price-table tbody strong { font-family: var(--f-display); font-size: 1.02r
 @media (max-width: 760px) {
   :root { --header-h: 66px; }
   .topbar__group--alt { display: none; }
-  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  /* PRODUCTS IN ROWS OF 2 ON MOBILE TO AVOID LONG SCROLL */
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+  /* catalogue grids specifically — always 2 cols on mobile */
+  [data-design-grid],
+  [data-material-grid],
+  [data-services] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: .75rem !important;
+  }
   .form-grid { grid-template-columns: 1fr; }
   .header__cta .btn--wa span { display: none; }
   .header__cta .btn--wa { padding: .7rem .8rem; }
@@ -2415,6 +2472,60 @@ table.price-table tbody strong { font-family: var(--f-display); font-size: 1.02r
   body { padding-bottom: 74px; }
   .stat { padding: 1.2rem 1rem; }
   .card__quick { opacity: 1; transform: none; }
+
+  /* compact 2-col card tuning */
+  .card { border-radius: 14px; }
+  .card__media { aspect-ratio: 1 / 1; }
+  .card__media--photo { aspect-ratio: 1 / 1; }
+  .card__body { padding: .75rem .7rem .8rem; }
+  .card__body h3 { font-size: .88rem; line-height: 1.25; }
+  .card__summary {
+    font-size: .76rem;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-top: .4rem;
+  }
+  .card__chips { display: none; }
+  .card__meta { display: none; }
+  .card__price-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .5rem;
+    margin-top: .6rem;
+    padding-top: .6rem;
+  }
+  .card__price em { font-size: .6rem; }
+  .card__price strong { font-size: 1.05rem; }
+  .card__price small { font-size: .68rem; }
+  .card__actions { width: 100%; gap: .4rem; }
+  .card__actions .btn--sm {
+    flex: 1;
+    justify-content: center;
+    padding: .5rem .5rem;
+    font-size: .66rem;
+    min-height: 36px;
+  }
+  .card__badges { top: .5rem; left: .5rem; }
+  .card__cat { left: .5rem; bottom: .5rem; font-size: .56rem; padding: .26rem .5rem; }
+  .card__quick { right: .5rem; bottom: .5rem; padding: .28rem .5rem; font-size: .58rem; }
+  .badge { font-size: .54rem; padding: .24rem .46rem; }
+
+  /* service cards in 2-col mode */
+  .service-card { border-radius: 14px; }
+  .service-card__media { aspect-ratio: 1 / 1; }
+  .service-card__body { padding: .85rem .75rem .9rem; }
+  .service-card h3 { font-size: .92rem; }
+  .service-card p { font-size: .78rem; }
+  .service-card__foot { margin-top: .7rem; padding-top: .7rem; gap: .5rem; flex-wrap: wrap; }
+  .service-card__price { font-size: .72rem; }
+  .service-card__price b { font-size: .92rem; }
+  .service-card .btn--sm { min-height: 36px; padding: .5rem .7rem; font-size: .68rem; }
+
+  /* material note hide on compact cards */
+  .card--material .card__note { display: none; }
 }
 
 @media (max-width: 520px) {
@@ -2423,6 +2534,21 @@ table.price-table tbody strong { font-family: var(--f-display); font-size: 1.02r
   .reviews-controls { justify-content: center; }
   .hero__actions .btn { width: 100%; }
   .topbar__group { gap: .9rem; }
+
+  /* keep 2 columns even on very small phones — tighter gap */
+  .grid-2, .grid-3, .grid-4,
+  [data-design-grid],
+  [data-material-grid],
+  [data-services] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: .6rem !important;
+  }
+  .card__body { padding: .6rem .6rem .7rem; }
+  .card__body h3 { font-size: .82rem; }
+  .card__price strong { font-size: .98rem; }
+  .card__actions .btn--sm { font-size: .62rem; padding: .45rem .4rem; min-height: 34px; }
+  .icon-btn { width: 34px; height: 34px; }
+  .icon-btn svg { width: 15px; height: 15px; }
 }
 
 /* ==========================================================================
@@ -2527,8 +2653,7 @@ a, button, [role="tab"], .filter, .nav__link, .card__quick { touch-action: manip
 
 @media (max-width: 520px) {
   .drawer { width: 100%; border-left: 0; }
-  .card__body { padding: 1.1rem 1.1rem 1.2rem; }
-  .card__price strong { font-size: 1.28rem; }
+  /* keep compact 2-col cards — do not enlarge padding again */
   .quote-item { grid-template-columns: 54px 1fr; }
   .quote-item__thumb { width: 54px; height: 54px; }
   .quote-item__side { grid-column: 2; flex-direction: row; align-items: center; justify-content: space-between; }
@@ -2550,6 +2675,121 @@ a, button, [role="tab"], .filter, .nav__link, .card__quick { touch-action: manip
   .hero__slide.is-active .hero__media img { animation: none; }
   .hero__dot.is-active::after { animation: none; transform: scaleX(1); }
   .reviews-progress i { animation: none; width: 100%; }
+}
+
+/* ==========================================================================
+   21. FINAL MOBILE FIXES — DASHBOARD FULL + 2-COL PRODUCTS
+   Ensures the hero slideshow is a true full-bleed dashboard on phones
+   and that every catalogue grid is 2 columns to cut long scrolling.
+   ========================================================================== */
+@media (max-width: 900px) {
+  /* hero dashboard: full width, no small window, clear images */
+  .hero {
+    min-height: auto;
+  }
+  .hero__grid {
+    /* already full-bleed via .hero .container override, keep it */
+  }
+  .hero__frame {
+    /* make the slideshow feel like a dashboard, not a card */
+    background: #0e0c0a;
+  }
+  .hero__slide {
+    /* ensure active slide is always crisp */
+    will-change: opacity;
+  }
+  .hero__media img {
+    /* override kenburns scale on mobile for clarity — less zoom = sharper */
+    transform: scale(1.02);
+  }
+  .hero__slide.is-active .hero__media img {
+    animation: none;
+    transform: scale(1.06);
+    transition: transform 8s ease-out;
+  }
+}
+
+@media (max-width: 760px) {
+  /* enforce 2-col for any .grid that is inside a section — not just catalogue */
+  .section .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem;
+  }
+  /* but keep single-column for specific layouts that must stay 1-col */
+  .section .split,
+  .section .contact-grid,
+  .section .stats,
+  .section .breadcrumb-cards,
+  .section .info-tiles,
+  .section .value-grid,
+  .section .steps,
+  .trustbar__inner {
+    grid-template-columns: initial;
+  }
+  /* re-assert catalogue grids stay 2-col even if above generic rule is overridden */
+  .grid.grid-3,
+  .grid.grid-2,
+  .grid.grid-4,
+  [data-design-grid],
+  [data-material-grid],
+  [data-services] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  /* trustbar: 2 cols on mobile is okay, but make it compact */
+  .trustbar__inner {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: .75rem;
+    padding-block: 1rem;
+  }
+  .trustbar__item { gap: .6rem; }
+  .trustbar__item strong { font-size: .82rem; }
+  .trustbar__item span { font-size: .7rem; line-height: 1.35; }
+}
+
+@media (max-width: 480px) {
+  /* even tighter 2-col grid on small phones */
+  .section .grid,
+  .grid.grid-3,
+  .grid.grid-2,
+  .grid.grid-4,
+  [data-design-grid],
+  [data-material-grid],
+  [data-services] {
+    gap: .6rem !important;
+  }
+  .card__body h3 {
+    font-size: .8rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.5em;
+  }
+  /* price row always stacked for readability in 2-col */
+  .card__price-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .card__price-row .card__price {
+    width: 100%;
+  }
+  /* hero dashboard full height on very small screens */
+  .hero__frame {
+    min-height: 92vw;
+    max-height: 80vh;
+  }
+}
+
+@media (max-width: 360px) {
+  /* keep 2 cols even at 360px — ultra compact */
+  .grid.grid-3,
+  [data-design-grid],
+  [data-material-grid] {
+    gap: .5rem !important;
+  }
+  .card__body { padding: .5rem .5rem .6rem; }
+  .card__price strong { font-size: .9rem; }
+  .card__actions .btn--sm { font-size: .58rem; }
 }
 
 @media print {
