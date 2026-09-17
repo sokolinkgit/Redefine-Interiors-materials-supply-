@@ -6,7 +6,7 @@
    A. Helpers, icons & WhatsApp links
    B. Site chrome (floating actions, quote drawer, toasts)
    C. Header, mobile nav & scroll UI
-   D. Hero slideshow (5 interiors, 3 second refresh)
+   D. Hero slideshow (5 interiors, 1 second refresh)
    E. Review carousel (batches of 3, 5 second refresh)
    F. Catalogue rendering, filters & detail modal
    G. Quotation list (localStorage)
@@ -277,7 +277,7 @@
   }
 
   /* ======================================================================
-     D. HERO SLIDESHOW — 5 interiors, 3 second refresh
+     D. HERO SLIDESHOW — 5 interiors, 1 second refresh (automated)
      ====================================================================== */
   function initHero() {
     const hero = $('[data-hero]');
@@ -286,7 +286,7 @@
     const slides = $$('.hero__slide', hero);
     const dots = $$('.hero__dot', hero);
     const count = $('[data-hero-count]', hero);
-    const INTERVAL = 3000;
+    const INTERVAL = 1000;
     let index = 0;
     let timer = null;
     let onScreen = true;
@@ -299,7 +299,7 @@
         d.classList.toggle('is-active', active);
         d.setAttribute('aria-selected', String(active));
         if (active && resetProgress) {
-          /* restart the 3s progress animation on the active bar */
+          /* restart the 1s progress animation on the active bar */
           d.style.animation = 'none';
           void d.offsetWidth;
           d.style.animation = '';
@@ -572,14 +572,20 @@
   }
 
   function serviceCard(s) {
+    const media = s.image
+      ? '<div class="service-card__media">' + responsiveImg(s.image, s.title + ' by Redefine Interiors — ' + s.text, '(max-width: 620px) 92vw, (max-width: 1024px) 46vw, 380px') + '<span class="service-card__cat">' + ICONS[SERVICE_ICON[s.slug]] + escapeHtml(s.title) + '</span></div>'
+      : '';
     return [
-      '<article class="service-card reveal">',
-      '  <span class="service-card__icon">' + ICONS[SERVICE_ICON[s.slug]] + '</span>',
-      '  <h3>' + escapeHtml(s.title) + '</h3>',
-      '  <p>' + escapeHtml(s.text) + '</p>',
-      '  <div class="service-card__foot">',
-      '    <span class="service-card__price">From <b>' + money(s.from) + '</b></span>',
-      '    <button class="btn btn--wa btn--sm" type="button" data-wa-service="' + s.slug + '">' + ICONS.whatsapp + 'Quote</button>',
+      '<article class="service-card reveal' + (s.image ? ' service-card--with-media' : '') + '">',
+      media,
+      '  <div class="service-card__body">',
+      '    <span class="service-card__icon">' + ICONS[SERVICE_ICON[s.slug]] + '</span>',
+      '    <h3>' + escapeHtml(s.title) + '</h3>',
+      '    <p>' + escapeHtml(s.text) + '</p>',
+      '    <div class="service-card__foot">',
+      '      <span class="service-card__price">From <b>' + money(s.from) + '</b></span>',
+      '      <button class="btn btn--wa btn--sm" type="button" data-wa-service="' + s.slug + '">' + ICONS.whatsapp + 'Quote</button>',
+      '    </div>',
       '  </div>',
       '</article>'
     ].join('');
