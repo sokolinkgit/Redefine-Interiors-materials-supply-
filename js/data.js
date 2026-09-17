@@ -158,6 +158,7 @@ const DESIGNS = [
 const MATERIALS = [
   {
     id: 'm01',
+    image: 'assets/img/mat-mdf-board.jpg',
     name: '18mm MDF Board',
     category: 'Boards & Panels',
     swatch: 'mdf', icon: 'box',
@@ -168,6 +169,7 @@ const MATERIALS = [
   },
   {
     id: 'm02',
+    image: 'assets/img/mat-laminate-sheet.jpg',
     name: 'Melamine Laminate Sheet',
     category: 'Boards & Panels',
     swatch: 'laminate', icon: 'palette',
@@ -178,6 +180,7 @@ const MATERIALS = [
   },
   {
     id: 'm03',
+    image: 'assets/img/mat-hardware-kit.jpg',
     name: 'Cabinet Hardware Kit',
     category: 'Hardware & Fittings',
     swatch: 'hardware', icon: 'wrench',
@@ -188,6 +191,7 @@ const MATERIALS = [
   },
   {
     id: 'm04',
+    image: 'assets/img/mat-sink-tap.jpg',
     name: 'Kitchen Sink & Pull-Out Tap Set',
     category: 'Hardware & Fittings',
     swatch: 'steel', icon: 'wrench',
@@ -198,6 +202,7 @@ const MATERIALS = [
   },
   {
     id: 'm05',
+    image: 'assets/img/mat-gypsum-board.jpg',
     name: 'Gypsum Ceiling Board',
     category: 'Gypsum & Ceilings',
     swatch: 'gypsum', icon: 'layers',
@@ -208,6 +213,7 @@ const MATERIALS = [
   },
   {
     id: 'm06',
+    image: 'assets/img/mat-aluminium-profiles.jpg',
     name: 'Aluminium Window & Door Profiles',
     category: 'Aluminium',
     swatch: 'aluminium', icon: 'window',
@@ -218,6 +224,7 @@ const MATERIALS = [
   },
   {
     id: 'm07',
+    image: 'assets/img/mat-porcelain-tile.jpg',
     name: 'Porcelain Floor Tile 600×600',
     category: 'Tiles & Finishes',
     swatch: 'tile', icon: 'palette',
@@ -228,6 +235,7 @@ const MATERIALS = [
   },
   {
     id: 'm08',
+    image: 'assets/img/mat-fluted-panel.jpg',
     name: 'Fluted WPC Wall Panel',
     category: 'Tiles & Finishes',
     swatch: 'fluted', icon: 'layers2',
@@ -238,6 +246,7 @@ const MATERIALS = [
   },
   {
     id: 'm09',
+    image: 'assets/img/mat-quartz-slab.jpg',
     name: 'Quartz Countertop Slab',
     category: 'Countertops',
     swatch: 'quartz', icon: 'spark',
@@ -248,6 +257,7 @@ const MATERIALS = [
   },
   {
     id: 'm10',
+    /* no photograph supplied yet — renders the designed swatch tile */
     name: 'LED Spotlight & Cove Strip Pack',
     category: 'Lighting',
     swatch: 'led', icon: 'bulb',

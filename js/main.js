@@ -73,6 +73,17 @@
     tiktok: SVG('<path d="M16 3c.4 2.2 1.9 3.8 4 4.1v3c-1.5 0-2.9-.5-4-1.3v5.7c0 3.3-2.4 5.8-5.6 5.8S4.9 18.4 4.9 15.2c0-3 2.3-5.5 5.3-5.7v3.1c-1.3.2-2.2 1.2-2.2 2.6 0 1.5 1.1 2.6 2.6 2.6s2.5-1.1 2.5-2.7V3z"/>', true)
   };
 
+  /* used for price-list rows that have no product photograph yet */
+  const CATEGORY_ICON = {
+    'Boards & Panels': 'box',
+    'Hardware & Fittings': 'wrench',
+    'Gypsum & Ceilings': 'layers',
+    'Aluminium': 'window',
+    'Tiles & Finishes': 'palette',
+    'Countertops': 'spark',
+    'Lighting': 'bulb'
+  };
+
   const SERVICE_ICON = {
     'kitchen-cabinets': 'cabinet',
     wardrobes: 'wardrobe',
@@ -80,6 +91,28 @@
     'gypsum-works': 'layers',
     'shop-renovation': 'shop',
     fittings: 'wrench'
+  };
+
+  /* --- responsive images ------------------------------------------------
+     Every catalogue photo ships in three sizes next to each other:
+       assets/img/<name>.jpg        (full,  1200–1400px)
+       assets/img/sm/<name>-760.jpg (tablet / retina phone)
+       assets/img/sm/<name>-480.jpg (phone)
+     Phones therefore never download a 130KB+ full-size photo.            */
+  const FULL_WIDTH = (src) => {
+    if (/^assets\/img\/d-/.test(src)) return 1200;
+    if (/^assets\/img\/hero-/.test(src)) return 1376;
+    return 1240;
+  };
+  const sized = (src, w) => src.replace(/^(.*\/)([^/]+)\.jpg$/, '$1' + 'sm/' + '$2-' + w + '.jpg');
+
+  const responsiveImg = (src, alt, sizes, opts) => {
+    const o = opts || {};
+    const widths = o.full ? [480, 760, FULL_WIDTH(src)] : [480, 760];
+    const set = widths.map((w) => (w === FULL_WIDTH(src) && o.full ? src : sized(src, w)) + ' ' + w + 'w').join(', ');
+    return '<img src="' + src + '" srcset="' + set + '" sizes="' + sizes + '" alt="' + escapeHtml(alt) + '"' +
+      ' loading="' + (o.eager ? 'eager' : 'lazy') + '" decoding="async"' +
+      (o.cls ? ' class="' + o.cls + '"' : '') + '>';
   };
 
   const money = (n) => 'KES ' + Number(n).toLocaleString('en-KE');
@@ -256,6 +289,7 @@
     const INTERVAL = 3000;
     let index = 0;
     let timer = null;
+    let onScreen = true;
 
     const render = (i, resetProgress) => {
       index = (i + slides.length) % slides.length;
@@ -274,7 +308,11 @@
       if (count) count.innerHTML = '<b>' + String(index + 1).padStart(2, '0') + '</b> / ' + String(slides.length).padStart(2, '0');
     };
 
-    const start = () => { stop(); timer = setInterval(() => render(index + 1, true), INTERVAL); };
+    const start = () => {
+      stop();
+      if (!onScreen || document.hidden) return;   /* phones: never rotate off-screen */
+      timer = setInterval(() => render(index + 1, true), INTERVAL);
+    };
     const stop = () => { if (timer) clearInterval(timer); timer = null; };
 
     const goTo = (i) => { render(i, true); start(); };
@@ -290,6 +328,16 @@
     hero.addEventListener('focusin', stop);
     hero.addEventListener('focusout', start);
     document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
+
+    /* only animate while the hero is actually on screen */
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          onScreen = entry.isIntersecting;
+          onScreen ? start() : stop();
+        });
+      }, { threshold: .12 }).observe(hero);
+    }
 
     /* touch swipe */
     let startX = 0;
@@ -391,9 +439,20 @@
 
       const start = () => {
         stop();
+        if (document.hidden) return;                /* don't rotate in a background tab */
         timer = window.setInterval(() => { if (!paused) render(index + 1); }, INTERVAL);
       };
       const stop = () => { if (timer) window.clearInterval(timer); timer = null; };
+
+      /* phones: pause the carousel entirely while it is scrolled out of view */
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) { paused = false; start(); }
+            else { paused = true; stop(); }
+          });
+        }, { threshold: .1 }).observe(root);
+      }
 
       if (prev) prev.addEventListener('click', () => { render(index - 1); start(); });
       if (next) next.addEventListener('click', () => { render(index + 1); start(); });
@@ -406,8 +465,25 @@
       }
       root.addEventListener('mouseenter', () => { paused = true; root.classList.add('reviews-paused'); });
       root.addEventListener('mouseleave', () => { paused = false; root.classList.remove('reviews-paused'); });
-      root.addEventListener('touchstart', () => { paused = true; }, { passive: true });
-      root.addEventListener('touchend', () => { paused = false; }, { passive: true });
+
+      /* touch: pause while pressed, and swipe left/right to change batch */
+      let touchX = 0;
+      let touchY = 0;
+      root.addEventListener('touchstart', (e) => {
+        paused = true;
+        touchX = e.touches[0].clientX;
+        touchY = e.touches[0].clientY;
+      }, { passive: true });
+      root.addEventListener('touchend', (e) => {
+        paused = false;
+        const dx = e.changedTouches[0].clientX - touchX;
+        const dy = e.changedTouches[0].clientY - touchY;
+        /* only treat it as a swipe when it is clearly horizontal */
+        if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.6) {
+          render(dx < 0 ? index + 1 : index - 1);
+          start();
+        }
+      }, { passive: true });
 
       let lastSize = batchSize();
       window.addEventListener('resize', () => {
@@ -427,7 +503,8 @@
     return [
       '<article class="card reveal" data-cat="' + escapeHtml(d.category) + '">',
       '  <div class="card__media">',
-      '    <img src="' + d.image + '" alt="' + escapeHtml(d.title) + ' — ' + escapeHtml(d.category) + ' by Redefine Interiors" loading="lazy" decoding="async">',
+      '    ' + responsiveImg(d.image, d.title + ' — ' + d.category + ' by Redefine Interiors',
+        '(max-width: 620px) 92vw, (max-width: 1024px) 46vw, 380px'),
       '    <div class="card__badges">',
       (d.badge ? '      <span class="badge">' + escapeHtml(d.badge) + '</span>' : ''),
       '    </div>',
@@ -462,13 +539,22 @@
     '</span>';
 
   function materialCard(m) {
+    const badge = m.badge ? '<span class="badge badge--ink">' + escapeHtml(m.badge) + '</span>' : '';
+    const media = m.image
+      ? '  <div class="card__media card__media--photo">' +
+        '    ' + responsiveImg(m.image, m.name + ' supplied by Redefine Interiors Kenya',
+          '(max-width: 620px) 92vw, (max-width: 1024px) 46vw, 380px') +
+        '    <span class="card__cat">' + ICONS[ m.icon || 'box' ] + escapeHtml(m.category) + '</span>' +
+        '  </div>'
+      : '  <div class="card__media card__media--swatch">' +
+        swatch(m.swatch, m.icon, m.category) +
+        '  </div>';
+
     return [
       '<article class="card card--material reveal" data-cat="' + escapeHtml(m.category) + '">',
-      '  <div class="card__media card__media--swatch">',
-      swatch(m.swatch, m.icon, m.category),
-      '    <div class="card__badges">',
-      (m.badge ? '      <span class="badge badge--ink">' + escapeHtml(m.badge) + '</span>' : ''),
-      '    </div>',
+      media,
+      '  <div class="card__badges card__badges--overlay">',
+      (badge ? '    ' + badge : ''),
       '  </div>',
       '  <div class="card__body">',
       '    <h3>' + escapeHtml(m.name) + '</h3>',
@@ -521,10 +607,14 @@
 
     /* full price list table */
     $$('[data-price-list]').forEach((tbody) => {
-      const rows = MATERIALS.map((m) => ({ name: m.name, unit: m.unit, price: m.price, category: m.category })).concat(PRICE_LIST);
+      const rows = MATERIALS.map((m) => ({ name: m.name, unit: m.unit, price: m.price, category: m.category, image: m.image })).concat(PRICE_LIST);
       rows.sort((a, b) => a.category.localeCompare(b.category) || a.price - b.price);
       tbody.innerHTML = rows.map((r) => [
         '<tr>',
+        '  <td class="price-table__photo">' + (r.image
+          ? '<img src="' + sized(r.image, 480) + '" alt="' + escapeHtml(r.name) + '" width="56" height="56" loading="lazy" decoding="async">'
+          : '<span class="price-table__icon" title="Photo on request" aria-hidden="true">' +
+            ICONS[CATEGORY_ICON[r.category] || 'box'] + '</span>') + '</td>',
         '  <td>' + escapeHtml(r.name) + '</td>',
         '  <td>' + escapeHtml(r.category) + '</td>',
         '  <td>' + escapeHtml(r.unit) + '</td>',
@@ -634,8 +724,12 @@
     const modal = $('[data-modal]');
     if (!d || !modal) return;
 
-    $('[data-modal-img]', modal).src = d.image;
-    $('[data-modal-img]', modal).alt = d.title + ' — ' + d.category;
+    const modalImg = $('[data-modal-img]', modal);
+    modalImg.src = d.image;
+    modalImg.srcset = [480, 760, FULL_WIDTH(d.image)]
+      .map((w) => (w === FULL_WIDTH(d.image) ? d.image : sized(d.image, w)) + ' ' + w + 'w').join(', ');
+    modalImg.sizes = '(max-width: 900px) 92vw, 620px';
+    modalImg.alt = d.title + ' — ' + d.category;
     $('[data-modal-body]', modal).innerHTML = [
       '<span class="eyebrow">' + escapeHtml(d.category) + '</span>',
       '<h3>' + escapeHtml(d.title) + '</h3>',
