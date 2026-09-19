@@ -21,8 +21,9 @@
 --       phone number of that account plus its password.
 --
 --  WHAT THIS FILE CREATES
---    §1  helper functions (updated_at, is_admin)
---    §2  public.admins          — which auth.users are allowed to edit the site
+--    §1  helper function (updated_at)
+--    §2  public.admins          — which auth.users are allowed to edit the site,
+--                                 plus is_admin(), current_admin(), grant_admin(), …
 --    §3  public.hero_slides     — homepage slideshow images
 --    §4  public.designs         — Designs page (+ homepage featured designs)
 --    §5  public.materials       — Materials page (+ homepage featured materials)
@@ -50,26 +51,6 @@ begin
 end;
 $$;
 
--- who is editing? (uuid of the signed-in user, or null for visitors)
--- auth.uid() is provided by Supabase.
-create or replace function public.is_admin()
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select exists (
-    select 1
-    from public.admins a
-    where a.id = auth.uid()
-      and a.is_active
-  );
-$$;
-
-revoke all on function public.is_admin() from public;
-grant execute on function public.is_admin() to anon, authenticated, service_role;
-
 -- =====================================================================================
 -- §2  ADMINS — the bridge between Supabase Auth and the website
 -- =====================================================================================
@@ -90,6 +71,30 @@ create table if not exists public.admins (
 
 comment on table public.admins is
   'Auth users allowed to edit website content. Add via public.grant_admin() or create the first user in the dashboard.';
+
+-- ---- who is editing? (uuid of the signed-in user, or null for visitors) -------------
+-- auth.uid() is provided by Supabase.
+-- (Created AFTER the table above on purpose: SQL-language functions are parsed
+--  against the database at CREATE FUNCTION time, so public.admins must already
+--  exist. The old layout created is_admin() in §1 and failed with
+--  'relation "public.admins" does not exist'.)
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.admins a
+    where a.id = auth.uid()
+      and a.is_active
+  );
+$$;
+
+revoke all on function public.is_admin() from public;
+grant execute on function public.is_admin() to anon, authenticated, service_role;
 
 drop trigger if exists admins_touch_updated_at on public.admins;
 create trigger admins_touch_updated_at
