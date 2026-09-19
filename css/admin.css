@@ -10,17 +10,18 @@
 
 /* ---------------------------------------------------------------- tokens */
 .admin-ui {
-  --admin-z-dock: 280;
+  --admin-z-bar: 305;   /* above the scrim, so the bar keeps working */
   --admin-z-scrim: 300;
+  --admin-z-panel: 320;
   --admin-z-drawer: 310;
-  --admin-z-login: 340;
+  --admin-z-login: 345;
   --admin-z-confirm: 360;
   --danger: #B23A2E;
   --danger-soft: #FBEDEA;
 }
 
 /* keep the site's toasts above the overlay while editing */
-body.is-admin .toast-stack { z-index: 400; bottom: 96px; }
+body.is-admin .toast-stack { z-index: 400; }
 body.admin-no-scroll { overflow: hidden; }
 
 /* a quiet gold dot on the logo: "you are editing" */
@@ -120,7 +121,6 @@ body.is-admin .admin-hidden-item {
   outline-offset: -2px;
 }
 body.is-admin .admin-hidden-item:hover { opacity: .85; }
-body.is-admin-preview .admin-hidden-item { display: none !important; }
 
 /* ==========================================================================
    2. "+" TILES — create something new, right where it will appear
@@ -157,92 +157,97 @@ body.is-admin-preview .admin-hidden-item { display: none !important; }
 .admin-add--wide { min-height: 0; padding: 1.6rem; margin-top: clamp(2.2rem, 5vw, 4rem); }
 
 /* the slideshow "+" sits with the prev/next arrows */
-.arrow-btn.admin-add-slide { border-color: var(--gold); color: var(--gold); }
-.arrow-btn.admin-add-slide svg { width: 15px; height: 15px; }
-.arrow-btn.admin-add-slide:hover { background: var(--gold); color: #fff; }
 
 /* ==========================================================================
-   3. DOCK — bottom left, opposite the WhatsApp / call buttons
+   3. THE ADMIN BAR — pinned to the very top, never over the content
+   --------------------------------------------------------------------------
+   The page is pushed down by exactly the height of the bar (body.has-admin-bar
+   gets --admin-bar-h, measured by js/admin.js), so nothing is ever covered.
+   It holds who is signed in, the connection status, Slideshow, Categories and
+   Sign out — and nothing else.
    ========================================================================== */
-.admin-dock {
+.admin-bar {
   position: fixed;
-  left: clamp(.75rem, 2vw, 1.5rem);
-  bottom: clamp(.75rem, 2vw, 1.5rem);
-  z-index: var(--admin-z-dock);
-  display: flex;
-  align-items: flex-end;
-  gap: .6rem;
-}
-.admin-dock__tab {
-  width: 46px;
-  height: 46px;
-  flex: none;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--admin-z-bar);
   background: var(--ink);
-  color: var(--gold-soft);
-  box-shadow: var(--shadow-l);
-  transition: transform .3s var(--ease), background .3s var(--ease);
-}
-.admin-dock__tab svg { width: 20px; height: 20px; }
-.admin-dock__tab:hover { transform: translateY(-2px); background: var(--ink-2); }
-.admin-dock.is-open .admin-dock__tab { background: var(--gold); color: #fff; }
-
-.admin-dock__panel {
-  width: min(330px, calc(100vw - 5.5rem));
-  padding: 1rem 1.1rem 1.05rem;
-  border-radius: var(--radius);
-  background: var(--white);
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow-l);
+  color: var(--cream);
+  box-shadow: 0 14px 34px -26px rgba(0, 0, 0, .9);
+  transform: translateY(-100%);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(10px) scale(.97);
-  transform-origin: bottom left;
-  transition: opacity .3s var(--ease), transform .3s var(--ease-out), visibility .3s;
+  transition: transform .35s var(--ease-out), opacity .3s var(--ease), visibility .3s;
 }
-.admin-dock.is-open .admin-dock__panel { opacity: 1; visibility: visible; transform: none; }
+.admin-bar.is-open { transform: none; opacity: 1; visibility: visible; }
 
-.admin-dock__who strong {
-  display: block;
-  font-family: var(--f-display);
-  font-size: 1.05rem;
-  line-height: 1.3;
+.admin-bar__inner {
+  display: flex;
+  align-items: center;
+  gap: .4rem .9rem;
+  flex-wrap: wrap;
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: .42rem clamp(.75rem, 2vw, 1.5rem);
+  font-size: .78rem;
+  line-height: 1.4;
 }
-.admin-dock__who small {
-  display: block;
-  font-size: .74rem;
-  color: var(--muted);
+.admin-bar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+}
+.admin-bar__brand svg { width: 15px; height: 15px; }
+.admin-bar__brand b { font-weight: 700; }
+.admin-bar__who {
+  font-weight: 600;
+  color: #fff;
+  max-width: 20ch;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 28ch;
 }
-.admin-dock__status {
-  margin: .55rem 0 .8rem;
-  padding: .5rem .65rem;
-  border-radius: var(--radius-sm);
-  background: var(--wa-light);
+.admin-bar__status {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  flex: 1 1 260px;
+  min-width: 0;
+  color: rgba(255, 255, 255, .74);
   font-size: .74rem;
-  line-height: 1.5;
-  color: #14532D;
 }
-.admin-dock__status b { font-weight: 700; }
-.admin-dock__status--warn { background: #FDF3E3; color: #7A4B12; }
-.admin-dock__btns { display: grid; gap: .4rem; }
-.admin-dock__hint {
-  margin-top: .7rem;
-  font-size: .68rem;
-  color: var(--muted);
-  text-align: center;
+.admin-bar__status b { color: #fff; font-weight: 700; }
+.admin-bar__status svg { width: 15px; height: 15px; flex: none; color: var(--gold-soft); }
+.admin-bar__status--warn svg { color: #F2B368; }
+.admin-bar__status code {
+  padding: .05rem .3rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, .12);
+  font-size: .7rem;
+  white-space: nowrap;
 }
+.admin-bar__actions { display: inline-flex; align-items: center; gap: .35rem; margin-left: auto; }
+.admin-bar .admin-chip {
+  background: rgba(255, 255, 255, .08);
+  border-color: rgba(255, 255, 255, .18);
+  color: #fff;
+  padding: .38rem .7rem;
+  font-size: .74rem;
+}
+.admin-bar .admin-chip svg { color: var(--gold-soft); }
+.admin-bar .admin-chip:hover { background: var(--gold); border-color: var(--gold); color: #fff; }
+.admin-bar .admin-chip--danger:hover { background: var(--danger); border-color: var(--danger); }
 
-/* preview-as-visitor hides every editing affordance but keeps the dock */
-body.is-admin-preview .admin-tools,
-body.is-admin-preview .admin-add,
-body.is-admin-preview .admin-add-slide { display: none !important; }
-body.is-admin-preview .admin-editable { outline: none !important; }
+/* the page never loses a pixel of content to the bar */
+body.has-admin-bar { padding-top: var(--admin-bar-h, 0px); }
+body.has-admin-bar .site-header { top: var(--admin-bar-h, 0px); }
+body.has-admin-bar .scroll-progress { top: var(--admin-bar-h, 0px); }
 
 /* ==========================================================================
    4. SHARED OVERLAY BITS
@@ -652,18 +657,219 @@ body.is-admin-preview .admin-editable { outline: none !important; }
    ========================================================================== */
 @media (max-width: 700px) {
   .admin-drawer { width: 100vw; }
-  .admin-dock { left: .6rem; bottom: .6rem; }
-  .admin-dock__panel { width: calc(100vw - 4.6rem); }
+  .admin-bar__inner { padding: .4rem .7rem; }
+  .admin-bar__who { max-width: 14ch; }
+  .admin-bar__status { flex-basis: 100%; order: 3; font-size: .72rem; }
+  .admin-bar__actions { margin-left: auto; }
+  .admin-bar__actions .admin-chip { padding: .36rem .55rem; font-size: .7rem; }
   .admin-tools { top: 8px; right: 8px; padding: 4px 5px; gap: 3px; }
   .admin-tool { width: 28px; height: 28px; }
   .admin-tool svg { width: 14px; height: 14px; }
   .admin-add { min-height: 200px; }
   .service-block > .admin-tools { top: 1rem; }
-  body.is-admin .toast-stack { bottom: 84px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .admin-tools, .admin-dock__panel, .admin-login__panel, .admin-confirm__panel, .admin-drawer {
+  .admin-tools, .admin-bar, .admin-login__panel, .admin-confirm__panel, .admin-drawer, .admin-modal__panel {
     transition-duration: .01ms;
   }
+}
+
+/* ==========================================================================
+   9. PANELS — homepage slideshow picker and the categories editor
+   ========================================================================== */
+.admin-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--admin-z-panel);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(.75rem, 3vw, 2rem);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .3s var(--ease), visibility .3s;
+}
+.admin-modal.is-open { opacity: 1; visibility: visible; }
+
+.admin-modal__panel {
+  width: min(700px, 100%);
+  max-height: min(88vh, 780px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-l);
+  transform: translateY(16px) scale(.98);
+  transition: transform .35s var(--ease-out);
+}
+.admin-modal.is-open .admin-modal__panel { transform: none; }
+
+.admin-modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.3rem .85rem;
+  border-bottom: 1px solid var(--line);
+}
+.admin-modal__head h3 { font-family: var(--f-display); font-size: 1.35rem; margin-top: .2rem; }
+.admin-modal__lead {
+  margin: 0;
+  padding: .85rem 1.3rem 0;
+  font-size: .8rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.admin-modal__body { flex: 1; overflow-y: auto; padding: .9rem 1.15rem 1rem; }
+.admin-modal__status {
+  margin: 0;
+  padding: .8rem 1.3rem 1.05rem;
+  font-size: .74rem;
+  line-height: 1.55;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+}
+.admin-modal__status i { font-style: italic; }
+.admin-modal__foot {
+  display: flex;
+  gap: .6rem;
+  padding: .85rem 1.3rem calc(.85rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--line);
+  background: var(--cream);
+}
+.admin-modal__foot input {
+  flex: 1;
+  min-width: 0;
+  padding: .62rem .8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  font: inherit;
+  font-size: .84rem;
+  color: var(--ink);
+}
+.admin-modal__foot input:focus { outline: 2px solid var(--gold-deep); outline-offset: 1px; }
+.admin-empty { padding: 1.6rem 0; text-align: center; font-size: .85rem; color: var(--muted); }
+
+/* ---- tabs -------------------------------------------------------------- */
+.admin-tabs { display: flex; gap: .35rem; padding: .85rem 1.3rem 0; flex-wrap: wrap; }
+.admin-tab {
+  padding: .42rem .85rem;
+  border: 1px solid var(--line);
+  border-radius: 100px;
+  background: var(--white);
+  font-size: .74rem;
+  font-weight: 600;
+  color: var(--muted);
+  transition: background .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease);
+}
+.admin-tab:hover { border-color: var(--gold-soft); color: var(--ink); }
+.admin-tab.is-active { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+/* ---- slideshow rows ---------------------------------------------------- */
+.admin-slide {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  padding: .5rem .55rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background .25s var(--ease), border-color .25s var(--ease);
+}
+.admin-slide + .admin-slide { margin-top: .25rem; }
+.admin-slide:hover { background: var(--cream); }
+.admin-slide.is-on { border-color: var(--gold-soft); background: #FDF8EF; }
+.admin-slide.is-draft { opacity: .55; }
+.admin-slide input { width: 18px; height: 18px; flex: none; accent-color: var(--gold-deep); }
+.admin-slide__thumb {
+  width: 64px;
+  height: 46px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--cream-2);
+}
+.admin-slide__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.admin-slide__thumb i { display: grid; place-items: center; }
+.admin-slide__thumb i svg { width: 18px; height: 18px; color: var(--muted); }
+.admin-slide__text { min-width: 0; }
+.admin-slide__text b { display: block; font-size: .85rem; line-height: 1.35; }
+.admin-slide__text small { display: block; font-size: .72rem; color: var(--muted); }
+.admin-slide-warn { display: inline-flex; align-items: center; gap: .45rem; color: #7A4B12; }
+.admin-slide-warn svg { width: 15px; height: 15px; flex: none; }
+
+/* ---- category rows ----------------------------------------------------- */
+.admin-cat {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .3rem .35rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+}
+.admin-cat:hover { background: var(--cream); }
+.admin-cat.is-off { opacity: .6; }
+.admin-cat__grip {
+  width: 1.7rem;
+  flex: none;
+  text-align: center;
+  font-size: .68rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.admin-cat__name {
+  flex: 1;
+  min-width: 0;
+  padding: .45rem .55rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  font: inherit;
+  font-size: .84rem;
+  color: var(--ink);
+}
+.admin-cat__name:focus { outline: 2px solid var(--gold-deep); outline-offset: 1px; }
+.admin-cat__count {
+  min-width: 2.2ch;
+  text-align: right;
+  font-size: .7rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.admin-cat__tools { display: flex; gap: 2px; flex: none; }
+.admin-cat__tools .admin-tool { width: 30px; height: 30px; }
+.admin-cat__tools .admin-tool svg { width: 14px; height: 14px; }
+.admin-cat__tools .admin-tool[disabled] { opacity: .3; pointer-events: none; }
+
+/* ---- the ★ tools and the filter-bar extras ----------------------------- */
+.admin-tool.is-on { background: var(--gold); color: #fff; }
+.admin-tool.is-on svg { color: #fff; }
+.admin-tool.is-on:hover { background: var(--gold-deep); }
+
+body.is-admin .filter--hidden { opacity: .55; border-style: dashed; }
+body.is-admin .filter--manage {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  border-style: dashed;
+  border-color: var(--gold);
+  color: var(--gold-deep);
+  font-weight: 600;
+}
+body.is-admin .filter--manage svg { width: 14px; height: 14px; }
+body.is-admin .filter--manage:hover { background: var(--gold); border-color: var(--gold); color: #fff; }
+body.is-admin .filter--manage:hover svg { color: #fff; }
+
+/* the bar squeezes on small screens: keep it one tidy row plus a status line */
+@media (max-width: 900px) {
+  .admin-modal { padding: 0; }
+  .admin-modal__panel { width: 100%; max-height: 100%; height: 100%; border-radius: 0; border: 0; }
+  .admin-bar__brand b { display: none; }
+  .admin-bar__who { max-width: 12ch; }
 }

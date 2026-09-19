@@ -92,12 +92,19 @@
        current Supabase content into them. A service created in the admin
        overlay that has no block yet is appended here from the same template. -->
   <section class="section section--cream">
-    <div class="container" data-service-blocks>
+    <div class="container">
       <div class="section-head section-head--center reveal">
         <span class="eyebrow">What we do</span>
         <h2 class="display-l">Pick the work you need — or bundle the whole fit-out</h2>
         <p class="lead">Each service can be delivered on its own, or bundled into a full fit-out. One team across kitchen, wardrobes, ceilings and flooring means one schedule, one point of contact and one guarantee.</p>
       </div>
+
+      <!-- the chips come from the categories table — admin bar → Categories -->
+      <div class="filters" data-filters="[data-service-blocks]" data-filter-kind="service"
+           data-all-label="All services" role="tablist" aria-label="Filter services by category"
+           style="justify-content:center;margin-bottom:clamp(1.6rem,4vw,2.6rem)"></div>
+
+      <div data-service-blocks>
 
       <!-- 1. Kitchen cabinets -->
       <article class="service-block" id="kitchen-cabinets" data-service-block="kitchen-cabinets">
@@ -261,6 +268,7 @@
         </div>
       </article>
 
+      </div><!-- /data-service-blocks -->
     </div>
   </section>
 
@@ -420,7 +428,9 @@
 <script src="js/config.js"></script>
 <!-- built-in content: what the site shows if Supabase is unreachable -->
 <script src="js/data.js"></script>
-<!-- pulls the live content out of Supabase -->
+<!-- the browser-only draft board used by the built-in admin account -->
+<script src="js/store.js"></script>
+<!-- pulls the live content out of Supabase (or from the draft board) -->
 <script src="js/content.js"></script>
 <!-- the website itself -->
 <script src="js/main.js"></script>

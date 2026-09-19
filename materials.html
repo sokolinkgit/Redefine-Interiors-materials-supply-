@@ -95,7 +95,7 @@
         <p class="lead">Buying for a project? Send us your list on WhatsApp — we confirm availability, delivery and lead time, and quote every line for you.</p>
       </div>
 
-      <div class="filters" data-filters="[data-material-grid]" data-all-label="All materials" role="tablist" aria-label="Filter materials by category"></div>
+      <div class="filters" data-filters="[data-material-grid]" data-filter-kind="material" data-all-label="All materials" role="tablist" aria-label="Filter materials by category"></div>
       <div class="grid grid-3" data-material-grid></div>
 
       <p class="grid-note">
@@ -266,7 +266,9 @@
 <script src="js/config.js"></script>
 <!-- built-in content: what the site shows if Supabase is unreachable -->
 <script src="js/data.js"></script>
-<!-- pulls the live content out of Supabase -->
+<!-- the browser-only draft board used by the built-in admin account -->
+<script src="js/store.js"></script>
+<!-- pulls the live content out of Supabase (or from the draft board) -->
 <script src="js/content.js"></script>
 <!-- the website itself -->
 <script src="js/main.js"></script>

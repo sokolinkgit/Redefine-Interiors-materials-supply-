@@ -23,6 +23,7 @@ const BUSINESS = {
 const DESIGNS = [
   {
     id: 'd01',
+    featured: true,
     title: 'Modern L-Shaped Kitchen Cabinets',
     category: 'Kitchen Cabinets',
     image: 'assets/img/d-kitchen-lshape.jpg',
@@ -34,6 +35,7 @@ const DESIGNS = [
   },
   {
     id: 'd02',
+    featured: true,
     title: 'White Gloss Kitchen & Breakfast Bar',
     category: 'Kitchen Cabinets',
     image: 'assets/img/d-kitchen-white-gloss.jpg',
@@ -45,6 +47,7 @@ const DESIGNS = [
   },
   {
     id: 'd03',
+    featured: true,
     title: 'U-Shaped Family Kitchen + Pantry',
     category: 'Kitchen Cabinets',
     image: 'assets/img/d-kitchen-ushape.jpg',
@@ -56,6 +59,7 @@ const DESIGNS = [
   },
   {
     id: 'd04',
+    featured: true,
     title: '4-Door Sliding Mirror Wardrobe',
     category: 'Wardrobes',
     image: 'assets/img/d-wardrobe-sliding.jpg',
@@ -67,6 +71,7 @@ const DESIGNS = [
   },
   {
     id: 'd05',
+    featured: true,
     title: 'Luxury Walk-In Closet',
     category: 'Wardrobes',
     image: 'assets/img/d-walkin-closet.jpg',
@@ -249,6 +254,7 @@ const MATERIALS = [
 const SERVICES = [
   {
     slug: 'kitchen-cabinets',
+    category: 'Kitchen Cabinets',
     title: 'Kitchen Cabinets',
     icon: 'cabinet',
     image: 'assets/img/d-kitchen-ushape.jpg',
@@ -274,6 +280,7 @@ const SERVICES = [
   },
   {
     slug: 'wardrobes',
+    category: 'Wardrobes',
     title: 'Wardrobes & Closets',
     icon: 'wardrobe',
     image: 'assets/img/d-wardrobe-sliding.jpg',
@@ -299,6 +306,7 @@ const SERVICES = [
   },
   {
     slug: 'aluminium-works',
+    category: 'Aluminium Works',
     title: 'Aluminium Works',
     icon: 'window',
     image: 'assets/img/hero-5-aluminum.jpg',
@@ -324,6 +332,7 @@ const SERVICES = [
   },
   {
     slug: 'gypsum-works',
+    category: 'Gypsum Works',
     title: 'Gypsum Works',
     icon: 'layers',
     image: 'assets/img/hero-3-living-gypsum.jpg',
@@ -349,6 +358,7 @@ const SERVICES = [
   },
   {
     slug: 'shop-renovation',
+    category: 'Shop Renovation',
     title: 'Shop Renovation',
     icon: 'shop',
     image: 'assets/img/hero-4-shop.jpg',
@@ -374,6 +384,7 @@ const SERVICES = [
   },
   {
     slug: 'fittings',
+    category: 'Fittings',
     title: 'All Fittings Work',
     icon: 'wrench',
     image: 'assets/img/hero-1-kitchen.jpg',
@@ -476,53 +487,57 @@ const FAQS = [
 ];
 
 /* --------------------------------------------------------- NAV / PAGE HELPERS */
-const DESIGN_CATEGORIES = ['All', 'Kitchen Cabinets', 'Wardrobes', 'Aluminium Works', 'Gypsum Works', 'Shop Renovation', 'Fittings'];
-const MATERIAL_CATEGORIES = ['All', 'Boards & Panels', 'Hardware & Fittings', 'Gypsum & Ceilings', 'Aluminium', 'Tiles & Finishes', 'Countertops', 'Lighting'];
+
+/* ------------------------------------------------------ CATEGORIES (FILTERS)
+   The chips above the Designs, Materials and Services grids. They live in the
+   `categories` table in Supabase and are fully editable from the admin bar →
+   "Categories" (add · rename · reorder · hide · delete). This object is the
+   built-in fallback used before the database answers, and the shape is:
+   { design: [], material: [], service: [] }.
+   `hidden: true` keeps a category out of the visitor-facing filter bar.      */
+const CATEGORIES = {
+  design: [
+    { name: 'Kitchen Cabinets' },
+    { name: 'Wardrobes' },
+    { name: 'Aluminium Works' },
+    { name: 'Gypsum Works' },
+    { name: 'Shop Renovation' },
+    { name: 'Fittings' }
+  ],
+  material: [
+    { name: 'Boards & Panels' },
+    { name: 'Hardware & Fittings' },
+    { name: 'Gypsum & Ceilings' },
+    { name: 'Aluminium' },
+    { name: 'Tiles & Finishes' },
+    { name: 'Countertops' },
+    { name: 'Lighting' }
+  ],
+  service: [
+    { name: 'Kitchen Cabinets' },
+    { name: 'Wardrobes' },
+    { name: 'Aluminium Works' },
+    { name: 'Gypsum Works' },
+    { name: 'Shop Renovation' },
+    { name: 'Fittings' }
+  ]
+};
+
+const categoryNames = (kind) => (CATEGORIES[kind] || []).map((c) => c.name);
+
+/* legacy names, still used by a few pages/components */
+const DESIGN_CATEGORIES = ['All'].concat(categoryNames('design'));
+const MATERIAL_CATEGORIES = ['All'].concat(categoryNames('material'));
+const SERVICE_CATEGORIES = ['All'].concat(categoryNames('service'));
 
 /* ------------------------------------------------- HOMEPAGE SLIDESHOW (HERO)
-   The five images that rotate in the home-page hero frame, in order.
-   `xs` / `sm` are the 480px and 760px cuts used by srcset on phones and
-   tablets; `label` is the short name used for the slideshow dots and in the
-   admin overlay. Editable from the admin overlay (ghost mode).              */
-const HERO_SLIDES = [
-  {
-    id: 'h01',
-    label: 'Kitchen cabinets',
-    image: 'assets/img/hero-1-kitchen.jpg',
-    xs: 'assets/img/sm/hero-1-kitchen-480.jpg',
-    sm: 'assets/img/sm/hero-1-kitchen-760.jpg',
-    alt: 'Kitchen cabinets — handleless walnut and matte white with a quartz island, installed in Kilimani, Nairobi'
-  },
-  {
-    id: 'h02',
-    label: 'Walk-in wardrobe',
-    image: 'assets/img/hero-2-wardrobe.jpg',
-    xs: 'assets/img/sm/hero-2-wardrobe-480.jpg',
-    sm: 'assets/img/sm/hero-2-wardrobe-760.jpg',
-    alt: 'Walk-in wardrobe with lit shelving fitted in Lavington, Nairobi'
-  },
-  {
-    id: 'h03',
-    label: 'Gypsum ceiling',
-    image: 'assets/img/hero-3-living-gypsum.jpg',
-    xs: 'assets/img/sm/hero-3-living-gypsum-480.jpg',
-    sm: 'assets/img/sm/hero-3-living-gypsum-760.jpg',
-    alt: 'Living room with gypsum ceiling and cove lighting completed in Milimani, Nakuru'
-  },
-  {
-    id: 'h04',
-    label: 'Shop renovation',
-    image: 'assets/img/hero-4-shop.jpg',
-    xs: 'assets/img/sm/hero-4-shop-480.jpg',
-    sm: 'assets/img/sm/hero-4-shop-760.jpg',
-    alt: 'Boutique shop interior with fluted panels and display rails, renovated in Thika'
-  },
-  {
-    id: 'h05',
-    label: 'Aluminium works',
-    image: 'assets/img/hero-5-aluminum.jpg',
-    xs: 'assets/img/sm/hero-5-aluminum-480.jpg',
-    sm: 'assets/img/sm/hero-5-aluminum-760.jpg',
-    alt: 'Aluminium sliding doors and glass balustrade installed in Naivasha'
-  }
-];
+   The hero frame no longer has its own list of pictures: it rotates the
+   DESIGNS below that are ticked as `featured: true` (admin bar → Slideshow, or
+   the ★ button on any design card). A design's photo — including whatever was
+   uploaded to replace it — is what appears in the slideshow, so the two are
+   never out of step. If nothing is ticked, the first five designs are used.  */
+const heroDesigns = (list) => {
+  const items = (list || []).filter((d) => d && d.image);
+  const featured = items.filter((d) => d.featured === true);
+  return featured.length ? featured : items.slice(0, 5);
+};
