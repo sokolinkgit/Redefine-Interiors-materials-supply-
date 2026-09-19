@@ -28,11 +28,18 @@
 --    §4  public.designs         — Designs page (+ homepage featured designs)
 --    §5  public.materials       — Materials page (+ homepage featured materials)
 --    §6  public.services        — Services cards AND the six services.html blocks
+--    §6b public.categories      — the filter chips of Designs / Materials / Services
 --    §7  Row Level Security     — everyone reads, only admins write
 --    §8  Storage bucket         — "site-media" for every uploaded photo
 --    §9  Realtime, grants, indexes
 --    §10 Seed                   — today's live content, so the site looks identical
 --    §11 Checks                 — copy/paste verification queries
+--    §12 Administrators         — the built-in account + how to promote others
+--
+--  THE HOMEPAGE SLIDESHOW
+--  It no longer has a table of its own: tick a design with  designs.is_featured
+--  (admin bar → Slideshow, or the ★ on any design card) and its photo — the very
+--  same photo the Designs page shows — rotates on the home page.
 -- =====================================================================================
 
 -- =====================================================================================
@@ -339,7 +346,13 @@ end;
 $$;
 
 -- =====================================================================================
--- §3  HERO SLIDES — the homepage slideshow
+-- §3  HERO SLIDES — LEGACY, no longer read by the website
+-- -------------------------------------------------------------------------------------
+-- The homepage slideshow is now driven by  public.designs.is_featured  (see §4 and the
+-- admin bar → Slideshow): the pictures on the home page ARE the pictures on the Designs
+-- page, so replacing a design photo replaces it everywhere. This table is kept so that
+-- nothing an earlier version stored is lost — the website does not read or write it.
+-- You may drop it once you are happy:   drop table if exists public.hero_slides;
 -- =====================================================================================
 create table if not exists public.hero_slides (
   id             uuid primary key default gen_random_uuid(),
@@ -358,7 +371,7 @@ create table if not exists public.hero_slides (
   check (image_url <> '' or image_url_760 <> '' or image_url_480 <> '')
 );
 
-comment on table  public.hero_slides             is 'Homepage slideshow: one row per rotating photo, ordered by position.';
+comment on table  public.hero_slides             is 'LEGACY since the slideshow moved to designs.is_featured — kept for reference, no longer read by the website.';
 comment on column public.hero_slides.image_url   is 'Full-size photo (public URL from the site-media bucket, or any https URL).';
 comment on column public.hero_slides.image_url_760 is 'Optional 760px cut for tablets/retina phones.';
 comment on column public.hero_slides.image_url_480 is 'Optional 480px cut for phones.';
@@ -387,6 +400,7 @@ create table if not exists public.designs (
   summary        text not null default '',
   features       jsonb not null default '[]'::jsonb,
   materials      jsonb not null default '[]'::jsonb,
+  is_featured    boolean not null default false,
   position       integer not null default 0,
   is_active      boolean not null default true,
   created_at     timestamptz not null default now(),
@@ -403,6 +417,12 @@ comment on column public.designs.code       is 'Stable public reference (d01, d0
 comment on column public.designs.lead_time  is 'Shown on the card, e.g. "2 – 3 weeks".';
 comment on column public.designs.unit       is 'Optional scope note, e.g. "per sqm".';
 comment on column public.designs.badge      is 'Optional corner badge, e.g. "Best seller". Empty = no badge.';
+comment on column public.designs.is_featured is 'true = this design''s photo rotates in the homepage slideshow (admin bar → Slideshow).';
+comment on column public.designs.category   is 'One of the public.categories rows with kind = ''design''; drives the chips above the Designs grid.';
+
+-- projects created before the slideshow change: add the column in place
+alter table public.designs
+  add column if not exists is_featured boolean not null default false;
 
 drop trigger if exists designs_touch_updated_at on public.designs;
 create trigger designs_touch_updated_at
@@ -466,6 +486,7 @@ create table if not exists public.services (
   cta_label      text not null default '',
   link_label     text not null default '',
   link_href      text not null default '',
+  category       text not null default '',
   position       integer not null default 0,
   is_active      boolean not null default true,
   created_at     timestamptz not null default now(),
@@ -488,10 +509,49 @@ comment on column public.services.bullets     is 'Checklist lines under the bloc
 comment on column public.services.cta_label   is 'WhatsApp button label, e.g. "Request kitchen quotation".';
 comment on column public.services.link_label  is 'Secondary link label, e.g. "See kitchen designs".';
 comment on column public.services.link_href   is 'Secondary link target, e.g. "designs.html".';
+comment on column public.services.category    is 'One of the public.categories rows with kind = ''service''; drives the chips on services.html.';
+
+-- projects created before the categories change: add the column in place
+alter table public.services
+  add column if not exists category text not null default '';
 
 drop trigger if exists services_touch_updated_at on public.services;
 create trigger services_touch_updated_at
   before update on public.services
+  for each row execute function public.touch_updated_at();
+
+-- =====================================================================================
+-- §6b CATEGORIES — the filter chips above the Designs, Materials and Services grids
+-- =====================================================================================
+-- One row = one chip, e.g. ('design', 'Kitchen Cabinets'). The whole list is managed
+-- from the website: admin bar → Categories (add · rename · reorder · hide · delete).
+-- Renaming a chip in the admin overlay also renames  designs.category /
+-- materials.category / services.category  on every row that used the old name, so the
+-- chips and the cards never drift apart.
+create table if not exists public.categories (
+  id             uuid primary key default gen_random_uuid(),
+  kind           text not null check (kind in ('design', 'material', 'service')),
+  name           text not null,
+  slug           text not null default '',
+  position       integer not null default 0,
+  is_active      boolean not null default true,
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now(),
+  created_by     uuid references auth.users (id) on delete set null,
+  updated_by     uuid references auth.users (id) on delete set null,
+  check (name <> ''),
+  unique (kind, name)
+);
+
+comment on table  public.categories           is 'Filter chips for the Designs, Materials and Services pages. Managed from the admin bar → Categories.';
+comment on column public.categories.kind      is 'Which page the chip belongs to: design | material | service.';
+comment on column public.categories.name      is 'The label on the chip AND the value stored in the matching category column of designs/materials/services.';
+comment on column public.categories.position  is 'Chip order, lowest first (the admin tools write 10, 20, 30 …).';
+comment on column public.categories.is_active is 'false = the chip is hidden from visitors; the items that use it stay online under “All”.';
+
+drop trigger if exists categories_touch_updated_at on public.categories;
+create trigger categories_touch_updated_at
+  before update on public.categories
   for each row execute function public.touch_updated_at();
 
 -- =====================================================================================
@@ -501,6 +561,7 @@ alter table public.hero_slides enable row level security;
 alter table public.designs     enable row level security;
 alter table public.materials   enable row level security;
 alter table public.services    enable row level security;
+alter table public.categories  enable row level security;
 
 -- ---------- hero_slides ----------
 drop policy if exists "hero_slides: public read" on public.hero_slides;
@@ -525,6 +586,33 @@ create policy "hero_slides: admin update"
 drop policy if exists "hero_slides: admin delete" on public.hero_slides;
 create policy "hero_slides: admin delete"
   on public.hero_slides for delete
+  to authenticated
+  using (public.is_admin());
+
+-- ---------- categories ----------
+-- Every visitor reads the chips; only an administrator changes them.
+drop policy if exists "categories: public read" on public.categories;
+create policy "categories: public read"
+  on public.categories for select
+  to anon, authenticated
+  using (true);
+
+drop policy if exists "categories: admin insert" on public.categories;
+create policy "categories: admin insert"
+  on public.categories for insert
+  to authenticated
+  with check (public.is_admin());
+
+drop policy if exists "categories: admin update" on public.categories;
+create policy "categories: admin update"
+  on public.categories for update
+  to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+drop policy if exists "categories: admin delete" on public.categories;
+create policy "categories: admin delete"
+  on public.categories for delete
   to authenticated
   using (public.is_admin());
 
@@ -651,6 +739,8 @@ create policy "site-media: admin delete"
 -- =====================================================================================
 -- §9  INDEXES, REALTIME & GRANTS
 -- =====================================================================================
+create index if not exists categories_kind_position_idx on public.categories (kind, position);
+create index if not exists designs_featured_idx on public.designs (is_featured) where is_featured;
 create index if not exists hero_slides_position_idx on public.hero_slides (position);
 create index if not exists designs_position_idx     on public.designs     (position);
 create index if not exists designs_category_idx     on public.designs     (category);
@@ -662,7 +752,7 @@ create index if not exists services_position_idx    on public.services    (posit
 do $$
 declare t text;
 begin
-  foreach t in array array['hero_slides','designs','materials','services']
+  foreach t in array array['designs','materials','services','categories']
   loop
     begin
       execute format('alter publication supabase_realtime add table public.%I', t);
@@ -681,6 +771,7 @@ grant select, insert, update, delete  on public.hero_slides  to anon, authentica
 grant select, insert, update, delete  on public.designs      to anon, authenticated, service_role;
 grant select, insert, update, delete  on public.materials    to anon, authenticated, service_role;
 grant select, insert, update, delete  on public.services     to anon, authenticated, service_role;
+grant select, insert, update, delete  on public.categories   to anon, authenticated, service_role;
 -- (RLS above is what actually decides who may do what; these grants only expose the tables.)
 
 -- =====================================================================================
@@ -693,7 +784,9 @@ grant select, insert, update, delete  on public.services     to anon, authentica
 -- the "site-media" bucket instead.
 
 -- ---------- homepage slideshow ----------
-insert into public.hero_slides
+-- Legacy: the slideshow now rotates the designs marked  is_featured = true  (below).
+-- Kept commented so a fresh project does not fill a table nothing reads.
+-- insert into public.hero_slides
   (code, label, image_url, image_url_760, image_url_480, image_alt, position, is_active)
 values
   ('h01', 'Kitchen cabinets', 'assets/img/hero-1-kitchen.jpg', 'assets/img/sm/hero-1-kitchen-760.jpg', 'assets/img/sm/hero-1-kitchen-480.jpg', 'Kitchen cabinets — handleless walnut and matte white with a quartz island, installed in Kilimani, Nairobi', 10, true),
@@ -702,6 +795,9 @@ values
   ('h04', 'Shop renovation', 'assets/img/hero-4-shop.jpg', 'assets/img/sm/hero-4-shop-760.jpg', 'assets/img/sm/hero-4-shop-480.jpg', 'Boutique shop interior with fluted panels and display rails, renovated in Thika', 40, true),
   ('h05', 'Aluminium works', 'assets/img/hero-5-aluminum.jpg', 'assets/img/sm/hero-5-aluminum-760.jpg', 'assets/img/sm/hero-5-aluminum-480.jpg', 'Aluminium sliding doors and glass balustrade installed in Naivasha', 50, true)
 on conflict (code) do nothing;
+--
+-- The five photos that used to sit here (hero-1-kitchen … hero-5-aluminum) are all in
+-- the designs seed below, where the first five rows are ticked as featured.
 
 -- ---------- designs ----------
 insert into public.designs
@@ -799,15 +895,84 @@ values
    'Request fittings quotation', 'Hardware & fittings', 'materials.html', 60, true)
 on conflict (slug) do nothing;
 
+-- ---------- categories (the filter chips) ----------
+-- Exactly what the live filter bars showed when this file was written. Re-running is
+-- harmless: on conflict (kind, name) do nothing. Add, rename, reorder, hide or delete
+-- them from the website afterwards — admin bar → Categories — and this seed will not
+-- bring a deleted chip back unless you change its name or kind.
+insert into public.categories (kind, name, slug, position, is_active) values
+  -- Designs page
+  ('design',   'Kitchen Cabinets',    'kitchen-cabinets',    10, true),
+  ('design',   'Wardrobes',           'wardrobes',           20, true),
+  ('design',   'Aluminium Works',     'aluminium-works',     30, true),
+  ('design',   'Gypsum Works',        'gypsum-works',        40, true),
+  ('design',   'Shop Renovation',     'shop-renovation',     50, true),
+  ('design',   'Fittings',            'fittings',            60, true),
+  -- Materials page
+  ('material', 'Boards & Panels',     'boards-panels',       10, true),
+  ('material', 'Hardware & Fittings', 'hardware-fittings',   20, true),
+  ('material', 'Gypsum & Ceilings',   'gypsum-ceilings',     30, true),
+  ('material', 'Aluminium',           'aluminium',           40, true),
+  ('material', 'Tiles & Finishes',    'tiles-finishes',      50, true),
+  ('material', 'Countertops',         'countertops',         60, true),
+  ('material', 'Lighting',            'lighting',            70, true),
+  -- Services page
+  ('service',  'Kitchen Cabinets',    'kitchen-cabinets',    10, true),
+  ('service',  'Wardrobes',           'wardrobes',           20, true),
+  ('service',  'Aluminium Works',     'aluminium-works',     30, true),
+  ('service',  'Gypsum Works',        'gypsum-works',        40, true),
+  ('service',  'Shop Renovation',     'shop-renovation',     50, true),
+  ('service',  'Fittings',            'fittings',            60, true)
+on conflict (kind, name) do nothing;
+
+-- ---------- the slideshow starts as the five designs above ----------
+-- Only when nothing has been ticked yet, so re-running never overrules your choice.
+update public.designs
+   set is_featured = true
+ where code in ('d01', 'd02', 'd03', 'd04', 'd05')
+   and not exists (select 1 from public.designs d where d.is_featured);
+
+-- ---------- every service gets a chip ----------
+-- The six shipped services already belong to one of the categories above; a service
+-- created later simply needs its Category filled in (admin bar → edit the service).
+update public.services
+   set category = case slug
+     when 'kitchen-cabinets' then 'Kitchen Cabinets'
+     when 'wardrobes'        then 'Wardrobes'
+     when 'aluminium-works'  then 'Aluminium Works'
+     when 'gypsum-works'     then 'Gypsum Works'
+     when 'shop-renovation'  then 'Shop Renovation'
+     when 'fittings'         then 'Fittings'
+     else category
+   end
+ where coalesce(category, '') = '';
+
 
 -- =====================================================================================
 -- §11 QUICK CHECKS — paste any of these into the SQL Editor whenever you want to look
 -- =====================================================================================
 --  How much content is live?
---    select 'hero_slides' as t, count(*) from public.hero_slides where is_active
---    union all select 'designs',     count(*) from public.designs     where is_active
---    union all select 'materials',   count(*) from public.materials   where is_active
---    union all select 'services',    count(*) from public.services    where is_active;
+--    select 'designs' as t, count(*) from public.designs where is_active
+--    union all select 'materials', count(*) from public.materials where is_active
+--    union all select 'services',  count(*) from public.services  where is_active
+--    union all select 'featured (slideshow)', count(*) from public.designs where is_active and is_featured
+--    union all select 'categories', count(*) from public.categories;
+--
+--  The filter chips, per page:
+--    select kind, position, name, is_active from public.categories
+--     order by kind, position;
+--
+--  Chips with nothing in them / items whose chip was deleted:
+--    select kind, name from public.categories c
+--     where not exists (
+--       select 1 from public.designs d  where c.kind = 'design'   and d.category  = c.name
+--       union all
+--       select 1 from public.materials m where c.kind = 'material' and m.category = c.name
+--       union all
+--       select 1 from public.services s  where c.kind = 'service'  and s.category  = c.name);
+--    select 'design' as kind, category, count(*) from public.designs   group by 2
+--     union all select 'material', category, count(*) from public.materials group by 2
+--     union all select 'service',  category, count(*) from public.services  group by 2;
 --
 --  Who can edit the site?
 --    select email, phone, role, is_active, last_login_at from public.admins order by created_at;
@@ -830,7 +995,53 @@ on conflict (slug) do nothing;
 --     where schemaname in ('public','storage') order by tablename, cmd;
 --
 --  Reset to the shipped content (destructive — then re-run §10):
---    truncate public.hero_slides, public.designs, public.materials, public.services;
+--    truncate public.designs, public.materials, public.services, public.categories;
+--
+-- =====================================================================================
+-- §12 ADMINISTRATORS — the built-in account and how to add others
+-- =====================================================================================
+-- THE BUILT-IN ACCOUNT (works before you do any of this)
+--   js/config.js ships a default administrator:
+--        phone     0703142874   (also accepts +254703142874 or 254703142874)
+--        password  Redefine2026#
+--   Tap/click the logo + name at the top-left of the website five times inside one
+--   minute and sign in with it. As long as Supabase has no matching user, the admin bar
+--   says “This device only” and your edits are kept in that browser (js/store.js) so you
+--   can prepare content straight away. The moment the account below exists, the same
+--   phone number and password give you the full, published session instead — nothing
+--   else to change anywhere.
+--
+-- CREATE IT (once, two minutes)
+--   1. Supabase Studio → Authentication → Users → “Add user” → “Create new user”
+--   2. E-mail:  leave it empty if the form allows, otherwise use your own address
+--      Phone:    +254703142874
+--      Password: Redefine2026#
+--      ✔ Auto Confirm User
+--      → Create user
+--   3. Back in the SQL Editor, promote it:
+--           select public.grant_admin('+254703142874', 'owner', 'Redefine administrator');
+--      (If your project refuses phone-only users, add the user with your e-mail instead,
+--       put that e-mail into  SITE_CONFIG.defaultAdmin.email  in js/config.js, and run
+--           select public.grant_admin('you@example.com', 'owner', 'Redefine administrator');
+--       The website then finds the account from the phone number you type at sign-in via
+--       public.resolve_admin_email().)
+--   4. Reload the website, tap the logo five times, sign in. The bar now reads
+--      “Connected to Supabase.” and every change is published to everybody.
+--
+-- CHANGE THE PASSWORD
+--   The password lives in the code (as a SHA-256 hash) so the sign-in works out of the
+--   box. To use a different one: change it in  Authentication → Users  and paste the new
+--   hash into js/config.js:
+--     node -e "console.log(require('crypto').createHash('sha256')
+--       .update('redefine-interiors::2026::YOUR-NEW-PASSWORD').digest('hex'))"
+--   (…and the matching base64:  node -e "console.log(Buffer.from('YOUR-NEW-PASSWORD').toString('base64'))")
+--
+-- ADD MORE ADMINISTRATORS
+--   Authentication → Users → Add user, then:
+--     select public.grant_admin('them@example.com');          -- reader of their e-mail
+--     select public.grant_admin('+254712345678');             -- or their phone number
+--   They sign in with that e-mail/phone and the password you gave them. Nobody but an
+--   administrator can change a single row: §7 refuses every other write.
 --
 -- =====================================================================================
 --  END OF FILE

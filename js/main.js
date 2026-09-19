@@ -310,42 +310,53 @@
   }
 
   /* ======================================================================
-     D. HERO SLIDESHOW — data-driven (Supabase hero_slides → HERO_SLIDES)
+     D. HERO SLIDESHOW — the DESIGNS ticked as "featured"
+        The homepage and the Designs page show the very same pictures: a design
+        appears in the slideshow when its ★ toggle is on (admin bar →
+        Slideshow, or the ★ on the design card / in its editor). Replacing a
+        design photo therefore replaces it in the slideshow too — there is no
+        second list of hard-coded URLs to keep in step.
         5 second refresh · dots · arrows · swipe · keyboard
      ====================================================================== */
   const HERO_SIZES = '(max-width: 900px) 100vw, 46vw';
 
-  function heroSlideMarkup(s, i) {
-    const hidden = s.active === false;
+  const heroList = () => (typeof heroDesigns === 'function' ? heroDesigns(publishable(DESIGNS)) : []);
+
+  function heroSlideMarkup(d, i) {
+    const hidden = d.active === false;
+    const alt = d.imageAlt || (d.title + ' — ' + d.category + ' by Redefine Interiors');
     return [
       '<div class="hero__slide' + (i === 0 ? ' is-active' : '') + '"' +
-        ' data-cms="hero_slide" data-cms-id="' + escapeHtml(String(s.uuid || s.id || i)) + '"' +
+        ' data-cms="design" data-cms-id="' + escapeHtml(String(d.uuid || d.id || i)) + '" data-cms-slide="1"' +
         (hidden ? ' data-cms-hidden="1"' : '') + '>',
       '  <div class="hero__media">',
-      responsiveImg(s.image, s.alt || s.label || '', HERO_SIZES, {
-        xs: s.xs, sm: s.sm, eager: true, priority: i === 0, full: true
+      responsiveImg(d.image, alt, HERO_SIZES, {
+        xs: d.image480, sm: d.image760, eager: true, priority: i === 0, full: true
       }),
       '  </div>',
       '</div>'
     ].join('');
   }
 
-  function heroDotMarkup(s, i) {
-    const label = s.label ? 'Show ' + String(s.label).toLowerCase() + ' project' : 'Show project ' + (i + 1);
+  function heroDotMarkup(d, i) {
+    const label = d.title || d.category
+      ? 'Show ' + String(d.title || d.category) + ' in the slideshow'
+      : 'Show project ' + (i + 1);
     return '<button class="hero__dot' + (i === 0 ? ' is-active' : '') + '" type="button" role="tab"' +
       ' aria-selected="' + (i === 0 ? 'true' : 'false') + '" aria-label="' + escapeHtml(label) + '"></button>';
   }
 
-  /* rebuilds the slideshow from HERO_SLIDES; returns false when the page has no hero */
+  /* rebuilds the slideshow from the featured designs; false if there is no hero */
   function renderHeroSlides() {
     const hero = $('[data-hero]');
     if (!hero) return false;
-    if (typeof HERO_SLIDES === 'undefined' || !HERO_SLIDES || !HERO_SLIDES.length) return false;
+    const list = heroList();
+    if (!list.length) return false;
     const wrap = $('.hero__slides', hero);
     const dots = $('.hero__dots', hero);
     if (!wrap || !dots) return false;
-    wrap.innerHTML = HERO_SLIDES.map(heroSlideMarkup).join('');
-    dots.innerHTML = HERO_SLIDES.map(heroDotMarkup).join('');
+    wrap.innerHTML = list.map(heroSlideMarkup).join('');
+    dots.innerHTML = list.map(heroDotMarkup).join('');
     return true;
   }
 
@@ -684,7 +695,8 @@
           '<span class="service-card__cat">' + icon + escapeHtml(s.title) + '</span></div>'
       : '';
     return [
-      '<article class="service-card reveal' + (s.image ? ' service-card--with-media' : '') + (s.active === false ? ' is-draft' : '') + '"' + cmsAttrs('service', s) + '>',
+      '<article class="service-card reveal' + (s.image ? ' service-card--with-media' : '') + (s.active === false ? ' is-draft' : '') + '"' +
+        ' data-cat="' + escapeHtml(s.category || '') + '"' + cmsAttrs('service', s) + '>',
       media,
       '  <div class="service-card__body">',
       '    <span class="service-card__icon">' + icon + '</span>',
@@ -733,8 +745,15 @@
     renderFilters();
   }
 
-  /* ---- category filters: rebuilt after every render, choice remembered --- */
+  /* ---- category filters: built from the CATEGORIES table, rebuilt after
+     every render, choice remembered -------------------------------------
+     • a category created in the admin bar gets a chip here (even when empty)
+     • a category renamed or hidden changes here immediately
+     • a label that exists on a card but not in the table still gets a chip,
+       so nothing a visitor could reach ever disappears from the page         */
   const filterMemory = new WeakMap();
+
+  const showAllFilters = () => showHidden;      // admins also see hidden categories
 
   function applyFilter(bar, cat) {
     const targetSel = bar.dataset.filters;
@@ -742,7 +761,12 @@
     const cards = $$(targetSel + ' > article');
 
     $$('.filter', bar).forEach((b) => b.classList.toggle('is-active', b.dataset.filter === cat));
-    cards.forEach((c) => { c.style.display = (cat === all || c.dataset.cat === cat) ? '' : 'none'; });
+    cards.forEach((c) => {
+      /* a row the CMS hid, or a service whose block is no longer published,
+         must stay hidden whatever the filter says */
+      if (c.dataset.cmsHidden === '1' || c.dataset.cmsGone === '1') { c.style.display = 'none'; return; }
+      c.style.display = (cat === all || c.dataset.cat === cat) ? '' : 'none';
+    });
 
     const visible = cards.filter((c) => c.style.display !== 'none');
     let empty = $('.empty-state', bar.parentElement);
@@ -760,22 +784,53 @@
     filterMemory.set(bar, cat);
   }
 
+  /* every category that should get a chip on this bar, in the order the
+     administrator arranged them (plus any label found only on a card) */
+  function filterNames(bar, counts) {
+    const kind = bar.dataset.filterKind || '';
+    const list = (window.SiteContent && window.SiteContent.categoryList)
+      ? window.SiteContent.categoryList(kind)
+      : [];
+    const names = [];
+    list.forEach((c) => {
+      if (!c || !c.name) return;
+      if (c.active === false && !showAllFilters() && !counts[c.name]) return;   // hidden & unused
+      if (names.indexOf(c.name) === -1) names.push(c.name);
+    });
+    Object.keys(counts).forEach((n) => { if (n && names.indexOf(n) === -1) names.push(n); });
+    return names;
+  }
+
   function renderFilters() {
     $$('[data-filters]').forEach((bar) => {
       const targetSel = bar.dataset.filters;
       const all = bar.dataset.allLabel || 'All';
       const cards = $$(targetSel + ' > article');
-      const cats = [];
-      cards.forEach((c) => { if (c.dataset.cat && cats.indexOf(c.dataset.cat) === -1) cats.push(c.dataset.cat); });
 
+      const counts = {};
+      cards.forEach((c) => {
+        const name = c.dataset.cat || '';
+        if (name && c.dataset.cmsGone !== '1') counts[name] = (counts[name] || 0) + 1;
+      });
+
+      const cats = filterNames(bar, counts);
       const remembered = filterMemory.get(bar);
       const active = remembered && (remembered === all || cats.indexOf(remembered) !== -1) ? remembered : all;
 
+      const hiddenSet = {};
+      ((window.SiteContent && window.SiteContent.categoryList) ? window.SiteContent.categoryList(bar.dataset.filterKind || '') : [])
+        .forEach((c) => { if (c && c.active === false) hiddenSet[c.name] = true; });
+
       bar.innerHTML = [all].concat(cats).map((cat) => {
-        const n = cat === all ? cards.length : cards.filter((c) => c.dataset.cat === cat).length;
-        return '<button class="filter" type="button" data-filter="' + escapeHtml(cat) + '">' +
+        const n = cat === all ? cards.filter((c) => c.dataset.cmsGone !== '1').length : (counts[cat] || 0);
+        return '<button class="filter' + (cat !== all && hiddenSet[cat] ? ' filter--hidden' : '') +
+          '" type="button" data-filter="' + escapeHtml(cat) + '">' +
           escapeHtml(cat) + '<span class="filter__count">' + n + '</span></button>';
-      }).join('');
+      }).join('') + (bar.dataset.filterKind && showHidden
+        ? '<button class="filter filter--manage" type="button" data-admin-act="categories"' +
+          ' data-admin-kind="' + escapeHtml(bar.dataset.filterKind) + '" title="Add, rename, reorder or hide these categories">' +
+          ICONS.plus + '<span>Categories</span></button>'
+        : '');
 
       applyFilter(bar, active);
     });
@@ -788,7 +843,7 @@
   function serviceBlockMarkup(s) {
     return [
       '<article class="service-block' + (s.active === false ? ' is-draft' : '') + '" id="' + escapeHtml(s.slug) + '"' +
-        ' data-service-block="' + escapeHtml(s.slug) + '"' + cmsAttrs('service', s) + '>',
+        ' data-service-block="' + escapeHtml(s.slug) + '" data-cat="' + escapeHtml(s.category || '') + '"' + cmsAttrs('service', s) + '>',
       '  <div class="service-block__media reveal">',
       '    ' + responsiveImg(s.image, s.imageAlt || s.title, '(max-width: 1024px) 92vw, 46vw', { xs: s.image480, sm: s.image760 }),
       '  </div>',
@@ -814,6 +869,7 @@
     block.dataset.serviceBlock = s.slug;
     block.dataset.cms = 'service';
     block.dataset.cmsId = String(s.uuid || s.slug);
+    block.dataset.cat = s.category || '';        // the chips at the top filter on this
     if (s.active === false) block.dataset.cmsHidden = '1'; else delete block.dataset.cmsHidden;
     block.classList.toggle('is-draft', s.active === false);
 
@@ -878,10 +934,15 @@
 
     /* deleted or hidden services: keep the markup for crawlers, hide it on screen */
     $$('[data-service-block]', wrap).forEach((b) => {
-      b.style.display = seen.indexOf(b.dataset.serviceBlock) === -1 ? 'none' : '';
+      const gone = seen.indexOf(b.dataset.serviceBlock) === -1;
+      b.dataset.cmsGone = gone ? '1' : '';
+      b.style.display = gone ? 'none' : '';
     });
 
     hydrateIcons();
+    /* the blocks only now carry their category, so the chips (and their
+       counts) are rebuilt after them — renderCatalog() ran before this */
+    renderFilters();
   }
 
   function initCatalog() {
@@ -1369,11 +1430,16 @@
       renderHeroSlides: renderHeroSlides,
       hydrateServiceBlocks: hydrateServiceBlocks,
       setShowHidden: (v) => { showHidden = !!v; refresh(); },
+      renderFilters: renderFilters,
+      heroList: heroList,
       lists: {
-        hero: () => (typeof HERO_SLIDES !== 'undefined' ? HERO_SLIDES : []),
+        hero: () => heroList(),
         designs: () => (typeof DESIGNS !== 'undefined' ? DESIGNS : []),
         materials: () => (typeof MATERIALS !== 'undefined' ? MATERIALS : []),
-        services: () => (typeof SERVICES !== 'undefined' ? SERVICES : [])
+        services: () => (typeof SERVICES !== 'undefined' ? SERVICES : []),
+        categories: (kind) => ((window.SiteContent && window.SiteContent.categoryList)
+          ? window.SiteContent.categoryList(kind)
+          : (typeof CATEGORIES !== 'undefined' && CATEGORIES[kind] ? CATEGORIES[kind] : []))
       }
     };
     document.dispatchEvent(new CustomEvent('site:ready'));

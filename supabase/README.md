@@ -1,9 +1,9 @@
 # Supabase CMS + ghost-mode admin — setup
 
 Everything the website needs from Supabase lives in **one file**: [`schema.sql`](./schema.sql).
-Run it once and the site is database-driven, with an administrator who can edit the
-homepage slideshow and every photo + line of text on the **Designs**, **Materials** and
-**Services** pages — without ever leaving those pages.
+Run it once and the site is database-driven, with an administrator who can edit every photo
+and line of text on the **Designs**, **Materials** and **Services** pages — plus the filter
+chips of all three and the homepage slideshow — without ever leaving those pages.
 
 * Project ref: `rzdfmnvkhfuhqybfexuy`
 * Project URL: `https://rzdfmnvkhfuhqybfexuy.supabase.co`
@@ -29,25 +29,62 @@ It creates:
 | Object | Purpose |
 | --- | --- |
 | `public.admins` | which Supabase Auth users may edit the site |
-| `public.hero_slides` | the homepage slideshow images |
-| `public.designs` | Designs page + the featured grid on the homepage |
+| `public.designs` | Designs page + the homepage grid, and — via `is_featured` — the homepage slideshow |
 | `public.materials` | Materials page + the featured grid on the homepage |
 | `public.services` | service cards **and** the six long blocks on `services.html` |
+| `public.categories` | the filter chips above the Designs, Materials and Services grids (`kind`, `name`, `position`, `is_active`) |
+| `public.hero_slides` | **legacy** — kept so nothing is lost; the homepage slideshow now comes from `designs.is_featured`. Safe to drop |
 | `public.is_admin()`, `current_admin()`, `resolve_admin_email()`, `admin_touch_login()` | the security + sign-in helpers the site calls |
 | `public.grant_admin()`, `revoke_admin()` | promote / demote an account from the SQL Editor |
 | Storage bucket **`site-media`** (public, 8 MB, images only) | every photo uploaded from the admin overlay |
 | Row Level Security on all of the above | everyone reads, only admins write |
-| Realtime on the four content tables | an edit on one device appears on the others |
+| Realtime on designs, materials, services and categories | an edit on one device appears on the others |
 | Seed data (§10) | today's live content, so nothing changes visually |
 
 ---
 
 ## 2. Create the administrator account
 
+### The built-in account — works before you do any of this
+
+The website ships with a default administrator coded into
+[`js/config.js`](../js/config.js), pre-filled in the sign-in panel:
+
+| | |
+| --- | --- |
+| Phone | **0703142874** (`+254703142874` and `2547032874`… i.e. `254703142874` also work) |
+| Password | **Redefine2026#** |
+
+Tap the logo five times and sign in with those two values **right now** — no Supabase step
+needed. Until the Auth user below exists, the admin bar says *“This device only”* and your
+edits are stored in that browser (`js/store.js`), so you can build the catalogue first.
+
+### Then make it the real, published account
+
+1. **Authentication → Users → Add user** → *Create new user*:
+   * **Phone**: `+254703142874`
+   * **Password**: `Redefine2026#`
+   * ✔ **Auto Confirm User** → **Create user**
+     *(If your project will not accept a user without an e-mail, create it with your own
+     e-mail instead and put that address into `SITE_CONFIG.defaultAdmin.email` in
+     `js/config.js` — sign-in by phone number still works, the site looks the account up
+     with `public.resolve_admin_email()`.)*
+2. Promote it in the SQL Editor:
+   ```sql
+   select public.grant_admin('+254703142874', 'owner', 'Redefine administrator');
+   ```
+3. Reload the website and sign in again with the same phone number and password. The bar now
+   reads **“Connected to Supabase.”** and everything you change is published to everybody —
+   including the content you prepared in browser-only mode (add it again, or copy the rows in
+   with §11's checks).
+
+### Any other administrator
+
 1. **Authentication → Users → Add user**.
-2. Enter your e-mail and a password, tick **Auto Confirm User**, create.
-3. That's it — **the first account created in the project is promoted to owner
-   automatically** by a trigger the script installs on `auth.users`.
+2. Enter an e-mail (or a phone number) and a password, tick **Auto Confirm User**, create.
+3. **The first account ever created in the project is promoted to owner automatically** by a
+   trigger the script installs on `auth.users`; every later account must be promoted once:
+   `select public.grant_admin('their@email');`
 
 Check it in the SQL Editor:
 
@@ -101,12 +138,14 @@ require it, because we sign in with a password.)
    There is no link, no `/admin` page and no visible hint — the counter is silent, and it
    survives the one navigation the logo link causes.
 3. The sign-in panel appears → enter the **e-mail or phone number** plus the **password**
-   you set in Supabase Auth.
-4. A small gold **dock** appears bottom-left, and every block you may edit grows a toolbar
-   when you hover (or tap) it.
+   (the built-in pair is pre-filled, so one click is enough).
+4. A thin **admin bar** appears across the top of every page, and every block you may edit
+   grows a toolbar when you hover (or tap) it. The bar holds **Slideshow**, **Categories**
+   and **Sign out** — nothing else.
 
-You stay signed in across pages and reloads — the session is stored locally, and the
-overlay comes back on its own. Use the dock to **sign out**.
+You stay signed in across pages and reloads — the session is stored locally, and the overlay
+comes back on its own. Use the bar's **Sign out** (in browser-only mode it also asks whether
+to keep or discard the edits that never reached Supabase).
 
 ---
 
@@ -118,7 +157,8 @@ screen anywhere.
 
 | Where | What you can do |
 | --- | --- |
-| **Homepage slideshow** | replace/add a photo, edit its alt text and dot label, reorder, hide, delete, add more slides (`+` beside the arrows) |
+| **Homepage slideshow** (admin bar → **Slideshow**) | tick the design photos that rotate on the home page. The slideshow uses the Designs' own pictures in the Designs' own order — replace a design photo and the slideshow follows automatically. Nothing ticked = the first five designs with a photo |
+| **Categories** (admin bar → **Categories**, or the *Categories* chip on any filter bar) | add, rename, reorder (↑ ↓), hide from visitors (eye) and delete the chips of the Designs, Materials **and** Services pages. Renaming a chip renames it on every item using it; deleting a chip leaves its items reachable under *All* |
 | **Designs** (page + homepage grid) | photo, alt text, title, summary, "what is included", "materials used", category, badge, typical time, scope note, order, publish/unpublish, duplicate, delete |
 | **Materials** (page + homepage grid) | photo (optional — without one the designed swatch shows), alt text, name, note, category, unit, badge, swatch, icon, order, publish/unpublish, duplicate, delete |
 | **Services** (cards + the six `services.html` blocks) | photo, alt text, title, card text, icon, slug, eyebrow, block heading, block paragraph, up to three highlight pairs, checklist, WhatsApp button label, second button label + link, order, publish/unpublish, duplicate, delete |
@@ -126,6 +166,7 @@ screen anywhere.
 Every toolbar:
 
 * ✎ **edit** everything about that block — photo and the text under it
+* ★ **feature** a design in the homepage slideshow (a ticked design shows a filled star)
 * ⧉ **duplicate** (the copy starts *hidden*, so nothing surprises a visitor)
 * ◀ ▶ **move** earlier / later in the order
 * ◉ **hide / show** — hidden items stay visible to you, dimmed and dashed, and disappear
@@ -141,10 +182,10 @@ renditions — **1600 / 760 / 480 px** — and uploads all three to the `site-me
 phones keep downloading small files exactly like they do with the shipped
 `assets/img/sm/` cuts. Limits: 8 MB, JPG/PNG/WebP/AVIF/GIF.
 
-### Preview as visitor
+### Seeing the page as a visitor
 
-The dock's **Preview as visitor** strips every editing control and hides drafts, so you can
-check the page exactly as the public sees it — then switch straight back.
+Sign out, or open the site in a private window — you will see exactly what the public sees
+(drafts hidden, no toolbars). Signed in, drafts stay visible to you, dimmed and dashed.
 
 ---
 
@@ -152,17 +193,20 @@ check the page exactly as the public sees it — then switch straight back.
 
 ```
 supabase/schema.sql        run once — tables, RLS, storage bucket, seed
-js/config.js               project URL + anon key + ghost-mode settings
-js/content.js              reads the 4 tables into the site's own arrays (js/data.js shapes)
-js/main.js                 renders those arrays — unchanged behaviour, data-driven hero
+js/config.js               project URL + anon key + the built-in admin account
+js/store.js                browser-only draft board (built-in admin before Auth exists)
+js/content.js              reads designs/materials/services/categories into the site's own
+                           arrays (the js/data.js shapes) — or from the draft board
+js/main.js                 renders those arrays — the hero is the featured designs
 js/ghost.js                the five-tap detector; downloads js/admin.js only when needed
-js/admin.js                sign-in, inline toolbars, editor drawer, uploads, CRUD
+js/admin.js                sign-in, admin bar, slideshow picker, categories, editor, uploads
 css/admin.css              the overlay's look (invisible unless you are signed in)
 ```
 
 * **The site never goes blank.** `js/data.js` still ships the full content; the page paints
-  from it immediately and is then topped up from Supabase. If Supabase is unreachable the
-  dock says so and editing switches off — visitors see the built-in content.
+  from it immediately and is then topped up from Supabase. If Supabase is unreachable the bar
+  says so — visitors see the built-in content, and the built-in admin keeps editing the
+  browser-only copy.
 * **Nothing extra for visitors.** `js/admin.js` and `css/admin.css` are tiny and the admin
   script is only downloaded after the gesture (or when a session already exists).
 * **SEO is preserved.** `services.html` keeps its six long blocks in the HTML — JavaScript
@@ -180,8 +224,11 @@ css/admin.css              the overlay's look (invisible unless you are signed i
 | Phone sign-in fails but e-mail works | The number is not on the Auth user and not on their `admins` row. Edit the user in Authentication → Users and add the phone, or `update public.admins set phone='+2547…' where email='…';` |
 | Saving says *row-level security* | Your session expired or you were demoted. Sign out, sign in again; check `select * from public.admins;`. |
 | Photo upload fails | The `site-media` bucket is missing (re-run §8 of the SQL) or the file is over 8 MB / not an image. |
-| The site shows the old content | Dock → **Reload content**, or check `select count(*) from public.designs;`. |
-| Edits do not appear for visitors | The item may be **hidden** (`is_active = false`) — toggle the eye in its toolbar. Also check any CDN/host cache. |
+| The site shows the old content | Reload the page (the live content is fetched at load), or check `select count(*) from public.designs;`. |
+| Edits do not appear for visitors | The item may be **hidden** (`is_active = false`) — toggle the eye in its toolbar — or the bar says *“This device only”*: those edits are in the browser and Supabase has no matching user yet (§2). Also check any CDN/host cache. |
+| The bar says *“This device only”* | Sign in with the built-in account and Supabase has no user with that phone number yet — create it (§2) and sign in again. Your draft stays in the browser until you discard it on sign-out. |
+| A category says *run §12 of supabase/schema.sql* | The project predates the `categories` table / `is_featured` column. Paste the whole `schema.sql` again — it is idempotent and adds them in place. |
+| The slideshow ignores my tick | Only designs that have a **photo** rotate, and hidden designs are skipped. Tick at least one from admin bar → Slideshow. |
 
 ---
 
@@ -189,6 +236,7 @@ css/admin.css              the overlay's look (invisible unless you are signed i
 
 * **Temporarily:** set `cms: false` (and/or `admin: false`) in `js/config.js`. The site then
   runs purely from `js/data.js` again — no database calls at all.
-* **Completely:** remove the six `<script>`/`<link>` lines added to each page
-  (`config.js`, `content.js`, `ghost.js`, `css/admin.css` and the supabase-js CDN tags).
+* **Completely:** remove the seven `<script>`/`<link>` lines added to each page
+  (`config.js`, `store.js`, `content.js`, `ghost.js`, `css/admin.css` and the supabase-js
+  CDN tags).
   The site is unchanged from before, because `js/data.js` still holds all the content.

@@ -37,10 +37,11 @@ Cloudflare Pages, an Apache/Nginx box). Nothing needs compiling.
 ├── index.html … contact.html
 ├── css/style.css          ← single stylesheet (design tokens at the top)
 ├── css/admin.css          ← the admin overlay only (invisible unless you are signed in)
-├── js/data.js             ← built-in content: slideshow, services, designs, materials, 50 reviews, areas, FAQs
+├── js/data.js             ← built-in content: categories, services, designs, materials, 50 reviews, areas, FAQs
 ├── js/main.js             ← slideshows, quotation list, filters, modal, forms, animations
-├── js/config.js           ← Supabase project URL + anon key + ghost-mode settings
-├── js/content.js          ← pulls the live content out of Supabase
+├── js/config.js           ← Supabase project URL + anon key + the built-in admin account
+├── js/store.js            ← browser-only draft board (built-in admin, before Supabase exists)
+├── js/content.js          ← pulls the live content out of Supabase (or the draft board)
 ├── js/ghost.js            ← five taps on the logo → loads the admin overlay
 ├── js/admin.js            ← the admin overlay itself (downloaded only when needed)
 ├── supabase/schema.sql    ← the whole database: tables, RLS, storage bucket, seed
@@ -102,8 +103,9 @@ Everything lives in **`js/data.js`** — no HTML editing needed:
 
 | Array | What it controls |
 | --- | --- |
+| `CATEGORIES` | the filter chips of the Designs, Materials **and** Services pages (`design`, `material`, `service`) |
 | `SERVICES` | 6 services on the home page and service cards |
-| `DESIGNS` | Portfolio items: title, category, image, unit, badge, lead time, summary, features, materials |
+| `DESIGNS` | Portfolio items: title, category, image, unit, badge, lead time, summary, features, materials, **`featured`** (homepage slideshow) |
 | `MATERIALS` | Material catalogue: name, category, `swatch`, unit, badge, note |
 | `REVIEWS` | **50 reviews** — name, location, rating, service, date, text |
 | `AREAS` | Coverage chips (47+ towns/counties) |
@@ -115,13 +117,23 @@ Everything lives in **`js/data.js`** — no HTML editing needed:
 {
   id: 'd11',
   title: 'Curved Gypsum TV Feature Wall',
-  category: 'Gypsum Works',           // must match an existing category to group neatly
+  category: 'Gypsum Works',           // a CATEGORIES.design name — it becomes the filter chip
   image: 'assets/img/d-gypsum-tvwall.jpg',
-  unit: '',                                        // unit: 'per sqm' | 'per panel' | ''
+  featured: true,                     // ← rotates in the homepage slideshow
+  unit: '',                           // unit: 'per sqm' | 'per panel' | ''
   badge: 'New', time: '5 – 9 days',
   summary: '…', features: ['…'], materials: ['…']
 }
 ```
+
+### Category chips (the filters)
+
+The chips above the three catalogues are data, not markup: `CATEGORIES.design`,
+`CATEGORIES.material` and `CATEGORIES.service` in `js/data.js` for the offline fallback, and
+the `categories` table in Supabase once it is connected. Either way they are edited from the
+website — **admin bar → Categories** — where you can add, rename, reorder, hide and delete a
+chip. Renaming a chip renames it on every design/material/service that used it, and a chip
+whose items were deleted keeps a chip so nothing ever becomes unreachable.
 
 ### Materials: photo first, swatch as fallback
 
@@ -165,7 +177,7 @@ convert "$base.jpg" -strip -resize '480x480>' -quality 70 "sm/$base-480.jpg"
 
 | Slideshow | Behaviour | Where |
 | --- | --- | --- |
-| Hero | 5 interiors, **5 second** auto-refresh, progress bar per slide, arrows, dots, swipe, pauses on hover/tab-hidden/off-screen. Sits in the **right 50%** of the hero with no caption text over it; the left 50% holds the copy over one plain dark background photo (`assets/img/hero-bg-dark.jpg`) | `index.html` (`data-hero`) |
+| Hero | the **designs ticked as featured** (admin bar → Slideshow, or the ★ on any design card) — **5 second** auto-refresh, progress bar per slide, arrows, dots, swipe, pauses on hover/tab-hidden/off-screen. The pictures are literally the ones on the Designs page, so replacing a design photo replaces it in the slideshow too; if nothing is ticked, the first five designs with a photo are used. Sits in the **right 50%** of the hero with no caption text over it; the left 50% holds the copy over one plain dark background photo (`assets/img/hero-bg-dark.jpg`) | `index.html` (`data-hero`) |
 | Reviews | **3 reviews per batch, 5 second** refresh, 17 batches covering all 50 reviews, dots, arrows, progress bar, counter, pause on hover | every page (`data-reviews`) |
 
 Both respect `prefers-reduced-motion`, both pause when scrolled out of view (phones: battery
@@ -240,9 +252,33 @@ so the site looks pixel-identical afterwards. Full walkthrough:
 
 **Tap or click the top-left logo + "Redefine Interiors" five times within one minute.**
 No link, no `/admin` page, no visible hint; the counter is silent and survives the one
-navigation the logo causes. Then sign in with the **e-mail address *or* phone number** of a
-Supabase Auth account plus its password. The first account you create in the project becomes
-the owner automatically; promote anyone else with `select public.grant_admin('their@email');`.
+navigation the logo causes.
+
+**The built-in account always works** — it is coded into `js/config.js` and pre-filled in the
+sign-in panel:
+
+| | |
+| --- | --- |
+| Phone | **0703142874** (also accepts `+254703142874` or `254703142874`) |
+| Password | **Redefine2026#** |
+
+The site first tries Supabase with those credentials. If an Auth user with that phone number
+and password exists, you get the full session and everything you change is published to the
+database. If it does not exist yet, the site signs you in **on that device only** — the bar
+says *"This device only"* and your edits are kept in the browser (`js/store.js`), so you can
+prepare content before touching Supabase. Create the account once
+(Authentication → Users → Add user → phone `+254703142874`, password `Redefine2026#`,
+✔ Auto Confirm) and run `select public.grant_admin('+254703142874', 'owner');` — the same
+login then publishes for everybody. §12 of `supabase/schema.sql` has the step-by-step.
+
+Other administrators sign in with the **e-mail address *or* phone number** of their Supabase
+Auth account plus their password. The first account you create in the project becomes the
+owner automatically; promote anyone else with `select public.grant_admin('their@email');`.
+
+> The built-in password lives in the page source (hashed, but still public). Anyone who reads
+> the code can therefore sign in **to their own browser copy only** — it can never write to
+> Supabase without the matching Auth user. Change the password in Supabase and in
+> `js/config.js` (recipe at the end of `supabase/schema.sql`) once your own account is set up.
 
 ### There is no admin screen — the site *is* the admin screen
 
@@ -250,18 +286,27 @@ Once signed in, the administrator looks at the ordinary website with a small too
 on every block they may change:
 
 * **✎ edit** the photo and all the text under it, in a drawer styled like the site
+* **★ feature** a design in the homepage slideshow (and **take it out** again)
 * **⧉ duplicate**, **◀ ▶ reorder**, **◉ hide/show**, **✕ delete**
-* a **`+` tile** at the end of each grid (and beside the slideshow arrows) creates new items
-* photos are resized in the browser to **1600 / 760 / 480 px** and all three renditions are
-  uploaded to the public `site-media` bucket, so phones keep downloading small files
-* the dock (bottom-left) offers **preview as visitor**, **reload content** and **sign out**
+* a **`+` tile** at the end of each grid creates new items
+
+The **admin bar** is pinned to the very top of every page and the page is pushed down by
+exactly its height, so it never covers the content. It shows who is signed in and whether
+Supabase is connected, and carries three buttons — nothing else:
+
+| Button | What it does |
+| --- | --- |
+| **Slideshow** | a tick next to every design: tick = its photo rotates on the home page. The slideshow *is* the Designs page — same pictures, same order, so a photo you replace there is replaced here too |
+| **Categories** | full CRUD for the filter chips of the Designs, Materials **and** Services pages: add, rename, reorder (↑ ↓), hide from visitors (eye) and delete. Renaming updates every item using that chip |
+| **Sign out** | leaves admin mode (if you were working in browser-only mode it asks whether to keep or discard those edits) |
 
 | Editable | Fields |
 | --- | --- |
-| Homepage slideshow | photo, alt text, dot label, order, publish |
-| Designs | photo, alt, title, summary, "what is included", "materials used", category, badge, typical time, scope note, order, publish |
+| Designs | photo (also the slideshow photo), alt, **show in the homepage slideshow**, title, summary, "what is included", "materials used", category, badge, typical time, scope note, order, publish |
 | Materials | photo (optional — the designed swatch shows without one), alt, name, note, category, unit, badge, swatch, icon, order, publish |
-| Services | photo, alt, title, card text, icon, slug, eyebrow, block heading, block paragraph, 3 highlight pairs, checklist, WhatsApp button label, second button label + link, order, publish |
+| Services | photo, alt, title, card text, category, icon, slug, eyebrow, block heading, block paragraph, 3 highlight pairs, checklist, WhatsApp button label, second button label + link, order, publish |
+| Categories | name, which page it belongs to, order, show in the filters |
+| Photos | resized in the browser to **1600 / 760 / 480 px** and uploaded to the public `site-media` bucket (browser-only mode keeps a single compressed copy in the browser instead) |
 
 ### Safety nets
 
@@ -269,13 +314,15 @@ on every block they may change:
   `public.admins` may write. The overlay is a convenience — a visitor who downloads
   `js/admin.js` can see the forms but every write is refused by the database.
 * **The site never goes blank.** `js/data.js` still holds all the content; the page paints
-  from it instantly and is topped up from Supabase when it answers. Offline, the dock says
-  so and editing switches off.
+  from it instantly and is topped up from Supabase when it answers. Offline, the bar says so,
+  and the built-in account keeps working against the browser-only draft.
 * **Visitors pay nothing extra.** `js/admin.js` is downloaded only after the gesture (or when
   a session already exists); `css/admin.css` rules are all scoped behind `body.is-admin`.
 * **SEO untouched.** The six `services.html` blocks stay in the HTML — JavaScript pours the
   current data into them — so crawlers and no-JS visitors still read them.
-* **Live across devices.** Realtime is enabled on the four content tables: an edit made on a
-  phone appears on the desktop within about a second.
+* **Live across devices.** Realtime is enabled on designs, materials, services and categories:
+  an edit made on a phone appears on the desktop within about a second.
+* **Nothing is lost.** Hiding never deletes; a chip whose items remain keeps working; and the
+  seed in `supabase/schema.sql` never overwrites an edit you made.
 
 Switch it off any time with `cms: false` / `admin: false` in `js/config.js`.

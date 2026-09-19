@@ -9,13 +9,16 @@
    actually needed, so visitors never pay for it:
      • the gesture completes            → load admin.js → show the sign-in
      • a Supabase session already exists → load admin.js → resume silently
+
+   The built-in account in js/config.js works even when supabase-js never
+   loaded, so the gesture is honoured as long as admin mode is switched on.
    ========================================================================== */
 (function () {
   'use strict';
 
   const cfg = window.SITE_CONFIG || {};
   const sb = window.SiteSupabase;
-  if (!cfg.admin || !sb) return;
+  if (!cfg.admin) return;
 
   const $ = (sel, ctx) => (ctx || document).querySelector(sel);
 
@@ -56,7 +59,7 @@
     try {
       const admin = await loadAdmin();
       if (!admin) return;
-      if (admin.isActive && admin.isActive()) admin.openDock();
+      if (admin.isActive && admin.isActive()) admin.openBar();
       else admin.openLogin();
     } catch (err) {
       if (window.console) console.warn('[redefine] admin overlay unavailable —', err.message);
@@ -102,6 +105,7 @@
 
   /* ------------------------------------------- already signed in? resume */
   async function resume() {
+    if (!sb) return;
     try {
       const { data } = await sb.auth.getSession();
       if (!data || !data.session) return;

@@ -28,6 +28,33 @@
     /* five taps/clicks on the top-left logo + name inside one minute */
     ghost: { taps: 5, windowMs: 60000 },
 
+    /* --- built-in administrator account ----------------------------------
+       These credentials ALWAYS open the admin bar, even before the Supabase
+       account exists and even when the database is unreachable. On the way in
+       the site still tries Supabase first: if an auth user with this phone
+       number (or the e-mail below) and this password exists, you get the full
+       cloud session and every change is published live. If it does not exist
+       yet, the site signs you in "on this device only" and stores your edits
+       in the browser (see js/store.js) until the Supabase account is created.
+
+       passwordHash = sha256('redefine-interiors::2026::' + password)
+       passwordB64  = the same password in base64, used only on browsers
+                      without crypto.subtle (plain http / very old engines).
+
+       To change the password:  node -e "console.log(require('crypto')
+         .createHash('sha256').update('redefine-interiors::2026::NEWPW')
+         .digest('hex'))"   … and paste the result below.                       */
+    defaultAdmin: {
+      phone: '0703142874',
+      phoneE164: '+254703142874',
+      email: '',                                   // optional: e-mail of the same account
+      fullName: 'Redefine administrator',
+      role: 'owner',
+      passwordHash: '1c342ffceb3d4d056981c1139a284b8ee6d9143b65ad7403fecc3e965b442579',
+      passwordB64: 'UmVkZWZpbmUyMDI2Iw==',
+      prefilled: true                              // show the credentials in the sign-in form
+    },
+
     /* --- uploads --------------------------------------------------------- */
     upload: {
       maxBytes: 8 * 1024 * 1024,   // must match the bucket's file_size_limit
