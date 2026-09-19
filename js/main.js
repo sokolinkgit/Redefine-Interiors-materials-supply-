@@ -73,17 +73,6 @@
     tiktok: SVG('<path d="M16 3c.4 2.2 1.9 3.8 4 4.1v3c-1.5 0-2.9-.5-4-1.3v5.7c0 3.3-2.4 5.8-5.6 5.8S4.9 18.4 4.9 15.2c0-3 2.3-5.5 5.3-5.7v3.1c-1.3.2-2.2 1.2-2.2 2.6 0 1.5 1.1 2.6 2.6 2.6s2.5-1.1 2.5-2.7V3z"/>', true)
   };
 
-  /* used for price-list rows that have no product photograph yet */
-  const CATEGORY_ICON = {
-    'Boards & Panels': 'box',
-    'Hardware & Fittings': 'wrench',
-    'Gypsum & Ceilings': 'layers',
-    'Aluminium': 'window',
-    'Tiles & Finishes': 'palette',
-    'Countertops': 'spark',
-    'Lighting': 'bulb'
-  };
-
   const SERVICE_ICON = {
     'kitchen-cabinets': 'cabinet',
     wardrobes: 'wardrobe',
@@ -115,7 +104,6 @@
       (o.cls ? ' class="' + o.cls + '"' : '') + '>';
   };
 
-  const money = (n) => 'KES ' + Number(n).toLocaleString('en-KE');
   const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   })[c]);
@@ -137,13 +125,13 @@
     general: 'Hello ' + BUSINESS.name + ' 👋\n\nI found you online and I would like to request a quotation.',
     design: (item) => 'Hello ' + BUSINESS.name + ' 👋\n\nI would like to request a quotation for this design:\n\n*' +
       item.title + '*\nCategory: ' + item.category +
-      '\nIndicative price: ' + money(item.price) + (item.unit ? ' ' + item.unit : ' (from)') +
+      (item.unit ? '\nScope: ' + item.unit : '') +
       '\n\nMy location: ______\nPreferred start date: ______\n\nPlease send me a detailed quotation. Thank you!',
     material: (item) => 'Hello ' + BUSINESS.name + ' 👋\n\nI would like to request a quotation for this material:\n\n*' +
-      item.name + '*\nPrice guide: ' + money(item.price) + ' ' + item.unit +
-      '\nQuantity needed: ______\n\nMy delivery location: ______\n\nPlease confirm availability and total cost. Thank you!',
+      item.name + '*\nUnit: ' + item.unit +
+      '\nQuantity needed: ______\n\nMy delivery location: ______\n\nPlease confirm availability and quote me. Thank you!',
     service: (s) => 'Hello ' + BUSINESS.name + ' 👋\n\nI would like a quotation for *' + s.title + '*.\n\n' +
-      'Approximate budget: from ' + money(s.from) + '\nMy location: ______\n\nPlease advise on the next step.'
+      'My location: ______\n\nPlease advise on the next step.'
   };
 
   const openWa = (message, number) => {
@@ -168,10 +156,10 @@
       '  </div>',
       '  <div class="drawer__body" data-quote-body></div>',
       '  <div class="drawer__foot">',
-      '    <div class="drawer__total"><span>Estimated total</span><strong data-quote-total>KES 0</strong></div>',
+      '    <div class="drawer__total"><span>Your list</span><strong data-quote-total>0 items</strong></div>',
       '    <button class="btn btn--wa btn--block" type="button" data-quote-send>' + ICONS.whatsapp + ' Request quotation on WhatsApp</button>',
       '    <button class="btn btn--light btn--block" type="button" data-quote-clear>Clear list</button>',
-      '    <p class="drawer__hint">Prices are indicative starting rates. Site inspection refines the final figure — free within Nairobi.</p>',
+      '    <p class="drawer__hint">We confirm availability and quote every line in writing — site inspection is free within Nairobi.</p>',
       '  </div>',
       '</aside>',
 
@@ -524,7 +512,7 @@
       '      <span>' + ICONS.ruler + 'Free site measurement</span>',
       '    </div>',
       '    <div class="card__price-row">',
-      '      <div class="card__price"><em>' + d.priceNote + ' price</em><strong>' + money(d.price) + '</strong> <small>' + (d.unit || 'complete installation') + '</small></div>',
+      '      <div class="card__price"><em>Quotation on request</em><strong>Made to measure</strong></div>',
       '      <div class="card__actions">',
       '        <button class="icon-btn" type="button" data-add="design" data-id="' + d.id + '" title="Add to quotation list" aria-label="Add ' + escapeHtml(d.title) + ' to quotation list">' + ICONS.cart + '</button>',
       '        <button class="btn btn--wa btn--sm" type="button" data-wa-quote="' + d.id + '">' + ICONS.whatsapp + 'Quotation</button>',
@@ -564,7 +552,7 @@
       '    <h3>' + escapeHtml(m.name) + '</h3>',
       '    <p class="card__note">' + escapeHtml(m.note) + '</p>',
       '    <div class="card__price-row">',
-      '      <div class="card__price"><em>Wholesale-friendly price</em><strong>' + money(m.price) + '</strong> <small>' + escapeHtml(m.unit) + '</small></div>',
+      '      <div class="card__price"><em>Quotation on request</em><strong>' + escapeHtml(m.unit) + '</strong></div>',
       '      <div class="card__actions">',
       '        <button class="icon-btn" type="button" data-add="material" data-id="' + m.id + '" title="Add to quotation list" aria-label="Add ' + escapeHtml(m.name) + ' to quotation list">' + ICONS.cart + '</button>',
       '        <button class="btn btn--wa btn--sm" type="button" data-wa-material="' + m.id + '">' + ICONS.whatsapp + 'Quotation</button>',
@@ -587,7 +575,7 @@
       '    <h3>' + escapeHtml(s.title) + '</h3>',
       '    <p>' + escapeHtml(s.text) + '</p>',
       '    <div class="service-card__foot">',
-      '      <span class="service-card__price">From <b>' + money(s.from) + '</b></span>',
+      '      <span class="service-card__price">Quotation on request</span>',
       '      <button class="btn btn--wa btn--sm" type="button" data-wa-service="' + s.slug + '">' + ICONS.whatsapp + 'Quote</button>',
       '    </div>',
       '  </div>',
@@ -613,25 +601,6 @@
       const limit = parseInt(grid.dataset.limit, 10);
       const list = limit ? MATERIALS.slice(0, limit) : MATERIALS;
       grid.innerHTML = list.map(materialCard).join('');
-    });
-
-    /* full price list table */
-    $$('[data-price-list]').forEach((tbody) => {
-      const rows = MATERIALS.map((m) => ({ name: m.name, unit: m.unit, price: m.price, category: m.category, image: m.image })).concat(PRICE_LIST);
-      rows.sort((a, b) => a.category.localeCompare(b.category) || a.price - b.price);
-      tbody.innerHTML = rows.map((r) => [
-        '<tr>',
-        '  <td class="price-table__photo">' + (r.image
-          ? '<img src="' + sized(r.image, 480) + '" alt="' + escapeHtml(r.name) + '" width="56" height="56" loading="lazy" decoding="async">'
-          : '<span class="price-table__icon" title="Photo on request" aria-hidden="true">' +
-            ICONS[CATEGORY_ICON[r.category] || 'box'] + '</span>') + '</td>',
-        '  <td>' + escapeHtml(r.name) + '</td>',
-        '  <td>' + escapeHtml(r.category) + '</td>',
-        '  <td>' + escapeHtml(r.unit) + '</td>',
-        '  <td><strong>' + money(r.price) + '</strong></td>',
-        '  <td><button class="btn btn--wa btn--sm" type="button" data-wa-inline="' + escapeHtml(r.name) + '|' + escapeHtml(r.unit) + '|' + r.price + '">' + ICONS.whatsapp + 'Quote</button></td>',
-        '</tr>'
-      ].join('')).join('');
     });
 
     /* service coverage areas */
@@ -668,7 +637,7 @@
           if (!empty) {
             empty = document.createElement('div');
             empty.className = 'empty-state';
-            empty.textContent = 'Nothing in this category yet — message us on WhatsApp and we will send options and prices.';
+            empty.textContent = 'Nothing in this category yet — message us on WhatsApp and we will send options.';
             $(targetSel).appendChild(empty);
           }
         } else if (empty) {
@@ -697,14 +666,6 @@
         if (s) openWa(MSG.service(s));
         return;
       }
-      const waInline = e.target.closest('[data-wa-inline]');
-      if (waInline) {
-        const parts = waInline.dataset.waInline.split('|');
-        openWa('Hello ' + BUSINESS.name + ' 👋\n\nI would like to request a quotation for:\n\n*' + parts[0] + '*\nPrice guide: ' + money(parts[2]) + ' ' + parts[1] +
-          '\n\nQuantity needed: ______\nDelivery location: ______\n\nPlease confirm availability and the total cost. Thank you!');
-        return;
-      }
-
       const add = e.target.closest('[data-add]');
       if (add) { addToQuote(add.dataset.add, add.dataset.id, add); return; }
 
@@ -744,7 +705,6 @@
       '<span class="eyebrow">' + escapeHtml(d.category) + '</span>',
       '<h3>' + escapeHtml(d.title) + '</h3>',
       '<p class="muted" style="font-size:.92rem">' + escapeHtml(d.summary) + '</p>',
-      '<div class="modal__price"><strong>' + money(d.price) + '</strong><span>' + d.priceNote + ' · ' + (d.unit || 'supplied &amp; installed') + '</span></div>',
       '<div class="chip-row">',
       '  <span class="chip">' + ICONS.clock + escapeHtml(d.time) + '</span>',
       '  <span class="chip">' + ICONS.shield + '1 year workmanship guarantee</span>',
@@ -758,7 +718,7 @@
       '  <button class="btn btn--wa" type="button" data-wa-quote="' + d.id + '">' + ICONS.whatsapp + 'Request quotation</button>',
       '  <button class="btn btn--light" type="button" data-add="design" data-id="' + d.id + '">' + ICONS.cart + 'Add to list</button>',
       '</div>',
-      '<p class="modal__note">Indicative pricing. Send your measurements or request a free site visit for an exact quotation — we serve all parts of Kenya.</p>'
+      '<p class="modal__note">Quotation on request. Send your measurements or request a free site visit for an exact written quotation — we serve all parts of Kenya.</p>'
     ].join('');
 
     modal.classList.add('is-open');
@@ -823,13 +783,6 @@
     renderQuote();
   }
 
-  function quoteTotal() {
-    return quote.reduce((sum, row) => {
-      const item = findItem(row.type, row.id);
-      return sum + (item ? item.price * row.qty : 0);
-    }, 0);
-  }
-
   function renderQuote() {
     const body = $('[data-quote-body]');
     const total = $('[data-quote-total]');
@@ -854,7 +807,6 @@
           '  <div class="quote-item__body">',
           '    <strong>' + escapeHtml(title) + '</strong>',
           '    <small>' + escapeHtml(item.category) + ' · ' + escapeHtml(unit) + '</small>',
-          '    <div class="quote-item__price">' + money(item.price * row.qty) + ' <em>(' + money(item.price) + ' × ' + row.qty + ')</em></div>',
           '  </div>',
           '  <div class="quote-item__side">',
           '    <button class="quote-item__remove" type="button" data-remove="' + row.type + ':' + row.id + '" aria-label="Remove ' + escapeHtml(title) + '">' + ICONS.trash + '</button>',
@@ -871,7 +823,7 @@
 
     const count = quote.reduce((n, r) => n + r.qty, 0);
     if (summary) summary.textContent = count ? count + ' item' + (count > 1 ? 's' : '') + ' selected' : 'No items yet';
-    if (total) total.textContent = money(quoteTotal());
+    if (total) total.textContent = count ? count + ' ' + (count > 1 ? 'items' : 'item') : '0 items';
 
     $$('[data-quote-count]').forEach((el) => {
       el.textContent = String(count);
@@ -890,13 +842,12 @@
       if (!item) return '';
       const title = item.title || item.name;
       const unit = item.unit || 'complete installation';
-      return (i + 1) + '. *' + title + '* — ' + money(item.price) + ' ' + unit + ' × ' + row.qty + ' = ' + money(item.price * row.qty);
+      return (i + 1) + '. *' + title + '* — ' + unit + ' × ' + row.qty;
     }).filter(Boolean);
 
     return 'Hello ' + BUSINESS.name + ' 👋\n\nI would like to request a quotation for the following:\n\n' +
       lines.join('\n') +
-      '\n\nEstimated total: ' + money(quoteTotal()) +
-      '\n\nMy name: ______\nMy location: ______\nPreferred start date: ______\n\nPlease confirm availability and the exact cost. Thank you!';
+      '\n\nMy name: ______\nMy location: ______\nPreferred start date: ______\n\nPlease confirm availability and the cost. Thank you!';
   }
 
   function openDrawer() {
