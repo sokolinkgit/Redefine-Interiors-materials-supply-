@@ -36,8 +36,14 @@ Cloudflare Pages, an Apache/Nginx box). Nothing needs compiling.
 .
 ├── index.html … contact.html
 ├── css/style.css          ← single stylesheet (design tokens at the top)
-├── js/data.js             ← ALL content: services, designs, materials, 50 reviews, areas, FAQs
+├── css/admin.css          ← the admin overlay only (invisible unless you are signed in)
+├── js/data.js             ← built-in content: slideshow, services, designs, materials, 50 reviews, areas, FAQs
 ├── js/main.js             ← slideshows, quotation list, filters, modal, forms, animations
+├── js/config.js           ← Supabase project URL + anon key + ghost-mode settings
+├── js/content.js          ← pulls the live content out of Supabase
+├── js/ghost.js            ← five taps on the logo → loads the admin overlay
+├── js/admin.js            ← the admin overlay itself (downloaded only when needed)
+├── supabase/schema.sql    ← the whole database: tables, RLS, storage bucket, seed
 ├── assets/img/            ← photography + logo (REDLOGO.png master, redlogo-512.png web cut) + favicon
 │   └── sm/                ← auto-generated 480px & 760px copies used by srcset on phones
 ├── robots.txt, sitemap.xml
@@ -87,6 +93,10 @@ plus the mobile action bar on phones, so the top of the page is never a duplicat
 ---
 
 ## 4. Editing content
+
+> **Prefer a dashboard?** Content can also be edited from the website itself — see
+> **§9 Supabase CMS & ghost-mode admin**. `js/data.js` then acts as the offline fallback
+> and the seed for the database, so both routes stay in step.
 
 Everything lives in **`js/data.js`** — no HTML editing needed:
 
@@ -213,3 +223,59 @@ gypsum TV feature wall, aluminium & glass office partition, and a minimart fit-o
 Modern evergreen browsers (Chrome, Edge, Safari, Firefox — desktop and mobile).
 Progressive enhancement: content (reviews text, contact details) is server-rendered
 HTML wherever it matters; carousels, filters and the quotation list hydrate with JavaScript.
+
+---
+
+## 9. Supabase CMS & ghost-mode admin
+
+The homepage slideshow and every photo + line of text on the **Designs**, **Materials** and
+**Services** pages can be edited from the website itself — no deploy, no code.
+
+**One file builds the whole database:** [`supabase/schema.sql`](supabase/schema.sql) →
+Supabase Studio → SQL Editor → paste → Run. It is idempotent, and it seeds today's content
+so the site looks pixel-identical afterwards. Full walkthrough:
+[`supabase/README.md`](supabase/README.md).
+
+### Signing in — ghost mode
+
+**Tap or click the top-left logo + "Redefine Interiors" five times within one minute.**
+No link, no `/admin` page, no visible hint; the counter is silent and survives the one
+navigation the logo causes. Then sign in with the **e-mail address *or* phone number** of a
+Supabase Auth account plus its password. The first account you create in the project becomes
+the owner automatically; promote anyone else with `select public.grant_admin('their@email');`.
+
+### There is no admin screen — the site *is* the admin screen
+
+Once signed in, the administrator looks at the ordinary website with a small toolbar floating
+on every block they may change:
+
+* **✎ edit** the photo and all the text under it, in a drawer styled like the site
+* **⧉ duplicate**, **◀ ▶ reorder**, **◉ hide/show**, **✕ delete**
+* a **`+` tile** at the end of each grid (and beside the slideshow arrows) creates new items
+* photos are resized in the browser to **1600 / 760 / 480 px** and all three renditions are
+  uploaded to the public `site-media` bucket, so phones keep downloading small files
+* the dock (bottom-left) offers **preview as visitor**, **reload content** and **sign out**
+
+| Editable | Fields |
+| --- | --- |
+| Homepage slideshow | photo, alt text, dot label, order, publish |
+| Designs | photo, alt, title, summary, "what is included", "materials used", category, badge, typical time, scope note, order, publish |
+| Materials | photo (optional — the designed swatch shows without one), alt, name, note, category, unit, badge, swatch, icon, order, publish |
+| Services | photo, alt, title, card text, icon, slug, eyebrow, block heading, block paragraph, 3 highlight pairs, checklist, WhatsApp button label, second button label + link, order, publish |
+
+### Safety nets
+
+* **Row Level Security** does the real work: everyone may read published rows, only
+  `public.admins` may write. The overlay is a convenience — a visitor who downloads
+  `js/admin.js` can see the forms but every write is refused by the database.
+* **The site never goes blank.** `js/data.js` still holds all the content; the page paints
+  from it instantly and is topped up from Supabase when it answers. Offline, the dock says
+  so and editing switches off.
+* **Visitors pay nothing extra.** `js/admin.js` is downloaded only after the gesture (or when
+  a session already exists); `css/admin.css` rules are all scoped behind `body.is-admin`.
+* **SEO untouched.** The six `services.html` blocks stay in the HTML — JavaScript pours the
+  current data into them — so crawlers and no-JS visitors still read them.
+* **Live across devices.** Realtime is enabled on the four content tables: an edit made on a
+  phone appears on the desktop within about a second.
+
+Switch it off any time with `cms: false` / `admin: false` in `js/config.js`.

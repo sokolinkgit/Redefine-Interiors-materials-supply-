@@ -1,0 +1,669 @@
+/* ==========================================================================
+   REDEFINE INTERIORS & MATERIALS SUPPLY — admin.css
+   --------------------------------------------------------------------------
+   Styles for the "ghost mode" admin overlay ONLY. Nothing in here is visible
+   to a visitor: every rule is scoped behind body.is-admin or the .admin-ui
+   shell that js/admin.js injects after a successful sign-in.
+   It reuses the site's design tokens (css/style.css §1) so the overlay feels
+   like part of the same brand.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- tokens */
+.admin-ui {
+  --admin-z-dock: 280;
+  --admin-z-scrim: 300;
+  --admin-z-drawer: 310;
+  --admin-z-login: 340;
+  --admin-z-confirm: 360;
+  --danger: #B23A2E;
+  --danger-soft: #FBEDEA;
+}
+
+/* keep the site's toasts above the overlay while editing */
+body.is-admin .toast-stack { z-index: 400; bottom: 96px; }
+body.admin-no-scroll { overflow: hidden; }
+
+/* a quiet gold dot on the logo: "you are editing" */
+body.is-admin .site-header .brand { position: relative; }
+body.is-admin .site-header .brand::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: -6px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 0 3px rgba(176, 133, 64, .22);
+}
+
+/* ==========================================================================
+   1. INLINE TOOLBARS — floating on the real cards
+   ========================================================================== */
+/* The toolbars hang off the block itself. .card, .service-card and .hero__slide
+   are already positioned by style.css — only the services.html blocks need help.
+   (A blanket rule here would flatten .hero__slide's position:absolute and break
+   the slideshow, so it is deliberately narrow.) */
+body.is-admin .service-block.admin-editable { position: relative; }
+
+.admin-tools {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 6px;
+  border-radius: 100px;
+  background: rgba(20, 17, 14, .82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 12px 28px -14px rgba(0, 0, 0, .7);
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity .28s var(--ease), transform .28s var(--ease);
+  pointer-events: none;
+}
+.admin-editable:hover > .admin-tools,
+.admin-editable:focus-within > .admin-tools,
+.admin-tools:hover,
+.admin-tools:focus-within { opacity: 1; transform: none; pointer-events: auto; }
+
+/* touch devices have no hover — always show the tools */
+@media (hover: none) {
+  .admin-tools { opacity: 1; transform: none; pointer-events: auto; }
+}
+
+.admin-tools__tag {
+  padding: 0 8px 0 4px;
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 900px) { .admin-tools__tag { display: none; } }
+
+.admin-tool {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(255, 255, 255, .08);
+  transition: background .2s var(--ease), color .2s var(--ease), transform .2s var(--ease);
+}
+.admin-tool svg { width: 15px; height: 15px; }
+.admin-tool:hover { background: var(--gold); color: #fff; transform: translateY(-1px); }
+.admin-tool.is-off { color: #FFD9A8; background: rgba(176, 133, 64, .35); }
+.admin-tool--danger:hover { background: var(--danger); }
+
+/* the slideshow toolbar only makes sense on the slide that is on screen */
+.hero__slide .admin-tools { top: 12px; right: 12px; }
+.hero__slide:not(.is-active) .admin-tools { display: none; }
+.hero__frame:hover .hero__slide.is-active .admin-tools { opacity: 1; transform: none; }
+
+/* service blocks: put the tools over the photo, not the text */
+.service-block > .admin-tools { top: clamp(2.2rem, 5vw, 4rem); right: 0; }
+.service-block .admin-tools { background: rgba(20, 17, 14, .9); }
+
+/* hidden (draft) items stay visible to the admin, clearly marked */
+body.is-admin .admin-hidden-item {
+  opacity: .55;
+  outline: 2px dashed rgba(176, 133, 64, .65);
+  outline-offset: -2px;
+}
+body.is-admin .admin-hidden-item:hover { opacity: .85; }
+body.is-admin-preview .admin-hidden-item { display: none !important; }
+
+/* ==========================================================================
+   2. "+" TILES — create something new, right where it will appear
+   ========================================================================== */
+.admin-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  min-height: 260px;
+  padding: 2rem 1.4rem;
+  border: 2px dashed rgba(176, 133, 64, .45);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, .5);
+  color: var(--muted);
+  text-align: center;
+  transition: border-color .3s var(--ease), background .3s var(--ease), transform .3s var(--ease), color .3s var(--ease);
+}
+.admin-add:hover {
+  border-color: var(--gold);
+  background: #fff;
+  color: var(--ink);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-m);
+}
+.admin-add svg { width: 26px; height: 26px; color: var(--gold); }
+.admin-add span {
+  font-family: var(--f-display);
+  font-size: 1.08rem;
+  color: var(--ink);
+}
+.admin-add small { font-size: .74rem; line-height: 1.5; max-width: 26ch; }
+.admin-add--wide { min-height: 0; padding: 1.6rem; margin-top: clamp(2.2rem, 5vw, 4rem); }
+
+/* the slideshow "+" sits with the prev/next arrows */
+.arrow-btn.admin-add-slide { border-color: var(--gold); color: var(--gold); }
+.arrow-btn.admin-add-slide svg { width: 15px; height: 15px; }
+.arrow-btn.admin-add-slide:hover { background: var(--gold); color: #fff; }
+
+/* ==========================================================================
+   3. DOCK — bottom left, opposite the WhatsApp / call buttons
+   ========================================================================== */
+.admin-dock {
+  position: fixed;
+  left: clamp(.75rem, 2vw, 1.5rem);
+  bottom: clamp(.75rem, 2vw, 1.5rem);
+  z-index: var(--admin-z-dock);
+  display: flex;
+  align-items: flex-end;
+  gap: .6rem;
+}
+.admin-dock__tab {
+  width: 46px;
+  height: 46px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--gold-soft);
+  box-shadow: var(--shadow-l);
+  transition: transform .3s var(--ease), background .3s var(--ease);
+}
+.admin-dock__tab svg { width: 20px; height: 20px; }
+.admin-dock__tab:hover { transform: translateY(-2px); background: var(--ink-2); }
+.admin-dock.is-open .admin-dock__tab { background: var(--gold); color: #fff; }
+
+.admin-dock__panel {
+  width: min(330px, calc(100vw - 5.5rem));
+  padding: 1rem 1.1rem 1.05rem;
+  border-radius: var(--radius);
+  background: var(--white);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-l);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px) scale(.97);
+  transform-origin: bottom left;
+  transition: opacity .3s var(--ease), transform .3s var(--ease-out), visibility .3s;
+}
+.admin-dock.is-open .admin-dock__panel { opacity: 1; visibility: visible; transform: none; }
+
+.admin-dock__who strong {
+  display: block;
+  font-family: var(--f-display);
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+.admin-dock__who small {
+  display: block;
+  font-size: .74rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 28ch;
+}
+.admin-dock__status {
+  margin: .55rem 0 .8rem;
+  padding: .5rem .65rem;
+  border-radius: var(--radius-sm);
+  background: var(--wa-light);
+  font-size: .74rem;
+  line-height: 1.5;
+  color: #14532D;
+}
+.admin-dock__status b { font-weight: 700; }
+.admin-dock__status--warn { background: #FDF3E3; color: #7A4B12; }
+.admin-dock__btns { display: grid; gap: .4rem; }
+.admin-dock__hint {
+  margin-top: .7rem;
+  font-size: .68rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* preview-as-visitor hides every editing affordance but keeps the dock */
+body.is-admin-preview .admin-tools,
+body.is-admin-preview .admin-add,
+body.is-admin-preview .admin-add-slide { display: none !important; }
+body.is-admin-preview .admin-editable { outline: none !important; }
+
+/* ==========================================================================
+   4. SHARED OVERLAY BITS
+   ========================================================================== */
+.admin-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: var(--admin-z-scrim);
+  background: rgba(12, 10, 8, .58);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .35s var(--ease), visibility .35s;
+}
+.admin-scrim.is-open { opacity: 1; visibility: visible; }
+
+.admin-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--gold-deep);
+}
+.admin-eyebrow svg { width: 13px; height: 13px; }
+
+.admin-x {
+  width: 38px;
+  height: 38px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--white);
+  transition: background .25s var(--ease), color .25s var(--ease), transform .25s var(--ease);
+}
+.admin-x svg { width: 16px; height: 16px; }
+.admin-x:hover { background: var(--ink); color: #fff; transform: rotate(90deg); }
+
+.admin-error {
+  margin: .7rem 0 0;
+  font-size: .8rem;
+  line-height: 1.5;
+  color: var(--danger);
+  min-height: 0;
+}
+.admin-error:empty { display: none; }
+.admin-error--foot { margin: 0; padding: 0 1.3rem; }
+.admin-error--foot:empty { padding: 0; }
+
+.btn--danger { --btn-bg: var(--danger); --btn-fg: #fff; --btn-bd: var(--danger); }
+.btn--danger:hover { --btn-bg: #93291F; --btn-bd: #93291F; }
+
+.admin-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .6rem .85rem;
+  border-radius: 100px;
+  border: 1px solid var(--line);
+  background: var(--cream);
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--ink);
+  transition: background .25s var(--ease), border-color .25s var(--ease), color .25s var(--ease);
+}
+.admin-chip svg { width: 15px; height: 15px; color: var(--gold-deep); }
+.admin-chip:hover { background: var(--ink); border-color: var(--ink); color: #fff; }
+.admin-chip:hover svg { color: var(--gold-soft); }
+.admin-chip--danger:hover { background: var(--danger); border-color: var(--danger); }
+.admin-chip--danger:hover svg { color: #fff; }
+
+.admin-icon-btn {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--muted);
+}
+.admin-icon-btn svg { width: 14px; height: 14px; }
+.admin-icon-btn:hover { background: var(--danger); border-color: var(--danger); color: #fff; }
+
+/* ==========================================================================
+   5. SIGN-IN PANEL (ghost mode)
+   ========================================================================== */
+.admin-login {
+  position: fixed;
+  inset: 0;
+  z-index: var(--admin-z-login);
+  display: grid;
+  place-items: center;
+  padding: 1.2rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .35s var(--ease), visibility .35s;
+}
+.admin-login.is-open { opacity: 1; visibility: visible; }
+
+.admin-login__panel {
+  position: relative;
+  width: min(430px, 100%);
+  padding: clamp(1.5rem, 4vw, 2.2rem);
+  border-radius: var(--radius-lg);
+  background: var(--cream);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-l);
+  transform: translateY(14px) scale(.98);
+  transition: transform .4s var(--ease-out);
+}
+.admin-login.is-open .admin-login__panel { transform: none; }
+.admin-login__panel .admin-x { position: absolute; top: 1rem; right: 1rem; }
+.admin-login__panel h3 {
+  font-family: var(--f-display);
+  font-size: clamp(1.5rem, 3.4vw, 1.95rem);
+  margin: .5rem 0 .45rem;
+}
+.admin-login__lead { font-size: .86rem; color: var(--muted); line-height: 1.6; }
+.admin-login__form { margin-top: 1.3rem; display: grid; gap: .95rem; }
+.admin-login__form .btn { margin-top: .25rem; }
+.admin-login__foot {
+  margin-top: 1.1rem;
+  padding-top: .9rem;
+  border-top: 1px solid var(--line);
+  font-size: .72rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.admin-pw { position: relative; display: block; }
+.admin-pw input { padding-right: 3rem !important; }
+.admin-pw__eye {
+  position: absolute;
+  top: 50%;
+  right: .5rem;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--muted);
+}
+.admin-pw__eye svg { width: 16px; height: 16px; }
+.admin-pw__eye:hover { background: var(--sand); color: var(--ink); }
+
+/* ==========================================================================
+   6. EDITOR DRAWER
+   ========================================================================== */
+.admin-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--admin-z-drawer);
+  width: min(520px, 100vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--cream);
+  border-left: 1px solid var(--line);
+  box-shadow: -30px 0 70px -40px rgba(20, 17, 14, .6);
+  transform: translateX(103%);
+  transition: transform .45s var(--ease-out);
+}
+.admin-drawer.is-open { transform: none; }
+
+.admin-drawer__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.3rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--white);
+}
+.admin-drawer__head h3 { font-family: var(--f-display); font-size: 1.3rem; margin-top: .2rem; }
+.admin-drawer__body { flex: 1; overflow-y: auto; padding: 1.2rem 1.3rem 1.4rem; }
+.admin-drawer__foot {
+  display: flex;
+  gap: .6rem;
+  padding: 1rem 1.3rem calc(1rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--line);
+  background: var(--white);
+}
+.admin-drawer__foot .btn { flex: 1; padding-inline: 1rem; }
+.admin-drawer__foot .btn--danger { flex: 0 0 auto; }
+.admin-drawer__foot .btn:disabled { opacity: .6; cursor: progress; transform: none; }
+
+/* ---- fieldsets ---------------------------------------------------------- */
+.admin-group {
+  margin: 0 0 1.5rem;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  padding-top: 1.1rem;
+}
+.admin-group:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
+.admin-group legend {
+  padding: 0;
+  margin-bottom: .9rem;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--gold-deep);
+}
+
+.admin-field { display: block; margin-bottom: 1rem; }
+.admin-field > label {
+  display: block;
+  margin-bottom: .35rem;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.admin-field > label em { color: var(--danger); font-style: normal; }
+.admin-field > small {
+  display: block;
+  margin-top: .35rem;
+  font-size: .72rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.admin-field input[type="text"],
+.admin-field input[type="number"],
+.admin-field input[type="url"],
+.admin-field select,
+.admin-field textarea {
+  width: 100%;
+  padding: .8rem .95rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--white);
+  font-size: .9rem;
+  font-family: inherit;
+  transition: border-color .25s var(--ease), box-shadow .25s var(--ease);
+}
+.admin-field textarea { resize: vertical; min-height: 92px; line-height: 1.6; }
+.admin-field input:focus,
+.admin-field select:focus,
+.admin-field textarea:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 4px rgba(176, 133, 64, .12);
+}
+.admin-field select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236E6257' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .9rem center;
+  background-size: 16px;
+  padding-right: 2.5rem;
+}
+
+/* ---- toggle ------------------------------------------------------------- */
+.admin-field--toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .8rem .95rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--white);
+}
+.admin-field--toggle b { display: block; font-size: .86rem; }
+.admin-field--toggle small { display: block; font-size: .72rem; color: var(--muted); line-height: 1.45; }
+.admin-switch { position: relative; flex: none; width: 46px; height: 26px; }
+.admin-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.admin-switch i {
+  position: absolute;
+  inset: 0;
+  border-radius: 100px;
+  background: var(--sand);
+  transition: background .25s var(--ease);
+}
+.admin-switch i::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(20, 17, 14, .3);
+  transition: transform .25s var(--ease-out);
+}
+.admin-switch input:checked + i { background: var(--wa); }
+.admin-switch input:checked + i::after { transform: translateX(20px); }
+.admin-switch input:focus-visible + i { outline: 2px solid var(--gold-deep); outline-offset: 3px; }
+
+/* ---- photo dropzone ----------------------------------------------------- */
+.admin-drop {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 176px;
+  border: 2px dashed rgba(176, 133, 64, .45);
+  border-radius: var(--radius);
+  background: var(--white);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color .25s var(--ease), background .25s var(--ease);
+}
+.admin-drop:hover, .admin-drop.is-over { border-color: var(--gold); background: #FFFCF6; }
+.admin-drop img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.admin-drop img.is-empty { display: none; }
+.admin-drop__cta {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  gap: .3rem;
+  padding: 1rem;
+  text-align: center;
+  color: var(--muted);
+}
+.admin-drop__cta svg { width: 22px; height: 22px; color: var(--gold); }
+.admin-drop__cta b { font-family: var(--f-display); font-size: 1rem; color: var(--ink); }
+.admin-drop__cta small { font-size: .72rem; line-height: 1.45; max-width: 30ch; }
+.admin-drop.has-photo .admin-drop__cta {
+  background: rgba(20, 17, 14, .72);
+  color: #fff;
+  border-radius: 100px;
+  padding: .5rem 1rem;
+  opacity: 0;
+  transition: opacity .25s var(--ease);
+}
+.admin-drop.has-photo .admin-drop__cta small { display: none; }
+.admin-drop.has-photo .admin-drop__cta b { color: #fff; font-family: var(--f-body); font-size: .8rem; }
+.admin-drop.has-photo .admin-drop__cta svg { display: none; }
+.admin-drop.has-photo:hover .admin-drop__cta { opacity: 1; }
+.admin-drop.is-busy { pointer-events: none; }
+.admin-drop.is-busy .admin-drop__cta { opacity: 0; }
+.admin-drop__busy {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: none;
+  place-items: center;
+  background: rgba(251, 248, 243, .9);
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--gold-deep);
+}
+.admin-drop.is-busy .admin-drop__busy { display: grid; }
+
+.admin-urlrow { display: flex; gap: .5rem; margin-top: .55rem; }
+.admin-urlrow input { flex: 1; min-width: 0; }
+.admin-urlrow .admin-chip { flex: none; }
+
+/* ---- highlight pairs ---------------------------------------------------- */
+.admin-pairs { display: grid; gap: .5rem; margin-bottom: .55rem; }
+.admin-pair { display: flex; gap: .45rem; align-items: center; }
+.admin-pair input { flex: 1; min-width: 0; }
+.admin-pairs:empty { display: none; }
+
+/* ==========================================================================
+   7. CONFIRM DIALOG
+   ========================================================================== */
+.admin-confirm {
+  position: fixed;
+  inset: 0;
+  z-index: var(--admin-z-confirm);
+  display: grid;
+  place-items: center;
+  padding: 1.2rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .3s var(--ease), visibility .3s;
+}
+.admin-confirm.is-open { opacity: 1; visibility: visible; }
+.admin-confirm__panel {
+  width: min(400px, 100%);
+  padding: clamp(1.4rem, 4vw, 1.9rem);
+  border-radius: var(--radius-lg);
+  background: var(--cream);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-l);
+  transform: translateY(12px) scale(.98);
+  transition: transform .35s var(--ease-out);
+}
+.admin-confirm.is-open .admin-confirm__panel { transform: none; }
+.admin-confirm__panel h3 { font-family: var(--f-display); font-size: 1.35rem; margin-bottom: .5rem; }
+.admin-confirm__panel p { font-size: .88rem; color: var(--muted); line-height: 1.6; }
+.admin-confirm__btns { display: flex; gap: .6rem; margin-top: 1.4rem; }
+.admin-confirm__btns .btn { flex: 1; }
+
+/* ==========================================================================
+   8. RESPONSIVE
+   ========================================================================== */
+@media (max-width: 700px) {
+  .admin-drawer { width: 100vw; }
+  .admin-dock { left: .6rem; bottom: .6rem; }
+  .admin-dock__panel { width: calc(100vw - 4.6rem); }
+  .admin-tools { top: 8px; right: 8px; padding: 4px 5px; gap: 3px; }
+  .admin-tool { width: 28px; height: 28px; }
+  .admin-tool svg { width: 14px; height: 14px; }
+  .admin-add { min-height: 200px; }
+  .service-block > .admin-tools { top: 1rem; }
+  body.is-admin .toast-stack { bottom: 84px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-tools, .admin-dock__panel, .admin-login__panel, .admin-confirm__panel, .admin-drawer {
+    transition-duration: .01ms;
+  }
+}
