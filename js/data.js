@@ -239,49 +239,163 @@ const MATERIALS = [
   }
 ];
 
-/* --------------------------------------------------------- SERVICES (6 CORE) */
+/* --------------------------------------------------------- SERVICES (6 CORE)
+   Each service carries two layers of copy:
+     text   → the short card used on the home page and in grids
+     body   → the long paragraph used by the service block on services.html
+   `eyebrow`, `meta`, `bullets`, `imageAlt`, `ctaLabel`, `linkLabel` and
+   `linkHref` drive the services.html block, so the whole page (image + every
+   line of text under it) can be edited from the admin overlay.              */
 const SERVICES = [
   {
     slug: 'kitchen-cabinets',
     title: 'Kitchen Cabinets',
-    icon: 'kitchen',
+    icon: 'cabinet',
     image: 'assets/img/d-kitchen-ushape.jpg',
-    text: 'Bespoke kitchens — carcasses, doors, worktops, sinks and appliance housing, built to your exact measurements.'
+    imageAlt: 'U-shaped kitchen with island, cream shaker cabinets and pendant lights built in Kenya',
+    text: 'Bespoke kitchens — carcasses, doors, worktops, sinks and appliance housing, built to your exact measurements.',
+    eyebrow: '01 · Kitchens',
+    blockTitle: 'Kitchen cabinets',
+    body: 'A kitchen is 70% cabinet and 30% layout. We get the layout right first — where the sink, cooker, fridge and prep space sit — then build carcasses in 18mm moisture-resistant board with soft-close hardware, worktops in quartz, granite or solid wood, and internals that actually fit your pots and pans.',
+    meta: [
+      { k: '18mm boards', v: 'Moisture-resistant' },
+      { k: 'Soft-close', v: 'Hinges & runners' },
+      { k: '2 – 4 weeks', v: 'Typical delivery' }
+    ],
+    bullets: [
+      'Melamine, acrylic gloss, veneer or shaker doors',
+      'Tall pantry, appliance and bin housing units',
+      'Quartz / granite worktops with sink & hob cut-outs',
+      'Soft-close hinges, quality runners, corner carousels'
+    ],
+    ctaLabel: 'Request kitchen quotation',
+    linkLabel: 'See kitchen designs',
+    linkHref: 'designs.html'
   },
   {
     slug: 'wardrobes',
     title: 'Wardrobes & Closets',
     icon: 'wardrobe',
     image: 'assets/img/d-wardrobe-sliding.jpg',
-    text: 'Sliding, hinged, walk-in and combined wardrobe-plus-desk units with fittings that last.'
+    imageAlt: 'Four door sliding wardrobe with mirror doors fitted in a Kenyan bedroom',
+    text: 'Sliding, hinged, walk-in and combined wardrobe-plus-desk units with fittings that last.',
+    eyebrow: '02 · Bedrooms',
+    blockTitle: 'Wardrobes & closets',
+    body: 'Sliding, hinged, walk-in or combined wardrobe-plus-desk units — designed around how you actually dress, with short-hang, long-hang, drawer, shoe and suitcase zones. Sliding doors save up to 900mm of floor space compared with hinged doors.',
+    meta: [
+      { k: 'Mirror doors', v: 'Full-length option' },
+      { k: 'Interior LED', v: 'On rails & shelves' },
+      { k: '7 – 14 days', v: 'Typical delivery' }
+    ],
+    bullets: [
+      'Full-length mirror and veneer door combinations',
+      'Interior LED lighting on rails and shelves',
+      'Drawers, jewellery trays, shoe racks & tie rails',
+      'Floor-to-ceiling units that close the dust gap'
+    ],
+    ctaLabel: 'Request wardrobe quotation',
+    linkLabel: 'See wardrobe designs',
+    linkHref: 'designs.html'
   },
   {
     slug: 'aluminium-works',
     title: 'Aluminium Works',
-    icon: 'aluminium',
+    icon: 'window',
     image: 'assets/img/hero-5-aluminum.jpg',
-    text: 'Windows, sliding doors, shop fronts, glass partitions, balustrades and burglar proofing.'
+    imageAlt: 'Aluminium sliding windows with security grilles installed in a Kenyan home',
+    text: 'Windows, sliding doors, shop fronts, gypsum partitions, balustrades and burglar proofing.',
+    eyebrow: '03 · Windows & partitions',
+    blockTitle: 'Aluminium works',
+    body: 'Windows, sliding doors, shop fronts, office partitions, glass balustrades, shower cubicles, mosquito mesh and burglar proofing. We fabricate in our workshop from measured site dimensions, so frames arrive square and fit the first time.',
+    meta: [
+      { k: 'Powder-coated', v: 'Black · bronze · silver' },
+      { k: '4 – 8mm glass', v: 'Single or double' },
+      { k: '5 – 10 days', v: 'Typical delivery' }
+    ],
+    bullets: [
+      'Powder-coated and anodised finishes: black, bronze, silver, charcoal',
+      '4mm – 8mm glass, single or double glazed',
+      'Sliding, casement, awning and fixed frames',
+      'Security grilles, mesh and quality locking gear'
+    ],
+    ctaLabel: 'Request aluminium quotation',
+    linkLabel: 'Aluminium profiles',
+    linkHref: 'materials.html'
   },
   {
     slug: 'gypsum-works',
     title: 'Gypsum Works',
-    icon: 'gypsum',
+    icon: 'layers',
     image: 'assets/img/hero-3-living-gypsum.jpg',
-    text: 'Ceilings, cove lighting, cornices, partitions, TV feature walls and decorative curves.'
+    imageAlt: 'Gypsum ceiling with concealed cove lighting installed in a Kenyan sitting room',
+    text: 'Ceilings, cove lighting, cornices, partitions, TV feature walls and decorative curves.',
+    eyebrow: '04 · Ceilings & walls',
+    blockTitle: 'Gypsum works',
+    body: 'Ceilings, cove lighting, cornices, shadow gaps, partitions, TV feature walls and decorative curves. Gypsum is the fastest way to make a room feel designed — and the jointing is where most fundis fail. Ours is taped, filled, sanded and primed until you cannot see a seam.',
+    meta: [
+      { k: 'Cove lighting', v: 'Concealed LED' },
+      { k: 'Crack-free', v: 'Taped & skimmed' },
+      { k: '3 – 9 days', v: 'Typical delivery' }
+    ],
+    bullets: [
+      'Concealed cove lighting and recessed spotlight layout',
+      'Curved and sculpted media walls with niches',
+      'Room partitions and dropped ceiling sections',
+      'Crack-resistant jointing, cornice and finishing'
+    ],
+    ctaLabel: 'Request gypsum quotation',
+    linkLabel: 'Gypsum boards & fittings',
+    linkHref: 'materials.html'
   },
   {
     slug: 'shop-renovation',
     title: 'Shop Renovation',
     icon: 'shop',
     image: 'assets/img/hero-4-shop.jpg',
-    text: 'Retail, salon, barbershop, clinic and office fit-outs — shelving, counters, lighting and branding surfaces.'
+    imageAlt: 'Boutique shop interior with fluted panels and display rails after renovation in Kenya',
+    text: 'Retail, salon, barbershop, clinic and office fit-outs — shelving, counters, lighting and branding surfaces.',
+    eyebrow: '05 · Commercial',
+    blockTitle: 'Shop renovation',
+    body: 'Boutiques, salons, barbershops, minimarts, pharmacies, clinics, restaurants and offices. We plan your customer flow — entrance, display zones, till point and storage — then build shelving, counters, ceilings, lighting, partitions and shop fronts. Night work available so you do not lose trading days.',
+    meta: [
+      { k: 'Turnkey', v: 'One team, one job' },
+      { k: 'Night work', v: 'Available' },
+      { k: '3 – 6 weeks', v: 'Typical delivery' }
+    ],
+    bullets: [
+      'Display shelving, rails, gondolas and counters',
+      'Fluted panels, signage surfaces and brand colours',
+      'Gypsum ceilings, aluminium shop fronts, glass partitions',
+      'Track, accent and feature lighting layout'
+    ],
+    ctaLabel: 'Request shop quotation',
+    linkLabel: 'Book a site survey',
+    linkHref: 'contact.html'
   },
   {
     slug: 'fittings',
     title: 'All Fittings Work',
-    icon: 'fittings',
+    icon: 'wrench',
     image: 'assets/img/hero-1-kitchen.jpg',
-    text: 'Doors, locks, handles, hinges, sinks, taps, sanitary ware, lighting and finishing — supplied and installed.'
+    imageAlt: 'Cabinet hardware, hinges and handles supplied by Redefine Interiors in Kenya',
+    text: 'Doors, locks, handles, hinges, sinks, taps, sanitary ware, lighting and finishing — supplied and installed.',
+    eyebrow: '06 · Finishing',
+    blockTitle: 'All fittings work',
+    body: 'The details that decide whether a space feels cheap or complete: doors, locks, handles, hinges, drawer runners, sinks, taps, showers, sanitary ware, mirrors, shelving and lighting — supplied and installed properly, the same week.',
+    meta: [
+      { k: 'Supply & fit', v: 'Same week' },
+      { k: 'Genuine brands', v: 'Only' },
+      { k: '1 – 5 days', v: 'Typical delivery' }
+    ],
+    bullets: [
+      'Door hanging, locksets, handles and closers',
+      'Sinks, taps, mixers, wastes and plumbing fittings',
+      'Bathroom vanities, mirrors, shower cubicles',
+      'Cabinet hardware upgrades (soft-close conversions)'
+    ],
+    ctaLabel: 'Request fittings quotation',
+    linkLabel: 'Hardware & fittings',
+    linkHref: 'materials.html'
   }
 ];
 
@@ -364,3 +478,51 @@ const FAQS = [
 /* --------------------------------------------------------- NAV / PAGE HELPERS */
 const DESIGN_CATEGORIES = ['All', 'Kitchen Cabinets', 'Wardrobes', 'Aluminium Works', 'Gypsum Works', 'Shop Renovation', 'Fittings'];
 const MATERIAL_CATEGORIES = ['All', 'Boards & Panels', 'Hardware & Fittings', 'Gypsum & Ceilings', 'Aluminium', 'Tiles & Finishes', 'Countertops', 'Lighting'];
+
+/* ------------------------------------------------- HOMEPAGE SLIDESHOW (HERO)
+   The five images that rotate in the home-page hero frame, in order.
+   `xs` / `sm` are the 480px and 760px cuts used by srcset on phones and
+   tablets; `label` is the short name used for the slideshow dots and in the
+   admin overlay. Editable from the admin overlay (ghost mode).              */
+const HERO_SLIDES = [
+  {
+    id: 'h01',
+    label: 'Kitchen cabinets',
+    image: 'assets/img/hero-1-kitchen.jpg',
+    xs: 'assets/img/sm/hero-1-kitchen-480.jpg',
+    sm: 'assets/img/sm/hero-1-kitchen-760.jpg',
+    alt: 'Kitchen cabinets — handleless walnut and matte white with a quartz island, installed in Kilimani, Nairobi'
+  },
+  {
+    id: 'h02',
+    label: 'Walk-in wardrobe',
+    image: 'assets/img/hero-2-wardrobe.jpg',
+    xs: 'assets/img/sm/hero-2-wardrobe-480.jpg',
+    sm: 'assets/img/sm/hero-2-wardrobe-760.jpg',
+    alt: 'Walk-in wardrobe with lit shelving fitted in Lavington, Nairobi'
+  },
+  {
+    id: 'h03',
+    label: 'Gypsum ceiling',
+    image: 'assets/img/hero-3-living-gypsum.jpg',
+    xs: 'assets/img/sm/hero-3-living-gypsum-480.jpg',
+    sm: 'assets/img/sm/hero-3-living-gypsum-760.jpg',
+    alt: 'Living room with gypsum ceiling and cove lighting completed in Milimani, Nakuru'
+  },
+  {
+    id: 'h04',
+    label: 'Shop renovation',
+    image: 'assets/img/hero-4-shop.jpg',
+    xs: 'assets/img/sm/hero-4-shop-480.jpg',
+    sm: 'assets/img/sm/hero-4-shop-760.jpg',
+    alt: 'Boutique shop interior with fluted panels and display rails, renovated in Thika'
+  },
+  {
+    id: 'h05',
+    label: 'Aluminium works',
+    image: 'assets/img/hero-5-aluminum.jpg',
+    xs: 'assets/img/sm/hero-5-aluminum-480.jpg',
+    sm: 'assets/img/sm/hero-5-aluminum-760.jpg',
+    alt: 'Aluminium sliding doors and glass balustrade installed in Naivasha'
+  }
+];

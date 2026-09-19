@@ -6,11 +6,16 @@
    A. Helpers, icons & WhatsApp links
    B. Site chrome (floating actions, quote drawer, toasts)
    C. Header, mobile nav & scroll UI
-   D. Hero slideshow (5 interiors, 5 second refresh)
+   D. Hero slideshow (data-driven, 5 second refresh)
    E. Review carousel (batches of 3, 5 second refresh)
-   F. Catalogue rendering, filters & detail modal
+   F. Catalogue rendering, filters, services.html blocks & detail modal
    G. Quotation list (localStorage)
    H. FAQ, forms, counters & reveal animations
+   I. Public API (window.Site) — the hooks js/content.js and js/admin.js use
+   --------------------------------------------------------------------------
+   Content comes from Supabase when it is reachable (js/content.js) and from
+   js/data.js when it is not; this file only ever renders whatever is in the
+   arrays, so the two are interchangeable.
    ========================================================================== */
 (function () {
   'use strict';
@@ -88,20 +93,55 @@
        assets/img/sm/<name>-760.jpg (tablet / retina phone)
        assets/img/sm/<name>-480.jpg (phone)
      Phones therefore never download a 130KB+ full-size photo.            */
+  const isLocalAsset = (src) => /^assets\/img\//.test(src || '');
   const FULL_WIDTH = (src) => {
     if (/^assets\/img\/d-/.test(src)) return 1200;
     if (/^assets\/img\/hero-/.test(src)) return 1376;
-    return 1240;
+    return isLocalAsset(src) ? 1240 : 1600;
   };
   const sized = (src, w) => src.replace(/^(.*\/)([^/]+)\.jpg$/, '$1' + 'sm/' + '$2-' + w + '.jpg');
 
+  /* Two flavours of photo live on this site:
+       • the shipped assets  → their 480/760 cuts already exist in assets/img/sm/
+       • Supabase uploads    → the three renditions uploaded with them (opts.xs/sm)
+     Anything else gets a single src, so a remote URL never produces a 404 srcset. */
   const responsiveImg = (src, alt, sizes, opts) => {
     const o = opts || {};
-    const widths = o.full ? [480, 760, FULL_WIDTH(src)] : [480, 760];
-    const set = widths.map((w) => (w === FULL_WIDTH(src) && o.full ? src : sized(src, w)) + ' ' + w + 'w').join(', ');
-    return '<img src="' + src + '" srcset="' + set + '" sizes="' + sizes + '" alt="' + escapeHtml(alt) + '"' +
-      ' loading="' + (o.eager ? 'eager' : 'lazy') + '" decoding="async"' +
+    if (!src) return '';
+    let set = '';
+    if (o.xs || o.sm) {
+      const parts = [];
+      if (o.xs) parts.push(o.xs + ' 480w');
+      if (o.sm) parts.push(o.sm + ' 760w');
+      parts.push(src + ' ' + FULL_WIDTH(src) + 'w');
+      set = parts.join(', ');
+    } else if (isLocalAsset(src)) {
+      const widths = o.full ? [480, 760, FULL_WIDTH(src)] : [480, 760];
+      set = widths.map((w) => (w === FULL_WIDTH(src) && o.full ? src : sized(src, w)) + ' ' + w + 'w').join(', ');
+    }
+    return '<img src="' + escapeHtml(src) + '"' +
+      (set ? ' srcset="' + set + '" sizes="' + sizes + '"' : '') +
+      ' alt="' + escapeHtml(alt || '') + '"' +
+      ' loading="' + (o.eager ? 'eager' : 'lazy') + '"' +
+      (o.priority ? ' fetchpriority="high"' : '') +
+      ' decoding="async"' +
       (o.cls ? ' class="' + o.cls + '"' : '') + '>';
+  };
+
+  /* srcset string for the design detail modal */
+  const srcsetFor = (item) => {
+    const src = item.image;
+    if (!src) return '';
+    if (item.image480 || item.image760) {
+      return [item.image480 ? item.image480 + ' 480w' : '',
+              item.image760 ? item.image760 + ' 760w' : '',
+              src + ' ' + FULL_WIDTH(src) + 'w'].filter(Boolean).join(', ');
+    }
+    if (isLocalAsset(src)) {
+      return [480, 760, FULL_WIDTH(src)]
+        .map((w) => (w === FULL_WIDTH(src) ? src : sized(src, w)) + ' ' + w + 'w').join(', ');
+    }
+    return '';
   };
 
   const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({
@@ -270,14 +310,53 @@
   }
 
   /* ======================================================================
-     D. HERO SLIDESHOW — 5 interiors, 5 second refresh (automated)
+     D. HERO SLIDESHOW — data-driven (Supabase hero_slides → HERO_SLIDES)
+        5 second refresh · dots · arrows · swipe · keyboard
      ====================================================================== */
+  const HERO_SIZES = '(max-width: 900px) 100vw, 46vw';
+
+  function heroSlideMarkup(s, i) {
+    const hidden = s.active === false;
+    return [
+      '<div class="hero__slide' + (i === 0 ? ' is-active' : '') + '"' +
+        ' data-cms="hero_slide" data-cms-id="' + escapeHtml(String(s.uuid || s.id || i)) + '"' +
+        (hidden ? ' data-cms-hidden="1"' : '') + '>',
+      '  <div class="hero__media">',
+      responsiveImg(s.image, s.alt || s.label || '', HERO_SIZES, {
+        xs: s.xs, sm: s.sm, eager: true, priority: i === 0, full: true
+      }),
+      '  </div>',
+      '</div>'
+    ].join('');
+  }
+
+  function heroDotMarkup(s, i) {
+    const label = s.label ? 'Show ' + String(s.label).toLowerCase() + ' project' : 'Show project ' + (i + 1);
+    return '<button class="hero__dot' + (i === 0 ? ' is-active' : '') + '" type="button" role="tab"' +
+      ' aria-selected="' + (i === 0 ? 'true' : 'false') + '" aria-label="' + escapeHtml(label) + '"></button>';
+  }
+
+  /* rebuilds the slideshow from HERO_SLIDES; returns false when the page has no hero */
+  function renderHeroSlides() {
+    const hero = $('[data-hero]');
+    if (!hero) return false;
+    if (typeof HERO_SLIDES === 'undefined' || !HERO_SLIDES || !HERO_SLIDES.length) return false;
+    const wrap = $('.hero__slides', hero);
+    const dots = $('.hero__dots', hero);
+    if (!wrap || !dots) return false;
+    wrap.innerHTML = HERO_SLIDES.map(heroSlideMarkup).join('');
+    dots.innerHTML = HERO_SLIDES.map(heroDotMarkup).join('');
+    return true;
+  }
+
+  let heroApi = null;
+
   function initHero() {
     const hero = $('[data-hero]');
     if (!hero) return;
 
-    const slides = $$('.hero__slide', hero);
-    const dots = $$('.hero__dot', hero);
+    let slides = [];
+    let dots = [];
     const count = $('[data-hero-count]', hero);
     const INTERVAL = 5000;
     let index = 0;
@@ -285,7 +364,11 @@
     let onScreen = true;
 
     const render = (i, resetProgress) => {
-      index = (i + slides.length) % slides.length;
+      if (!slides.length) {
+        if (count) count.innerHTML = '<b>00</b> / 00';
+        return;
+      }
+      index = ((i % slides.length) + slides.length) % slides.length;
       slides.forEach((s, n) => s.classList.toggle('is-active', n === index));
       dots.forEach((d, n) => {
         const active = n === index;
@@ -302,14 +385,34 @@
 
     const start = () => {
       stop();
-      if (!onScreen || document.hidden) return;   /* phones: never rotate off-screen */
+      if (!onScreen || document.hidden || slides.length < 2) return;   /* phones: never rotate off-screen */
       timer = setInterval(() => render(index + 1, true), INTERVAL);
     };
     const stop = () => { if (timer) clearInterval(timer); timer = null; };
 
     const goTo = (i) => { render(i, true); start(); };
 
-    dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
+    const collect = () => {
+      slides = $$('.hero__slide', hero);
+      dots = $$('.hero__dot', hero);
+      dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
+    };
+
+    /* the admin overlay calls this after every slideshow edit */
+    heroApi = {
+      refresh: () => {
+        const keep = index;
+        renderHeroSlides();
+        collect();
+        render(slides.length ? Math.min(keep, slides.length - 1) : 0, true);
+        start();
+      },
+      count: () => slides.length
+    };
+
+    renderHeroSlides();
+    collect();
+
     const prev = $('[data-hero-prev]', hero);
     const next = $('[data-hero-next]', hero);
     if (prev) prev.addEventListener('click', () => goTo(index - 1));
@@ -491,12 +594,19 @@
   /* ======================================================================
      F. CATALOGUE RENDERING, FILTERS & DETAIL MODAL
      ====================================================================== */
+  const CARD_SIZES = '(max-width: 760px) 46vw, (max-width: 1024px) 46vw, 380px';
+
+  /* marks every block the admin overlay may edit (invisible to visitors) */
+  const cmsAttrs = (kind, item) =>
+    ' data-cms="' + kind + '" data-cms-id="' + escapeHtml(String(item.uuid || item.id || item.slug || '')) + '"' +
+    (item.active === false ? ' data-cms-hidden="1"' : '');
+
   function designCard(d) {
+    const alt = d.imageAlt || (d.title + ' — ' + d.category + ' by Redefine Interiors');
     return [
-      '<article class="card reveal" data-cat="' + escapeHtml(d.category) + '">',
+      '<article class="card reveal' + (d.active === false ? ' is-draft' : '') + '" data-cat="' + escapeHtml(d.category) + '"' + cmsAttrs('design', d) + '>',
       '  <div class="card__media">',
-      '    ' + responsiveImg(d.image, d.title + ' — ' + d.category + ' by Redefine Interiors',
-        '(max-width: 760px) 46vw, (max-width: 1024px) 46vw, 380px'),
+      '    ' + responsiveImg(d.image, alt, CARD_SIZES, { xs: d.image480, sm: d.image760 }),
       '    <div class="card__badges">',
       (d.badge ? '      <span class="badge">' + escapeHtml(d.badge) + '</span>' : ''),
       '    </div>',
@@ -532,18 +642,18 @@
 
   function materialCard(m) {
     const badge = m.badge ? '<span class="badge badge--ink">' + escapeHtml(m.badge) + '</span>' : '';
+    const alt = m.imageAlt || (m.name + ' supplied by Redefine Interiors Kenya');
     const media = m.image
       ? '  <div class="card__media card__media--photo">' +
-        '    ' + responsiveImg(m.image, m.name + ' supplied by Redefine Interiors Kenya',
-          '(max-width: 760px) 46vw, (max-width: 1024px) 46vw, 380px') +
-        '    <span class="card__cat">' + ICONS[ m.icon || 'box' ] + escapeHtml(m.category) + '</span>' +
+        '    ' + responsiveImg(m.image, alt, CARD_SIZES, { xs: m.image480, sm: m.image760 }) +
+        '    <span class="card__cat">' + (ICONS[m.icon] || ICONS.box) + escapeHtml(m.category) + '</span>' +
         '  </div>'
       : '  <div class="card__media card__media--swatch">' +
         swatch(m.swatch, m.icon, m.category) +
         '  </div>';
 
     return [
-      '<article class="card card--material reveal" data-cat="' + escapeHtml(m.category) + '">',
+      '<article class="card card--material reveal' + (m.active === false ? ' is-draft' : '') + '" data-cat="' + escapeHtml(m.category) + '"' + cmsAttrs('material', m) + '>',
       media,
       '  <div class="card__badges card__badges--overlay">',
       (badge ? '    ' + badge : ''),
@@ -563,15 +673,21 @@
     ].join('');
   }
 
+  /* an editable icon beats a hard-coded one, but the slug map stays as a fallback */
+  const iconFor = (s) => (ICONS[s.icon] ? s.icon : (SERVICE_ICON[s.slug] || 'spark'));
+
   function serviceCard(s) {
+    const icon = ICONS[iconFor(s)] || ICONS.spark;
     const media = s.image
-      ? '<div class="service-card__media">' + responsiveImg(s.image, s.title + ' by Redefine Interiors — ' + s.text, '(max-width: 760px) 46vw, (max-width: 1024px) 46vw, 380px') + '<span class="service-card__cat">' + ICONS[SERVICE_ICON[s.slug]] + escapeHtml(s.title) + '</span></div>'
+      ? '<div class="service-card__media">' +
+          responsiveImg(s.image, s.imageAlt || (s.title + ' by Redefine Interiors — ' + s.text), CARD_SIZES, { xs: s.image480, sm: s.image760 }) +
+          '<span class="service-card__cat">' + icon + escapeHtml(s.title) + '</span></div>'
       : '';
     return [
-      '<article class="service-card reveal' + (s.image ? ' service-card--with-media' : '') + '">',
+      '<article class="service-card reveal' + (s.image ? ' service-card--with-media' : '') + (s.active === false ? ' is-draft' : '') + '"' + cmsAttrs('service', s) + '>',
       media,
       '  <div class="service-card__body">',
-      '    <span class="service-card__icon">' + ICONS[SERVICE_ICON[s.slug]] + '</span>',
+      '    <span class="service-card__icon">' + icon + '</span>',
       '    <h3>' + escapeHtml(s.title) + '</h3>',
       '    <p>' + escapeHtml(s.text) + '</p>',
       '    <div class="service-card__foot">',
@@ -583,24 +699,30 @@
     ].join('');
   }
 
-  function initCatalog() {
+  /* ---- which items a visitor may see ----------------------------------
+     Supabase already filters inactive rows out for signed-out visitors; this
+     keeps drafts off the page for a signed-in admin in "preview" mode too.   */
+  let showHidden = false;
+  const publishable = (list) => (showHidden ? (list || []).slice() : (list || []).filter((x) => x && x.active !== false));
+
+  function renderCatalog() {
     /* services */
     $$('[data-services]').forEach((wrap) => {
-      wrap.innerHTML = SERVICES.map(serviceCard).join('');
+      wrap.innerHTML = publishable(SERVICES).map(serviceCard).join('');
     });
 
     /* designs (optional data-limit to show a preview grid) */
     $$('[data-design-grid]').forEach((grid) => {
+      const list = publishable(DESIGNS);
       const limit = parseInt(grid.dataset.limit, 10);
-      const list = limit ? DESIGNS.slice(0, limit) : DESIGNS;
-      grid.innerHTML = list.map(designCard).join('');
+      grid.innerHTML = (limit ? list.slice(0, limit) : list).map(designCard).join('');
     });
 
     /* materials */
     $$('[data-material-grid]').forEach((grid) => {
+      const list = publishable(MATERIALS);
       const limit = parseInt(grid.dataset.limit, 10);
-      const list = limit ? MATERIALS.slice(0, limit) : MATERIALS;
-      grid.innerHTML = list.map(materialCard).join('');
+      grid.innerHTML = (limit ? list.slice(0, limit) : list).map(materialCard).join('');
     });
 
     /* service coverage areas */
@@ -608,41 +730,170 @@
       wrap.innerHTML = AREAS.map((a) => '<span>' + escapeHtml(a) + '</span>').join('');
     });
 
-    /* filters */
+    renderFilters();
+  }
+
+  /* ---- category filters: rebuilt after every render, choice remembered --- */
+  const filterMemory = new WeakMap();
+
+  function applyFilter(bar, cat) {
+    const targetSel = bar.dataset.filters;
+    const all = bar.dataset.allLabel || 'All';
+    const cards = $$(targetSel + ' > article');
+
+    $$('.filter', bar).forEach((b) => b.classList.toggle('is-active', b.dataset.filter === cat));
+    cards.forEach((c) => { c.style.display = (cat === all || c.dataset.cat === cat) ? '' : 'none'; });
+
+    const visible = cards.filter((c) => c.style.display !== 'none');
+    let empty = $('.empty-state', bar.parentElement);
+    if (!visible.length) {
+      if (!empty) {
+        empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = 'Nothing in this category yet — message us on WhatsApp and we will send options.';
+        const target = $(targetSel);
+        if (target) target.appendChild(empty);
+      }
+    } else if (empty) {
+      empty.remove();
+    }
+    filterMemory.set(bar, cat);
+  }
+
+  function renderFilters() {
     $$('[data-filters]').forEach((bar) => {
       const targetSel = bar.dataset.filters;
       const all = bar.dataset.allLabel || 'All';
       const cards = $$(targetSel + ' > article');
       const cats = [];
-      cards.forEach((c) => { if (!cats.includes(c.dataset.cat)) cats.push(c.dataset.cat); });
+      cards.forEach((c) => { if (c.dataset.cat && cats.indexOf(c.dataset.cat) === -1) cats.push(c.dataset.cat); });
 
-      bar.innerHTML = [all].concat(cats).map((cat, i) => {
+      const remembered = filterMemory.get(bar);
+      const active = remembered && (remembered === all || cats.indexOf(remembered) !== -1) ? remembered : all;
+
+      bar.innerHTML = [all].concat(cats).map((cat) => {
         const n = cat === all ? cards.length : cards.filter((c) => c.dataset.cat === cat).length;
-        return '<button class="filter' + (i === 0 ? ' is-active' : '') + '" type="button" data-filter="' + cat + '">' +
+        return '<button class="filter" type="button" data-filter="' + escapeHtml(cat) + '">' +
           escapeHtml(cat) + '<span class="filter__count">' + n + '</span></button>';
       }).join('');
 
+      applyFilter(bar, active);
+    });
+  }
+
+  /* ---- services.html: the six long blocks -------------------------------
+     The blocks stay in the HTML — search engines and no-JS visitors still read
+     them — we only pour the current data into them. A service created in the
+     admin overlay that has no block yet gets one appended from the template. */
+  function serviceBlockMarkup(s) {
+    return [
+      '<article class="service-block' + (s.active === false ? ' is-draft' : '') + '" id="' + escapeHtml(s.slug) + '"' +
+        ' data-service-block="' + escapeHtml(s.slug) + '"' + cmsAttrs('service', s) + '>',
+      '  <div class="service-block__media reveal">',
+      '    ' + responsiveImg(s.image, s.imageAlt || s.title, '(max-width: 1024px) 92vw, 46vw', { xs: s.image480, sm: s.image760 }),
+      '  </div>',
+      '  <div class="reveal">',
+      '    <span class="eyebrow">' + escapeHtml(s.eyebrow || '') + '</span>',
+      '    <h2 class="display-m">' + escapeHtml(s.blockTitle || s.title) + '</h2>',
+      '    <p class="lead" style="margin-top:.9rem">' + escapeHtml(s.body || s.text || '') + '</p>',
+      '    <div class="service-block__meta">' + (s.meta || []).map((m) =>
+            '<div><strong>' + escapeHtml(m.k || '') + '</strong><span>' + escapeHtml(m.v || '') + '</span></div>').join('') + '</div>',
+      '    <ul class="checklist">' + (s.bullets || []).map((b) =>
+            '<li><span class="i" data-icon="checkCircle"></span> ' + escapeHtml(b) + '</li>').join('') + '</ul>',
+      '    <div class="service-block__actions">',
+      '      <button class="btn btn--wa" type="button" data-wa-service="' + escapeHtml(s.slug) + '">' + ICONS.whatsapp + ' ' +
+             escapeHtml(s.ctaLabel || ('Request ' + s.title + ' quotation')) + '</button>',
+      (s.linkLabel ? '      <a class="btn btn--light" href="' + escapeHtml(s.linkHref || 'contact.html') + '">' + escapeHtml(s.linkLabel) + '</a>' : ''),
+      '    </div>',
+      '  </div>',
+      '</article>'
+    ].join('');
+  }
+
+  function hydrateServiceBlock(block, s) {
+    block.dataset.serviceBlock = s.slug;
+    block.dataset.cms = 'service';
+    block.dataset.cmsId = String(s.uuid || s.slug);
+    if (s.active === false) block.dataset.cmsHidden = '1'; else delete block.dataset.cmsHidden;
+    block.classList.toggle('is-draft', s.active === false);
+
+    const img = $('.service-block__media img', block);
+    if (img && s.image) {
+      img.src = s.image;
+      img.alt = s.imageAlt || img.alt || s.title;
+      const set = srcsetFor(s);
+      if (set) img.setAttribute('srcset', set); else img.removeAttribute('srcset');
+      const media = $('.service-block__media', block);
+      if (media) media.style.display = '';
+    } else if (!s.image) {
+      const media = $('.service-block__media', block);
+      if (media) media.style.display = 'none';
+    }
+
+    const eyebrow = $('.eyebrow', block);
+    if (eyebrow) eyebrow.textContent = s.eyebrow || '';
+    const h2 = $('h2', block);
+    if (h2) h2.textContent = s.blockTitle || s.title;
+    const lead = $('p.lead', block);
+    if (lead) lead.textContent = s.body || s.text || '';
+
+    const meta = $('.service-block__meta', block);
+    if (meta) {
+      meta.innerHTML = (s.meta || []).map((m) =>
+        '<div><strong>' + escapeHtml(m.k || '') + '</strong><span>' + escapeHtml(m.v || '') + '</span></div>').join('');
+      meta.style.display = (s.meta && s.meta.length) ? '' : 'none';
+    }
+    const list = $('ul.checklist', block);
+    if (list) {
+      list.innerHTML = (s.bullets || []).map((b) =>
+        '<li><span class="i" data-icon="checkCircle"></span> ' + escapeHtml(b) + '</li>').join('');
+    }
+    const cta = $('[data-wa-service]', block);
+    if (cta) cta.innerHTML = ICONS.whatsapp + ' ' + escapeHtml(s.ctaLabel || ('Request ' + s.title + ' quotation'));
+    const link = $('.service-block__actions a', block);
+    if (link) {
+      if (s.linkLabel) { link.textContent = s.linkLabel; link.style.display = ''; } else { link.style.display = 'none'; }
+      if (s.linkHref) link.href = s.linkHref;
+    }
+  }
+
+  function hydrateServiceBlocks() {
+    const wrap = $('[data-service-blocks]');
+    if (!wrap) return;
+    const list = publishable(SERVICES);
+    const seen = [];
+
+    list.forEach((s) => {
+      let block = $('[data-service-block="' + s.slug + '"]', wrap);
+      if (!block) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = serviceBlockMarkup(s);
+        block = tmp.firstElementChild;
+        wrap.appendChild(block);
+      } else {
+        hydrateServiceBlock(block, s);
+      }
+      seen.push(s.slug);
+    });
+
+    /* deleted or hidden services: keep the markup for crawlers, hide it on screen */
+    $$('[data-service-block]', wrap).forEach((b) => {
+      b.style.display = seen.indexOf(b.dataset.serviceBlock) === -1 ? 'none' : '';
+    });
+
+    hydrateIcons();
+  }
+
+  function initCatalog() {
+    renderCatalog();
+    hydrateServiceBlocks();
+
+    /* filter clicks (delegated once per bar) */
+    $$('[data-filters]').forEach((bar) => {
       bar.addEventListener('click', (e) => {
         const btn = e.target.closest('[data-filter]');
         if (!btn) return;
-        const cat = btn.dataset.filter;
-        $$('.filter', bar).forEach((b) => b.classList.toggle('is-active', b === btn));
-        cards.forEach((c) => {
-          const show = cat === all || c.dataset.cat === cat;
-          c.style.display = show ? '' : 'none';
-        });
-        const visible = cards.filter((c) => c.style.display !== 'none');
-        let empty = $('.empty-state', bar.parentElement);
-        if (!visible.length) {
-          if (!empty) {
-            empty = document.createElement('div');
-            empty.className = 'empty-state';
-            empty.textContent = 'Nothing in this category yet — message us on WhatsApp and we will send options.';
-            $(targetSel).appendChild(empty);
-          }
-        } else if (empty) {
-          empty.remove();
-        }
+        applyFilter(bar, btn.dataset.filter);
       });
     });
 
@@ -662,7 +913,7 @@
       }
       const waService = e.target.closest('[data-wa-service]');
       if (waService) {
-        const s = SERVICES.find((x) => x.slug === waService.dataset.waService);
+        const s = SERVICES.find((x) => x.slug === waService.dataset.waService || x.id === waService.dataset.waService);
         if (s) openWa(MSG.service(s));
         return;
       }
@@ -697,10 +948,10 @@
 
     const modalImg = $('[data-modal-img]', modal);
     modalImg.src = d.image;
-    modalImg.srcset = [480, 760, FULL_WIDTH(d.image)]
-      .map((w) => (w === FULL_WIDTH(d.image) ? d.image : sized(d.image, w)) + ' ' + w + 'w').join(', ');
+    const set = srcsetFor(d);
+    if (set) modalImg.setAttribute('srcset', set); else modalImg.removeAttribute('srcset');
     modalImg.sizes = '(max-width: 900px) 92vw, 620px';
-    modalImg.alt = d.title + ' — ' + d.category;
+    modalImg.alt = d.imageAlt || (d.title + ' — ' + d.category);
     $('[data-modal-body]', modal).innerHTML = [
       '<span class="eyebrow">' + escapeHtml(d.category) + '</span>',
       '<h3>' + escapeHtml(d.title) + '</h3>',
@@ -1031,14 +1282,15 @@
     nums.forEach((n) => io.observe(n));
   }
 
+  let revealIO = null;
+
   function initReveal() {
     const els = $$('.reveal');
-    if (!els.length) return;
     if (!('IntersectionObserver' in window)) {
       els.forEach((el) => el.classList.add('is-in'));
       return;
     }
-    const io = new IntersectionObserver((entries, obs) => {
+    revealIO = new IntersectionObserver((entries, obs) => {
       entries.forEach((entry) => {
         if (!entry.isIntersecting) return;
         const siblings = Array.prototype.slice.call(entry.target.parentElement.children);
@@ -1046,9 +1298,21 @@
         entry.target.style.setProperty('--d', Math.min(i, 6) * 70 + 'ms');
         entry.target.classList.add('is-in');
         obs.unobserve(entry.target);
+        entry.target.__revealWatched = false;
       });
     }, { threshold: .12, rootMargin: '0px 0px -40px 0px' });
-    els.forEach((el) => io.observe(el));
+    revealScan();
+  }
+
+  /* also watches nodes injected later (Supabase content, admin edits) */
+  function revealScan(root) {
+    const nodes = $$('.reveal', root || document);
+    if (!revealIO) { nodes.forEach((el) => el.classList.add('is-in')); return; }
+    nodes.forEach((el) => {
+      if (el.__revealWatched) return;
+      el.__revealWatched = true;
+      revealIO.observe(el);
+    });
   }
 
   /* re-run reveal for content injected later (grids, reviews) */
@@ -1059,6 +1323,25 @@
   /* ======================================================================
      BOOT
      ====================================================================== */
+  /* ======================================================================
+     I. PUBLIC API — used by js/content.js (Supabase) and js/admin.js (ghost
+        mode). The page renders instantly from js/data.js and is then topped
+        up with whatever the database says, so a slow or offline connection
+        never leaves the site blank.
+     ====================================================================== */
+  let booted = false;
+  let pendingRefresh = false;
+
+  function refresh() {
+    if (!booted) { pendingRefresh = true; return; }
+    renderCatalog();
+    hydrateServiceBlocks();
+    if (heroApi) heroApi.refresh(); else renderHeroSlides();
+    hydrateIcons();
+    revealScan();
+    document.dispatchEvent(new CustomEvent('site:rendered'));
+  }
+
   function boot() {
     hydrateIcons();
     buildChrome();
@@ -1074,6 +1357,27 @@
     initReveal();
     revealObserverFor($$('.drawer, .modal'));
     document.body.classList.add('is-ready');
+
+    booted = true;
+    window.Site = {
+      icons: ICONS,
+      escapeHtml: escapeHtml,
+      responsiveImg: responsiveImg,
+      toast: toast,
+      refresh: refresh,
+      renderCatalog: renderCatalog,
+      renderHeroSlides: renderHeroSlides,
+      hydrateServiceBlocks: hydrateServiceBlocks,
+      setShowHidden: (v) => { showHidden = !!v; refresh(); },
+      lists: {
+        hero: () => (typeof HERO_SLIDES !== 'undefined' ? HERO_SLIDES : []),
+        designs: () => (typeof DESIGNS !== 'undefined' ? DESIGNS : []),
+        materials: () => (typeof MATERIALS !== 'undefined' ? MATERIALS : []),
+        services: () => (typeof SERVICES !== 'undefined' ? SERVICES : [])
+      }
+    };
+    document.dispatchEvent(new CustomEvent('site:ready'));
+    if (pendingRefresh) { pendingRefresh = false; refresh(); }
   }
 
   if (document.readyState === 'loading') {
