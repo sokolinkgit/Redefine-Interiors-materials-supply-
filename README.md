@@ -26,10 +26,10 @@ Cloudflare Pages, an Apache/Nginx box). Nothing needs compiling.
 | File | Purpose |
 | --- | --- |
 | `index.html` | Home — 50/50 hero (copy left, slideshow right), services, featured designs, featured materials, stats, process, 50-review slideshow (3 per batch, 5s), FAQ, quotation form |
-| `designs.html` | Full design portfolio with category filters, prices and a "view details" modal |
-| `materials.html` | Material catalogue with product photos, full price-list table (with thumbnails), delivery & coverage |
+| `designs.html` | Full design portfolio with category filters and a "view details" modal |
+| `materials.html` | Material catalogue with product photos, delivery & coverage |
 | `services.html` | The six services in detail (kitchens, wardrobes, aluminium, gypsum, shop renovation, fittings) |
-| `about.html` | Story, values, quality standards, coverage, reviews |
+| `about.html` | Values, quality standards, coverage, reviews (logo shown on the right of the page hero) |
 | `contact.html` | Contact cards, quotation form, what-happens-next, coverage, FAQ |
 
 ```
@@ -48,14 +48,13 @@ Cloudflare Pages, an Apache/Nginx box). Nothing needs compiling.
 
 ## 3. WhatsApp quotation system (the core feature)
 
-Every design, material, price-list row and service block has its own **WhatsApp button**.
+Every design, material and service block has its own **WhatsApp button**.
 Pressing one opens `wa.me` with a message that is already written for that exact item:
 
 > Hello Redefine Interiors & Materials Supply 👋
 > I would like to request a quotation for this design:
 > **Modern L-Shaped Kitchen Cabinets**
 > Category: Kitchen Cabinets
-> Indicative price: KES 185,000 (from)
 > My location: ______ …
 
 **Quotation list (trolley icon).** Visitors can add several designs/materials to a list
@@ -94,9 +93,8 @@ Everything lives in **`js/data.js`** — no HTML editing needed:
 | Array | What it controls |
 | --- | --- |
 | `SERVICES` | 6 services on the home page and service cards |
-| `DESIGNS` | Portfolio items: title, category, image, price, "from" note, unit, badge, lead time, summary, features, materials |
-| `MATERIALS` | Material catalogue: name, category, `swatch`, price, unit, badge, note |
-| `PRICE_LIST` | Extra rows in the materials price table |
+| `DESIGNS` | Portfolio items: title, category, image, unit, badge, lead time, summary, features, materials |
+| `MATERIALS` | Material catalogue: name, category, `swatch`, unit, badge, note |
 | `REVIEWS` | **50 reviews** — name, location, rating, service, date, text |
 | `AREAS` | Coverage chips (47+ towns/counties) |
 | `FAQS` | Reference copy of the FAQ answers (the visible FAQs are in the HTML for SEO) |
@@ -109,7 +107,7 @@ Everything lives in **`js/data.js`** — no HTML editing needed:
   title: 'Curved Gypsum TV Feature Wall',
   category: 'Gypsum Works',           // must match an existing category to group neatly
   image: 'assets/img/d-gypsum-tvwall.jpg',
-  price: 62000, priceNote: 'from', unit: '',      // unit: 'per sqm' | 'per panel' | ''
+  unit: '',                                        // unit: 'per sqm' | 'per panel' | ''
   badge: 'New', time: '5 – 9 days',
   summary: '…', features: ['…'], materials: ['…']
 }
@@ -118,8 +116,8 @@ Everything lives in **`js/data.js`** — no HTML editing needed:
 ### Materials: photo first, swatch as fallback
 
 Every material now carries an `image` pointing at a real product photograph in
-`assets/img/` — the home-page preview, the materials catalogue and the price-list
-thumbnail column all render it via `responsiveImg()`:
+`assets/img/` — the home-page preview and the materials catalogue
+both render it via `responsiveImg()`:
 
 ```js
 {
@@ -128,7 +126,7 @@ thumbnail column all render it via `responsiveImg()`:
   name: 'LED Spotlight & Cove Strip Pack',
   category: 'Lighting',
   swatch: 'led', icon: 'bulb',                // kept as the graceful fallback
-  price: 3400, unit: 'per pack', badge: 'Warm / cool', note: '…'
+  unit: 'per pack', badge: 'Warm / cool', note: '…'
 }
 ```
 
@@ -177,7 +175,7 @@ legibility scrim, large dots/arrows and a visible slide counter.
 * **Phone refinements** (section 20 of the stylesheet — most traffic is mobile):
   16px form fields so iOS never zooms on focus, 44–48px tap targets, `env(safe-area-inset-*)`
   spacing for notched iPhones, filter chips that scroll sideways instead of stacking,
-  bottom-sheet modal, horizontally scrolling price table, sticky-hover effects removed on
+  bottom-sheet modal, sticky-hover effects removed on
   touch devices, and no tap highlight flash
 * **Logo** — the gold house-and-check mark of `REDLOGO.png` (master artwork). The site renders
   `redlogo-512.png`, a transparent-background 512px web cut of it, in the header/footer brand slot
@@ -213,5 +211,5 @@ gypsum TV feature wall, aluminium & glass office partition, and a minimart fit-o
 ## 8. Browser support
 
 Modern evergreen browsers (Chrome, Edge, Safari, Firefox — desktop and mobile).
-Progressive enhancement: content (prices, reviews text, contact details) is server-rendered
+Progressive enhancement: content (reviews text, contact details) is server-rendered
 HTML wherever it matters; carousels, filters and the quotation list hydrate with JavaScript.

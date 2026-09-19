@@ -1,6 +1,7 @@
 /* ==========================================================================
    REDEFINE INTERIORS & MATERIALS SUPPLY — CONTENT DATA
-   Pure data layer. All prices are indicative "from" rates in Kenya Shillings.
+   Pure data layer. No prices are published on the site — clients receive a
+   written quotation after a site visit.
    ========================================================================== */
 
 const BUSINESS = {
@@ -25,8 +26,6 @@ const DESIGNS = [
     title: 'Modern L-Shaped Kitchen Cabinets',
     category: 'Kitchen Cabinets',
     image: 'assets/img/d-kitchen-lshape.jpg',
-    price: 185000,
-    priceNote: 'from',
     badge: 'Best seller',
     time: '2 – 3 weeks',
     summary: 'Matte graphite cabinets with a warm walnut worktop, soft-close everything and a fully fitted corner unit that uses every centimetre of your kitchen.',
@@ -38,8 +37,6 @@ const DESIGNS = [
     title: 'White Gloss Kitchen & Breakfast Bar',
     category: 'Kitchen Cabinets',
     image: 'assets/img/d-kitchen-white-gloss.jpg',
-    price: 235000,
-    priceNote: 'from',
     badge: 'Showroom finish',
     time: '3 weeks',
     summary: 'Handleless high-gloss doors, charcoal quartz tops and a slim breakfast bar — a bright, easy-clean kitchen that suits modern Nairobi apartments.',
@@ -51,8 +48,6 @@ const DESIGNS = [
     title: 'U-Shaped Family Kitchen + Pantry',
     category: 'Kitchen Cabinets',
     image: 'assets/img/d-kitchen-ushape.jpg',
-    price: 320000,
-    priceNote: 'from',
     badge: '',
     time: '3 – 4 weeks',
     summary: 'A full family kitchen with a tall pantry, double oven housing and a generous island — designed for large households and serious cooking.',
@@ -64,9 +59,7 @@ const DESIGNS = [
     title: '4-Door Sliding Mirror Wardrobe',
     category: 'Wardrobes',
     image: 'assets/img/d-wardrobe-sliding.jpg',
-    price: 96000,
-    priceNote: 'from',
-    badge: 'Best value',
+    badge: 'Popular',
     time: '7 – 10 days',
     summary: 'Two mirror doors, two veneer doors and internal fittings that actually make sense — hanging rails, shelves, shoe rack and a lockable drawer.',
     features: ['Soft-close sliding system', 'Full-length mirror doors', 'Interior LED downlighting', 'Drawers, shelves & shoe rack'],
@@ -77,8 +70,6 @@ const DESIGNS = [
     title: 'Luxury Walk-In Closet',
     category: 'Wardrobes',
     image: 'assets/img/d-walkin-closet.jpg',
-    price: 210000,
-    priceNote: 'from',
     badge: 'Premium',
     time: '3 weeks',
     summary: 'A boutique-style walk-in with lit hanging rails, glass display doors, a jewellery drawer unit and an island ottoman for the master suite.',
@@ -90,8 +81,6 @@ const DESIGNS = [
     title: 'Boutique Fitted Wardrobe Wall',
     category: 'Wardrobes',
     image: 'assets/img/hero-2-wardrobe.jpg',
-    price: 118000,
-    priceNote: 'from',
     badge: 'Space saver',
     time: '10 – 14 days',
     summary: 'A full wall of fitted storage with open display shelving, drawers and a dressing corner — perfect for bedrooms that have to work harder.',
@@ -103,8 +92,6 @@ const DESIGNS = [
     title: 'Aluminium Sliding Doors & Windows',
     category: 'Aluminium Works',
     image: 'assets/img/hero-5-aluminum.jpg',
-    price: 9500,
-    priceNote: 'from',
     unit: 'per sqm',
     badge: 'Security',
     time: '5 – 10 days',
@@ -117,8 +104,6 @@ const DESIGNS = [
     title: 'Gypsum Ceiling with Cove Lighting',
     category: 'Gypsum Works',
     image: 'assets/img/hero-3-living-gypsum.jpg',
-    price: 3200,
-    priceNote: 'from',
     unit: 'per sqm',
     badge: 'Most requested',
     time: '3 – 7 days',
@@ -131,8 +116,6 @@ const DESIGNS = [
     title: 'Boutique Shop Renovation',
     category: 'Shop Renovation',
     image: 'assets/img/hero-4-shop.jpg',
-    price: 380000,
-    priceNote: 'from',
     badge: 'Turnkey',
     time: '3 – 5 weeks',
     summary: 'Fluted panels, display rails, cash counter, lighting and branding surfaces — a retail space customers want to walk into.',
@@ -144,9 +127,7 @@ const DESIGNS = [
     title: 'Complete 3-Bedroom Home Fit-Out',
     category: 'Fittings',
     image: 'assets/img/hero-1-kitchen.jpg',
-    price: 750000,
-    priceNote: 'from',
-    badge: 'Save 12%',
+    badge: 'One contract',
     time: '5 – 8 weeks',
     summary: 'One team, one contract: kitchen, wardrobes, gypsum ceilings, aluminium, doors, locks, sanitary and all plumbing fittings for the whole house.',
     features: ['Kitchen + 3 wardrobes', 'Full gypsum ceiling package', 'All doors, locks & handles', 'Sanitary & plumbing fittings'],
@@ -162,10 +143,9 @@ const MATERIALS = [
     name: '18mm MDF Board',
     category: 'Boards & Panels',
     swatch: 'mdf', icon: 'box',
-    price: 3200,
     unit: 'per 8×4ft sheet',
     badge: 'In stock',
-    note: 'Moisture-resistant grade for kitchens and bathrooms. Bulk discounts from 10 sheets.'
+    note: 'Moisture-resistant grade for kitchens and bathrooms. Bulk discounts on project orders.'
   },
   {
     id: 'm02',
@@ -173,7 +153,6 @@ const MATERIALS = [
     name: 'Melamine Laminate Sheet',
     category: 'Boards & Panels',
     swatch: 'laminate', icon: 'palette',
-    price: 4600,
     unit: 'per 8×4ft sheet',
     badge: '40+ colours',
     note: 'Woodgrains, marbles and plain colours. Matching edge tape available.'
@@ -184,7 +163,6 @@ const MATERIALS = [
     name: 'Cabinet Hardware Kit',
     category: 'Hardware & Fittings',
     swatch: 'hardware', icon: 'wrench',
-    price: 4950,
     unit: 'per kit',
     badge: 'Soft-close',
     note: '20 soft-close hinges, 5 pairs of drawer runners, screws and buffers.'
@@ -195,7 +173,6 @@ const MATERIALS = [
     name: 'Kitchen Sink & Pull-Out Tap Set',
     category: 'Hardware & Fittings',
     swatch: 'steel', icon: 'wrench',
-    price: 12800,
     unit: 'per set',
     badge: '304 stainless',
     note: 'Undercut double bowl sink with pull-out mixer, waste kit and fittings.'
@@ -206,7 +183,6 @@ const MATERIALS = [
     name: 'Gypsum Ceiling Board',
     category: 'Gypsum & Ceilings',
     swatch: 'gypsum', icon: 'layers',
-    price: 950,
     unit: 'per 1.2×2.4m board',
     badge: '9mm',
     note: 'Ceiling-grade boards. Studs, channels, joint tape and skim also available.'
@@ -217,7 +193,6 @@ const MATERIALS = [
     name: 'Aluminium Window & Door Profiles',
     category: 'Aluminium',
     swatch: 'aluminium', icon: 'window',
-    price: 780,
     unit: 'per kg',
     badge: 'Anodised',
     note: 'Silver, black and bronze finishes. Cut-to-size and fabrication on request.'
@@ -228,7 +203,6 @@ const MATERIALS = [
     name: 'Porcelain Floor Tile 600×600',
     category: 'Tiles & Finishes',
     swatch: 'tile', icon: 'palette',
-    price: 1450,
     unit: 'per sqm',
     badge: 'Matt / gloss',
     note: 'Lappato, marble-look and wood-look ranges. Free samples on request.'
@@ -239,7 +213,6 @@ const MATERIALS = [
     name: 'Fluted WPC Wall Panel',
     category: 'Tiles & Finishes',
     swatch: 'fluted', icon: 'layers2',
-    price: 2600,
     unit: 'per panel (300×2900mm)',
     badge: 'Waterproof',
     note: 'Popular for TV walls, shop fronts and reception areas. Trims available.'
@@ -250,7 +223,6 @@ const MATERIALS = [
     name: 'Quartz Countertop Slab',
     category: 'Countertops',
     swatch: 'quartz', icon: 'spark',
-    price: 14500,
     unit: 'per sqm fitted',
     badge: '20mm',
     note: 'Marble-look quartz with cut-outs, joins and edge profiling included.'
@@ -261,21 +233,10 @@ const MATERIALS = [
     name: 'LED Spotlight & Cove Strip Pack',
     category: 'Lighting',
     swatch: 'led', icon: 'bulb',
-    price: 3400,
     unit: 'per pack',
     badge: 'Warm / cool',
     note: '6 recessed spotlights plus 5m of cove strip with driver and connectors.'
   }
-];
-
-/* Extra price-list rows (materials page table, no photography needed) */
-const PRICE_LIST = [
-  { name: 'Gypsum metal studs & channels', unit: 'per length', price: 480, category: 'Gypsum & Ceilings' },
-  { name: 'Ceiling cornice moulding', unit: 'per 3m length', price: 750, category: 'Gypsum & Ceilings' },
-  { name: 'Tile adhesive', unit: 'per 20kg bag', price: 900, category: 'Tiles & Finishes' },
-  { name: 'Cabinet handles & knobs', unit: 'per dozen', price: 2200, category: 'Hardware & Fittings' },
-  { name: 'Washable wall emulsion paint', unit: 'per 20L bucket', price: 6400, category: 'Tiles & Finishes' },
-  { name: 'Aluminium sliding door track set', unit: 'per set', price: 5900, category: 'Aluminium' }
 ];
 
 /* --------------------------------------------------------- SERVICES (6 CORE) */
@@ -285,7 +246,6 @@ const SERVICES = [
     title: 'Kitchen Cabinets',
     icon: 'kitchen',
     image: 'assets/img/d-kitchen-ushape.jpg',
-    from: 185000,
     text: 'Bespoke kitchens — carcasses, doors, worktops, sinks and appliance housing, built to your exact measurements.'
   },
   {
@@ -293,7 +253,6 @@ const SERVICES = [
     title: 'Wardrobes & Closets',
     icon: 'wardrobe',
     image: 'assets/img/d-wardrobe-sliding.jpg',
-    from: 96000,
     text: 'Sliding, hinged, walk-in and combined wardrobe-plus-desk units with fittings that last.'
   },
   {
@@ -301,7 +260,6 @@ const SERVICES = [
     title: 'Aluminium Works',
     icon: 'aluminium',
     image: 'assets/img/hero-5-aluminum.jpg',
-    from: 9500,
     text: 'Windows, sliding doors, shop fronts, glass partitions, balustrades and burglar proofing.'
   },
   {
@@ -309,7 +267,6 @@ const SERVICES = [
     title: 'Gypsum Works',
     icon: 'gypsum',
     image: 'assets/img/hero-3-living-gypsum.jpg',
-    from: 3200,
     text: 'Ceilings, cove lighting, cornices, partitions, TV feature walls and decorative curves.'
   },
   {
@@ -317,7 +274,6 @@ const SERVICES = [
     title: 'Shop Renovation',
     icon: 'shop',
     image: 'assets/img/hero-4-shop.jpg',
-    from: 380000,
     text: 'Retail, salon, barbershop, clinic and office fit-outs — shelving, counters, lighting and branding surfaces.'
   },
   {
@@ -325,7 +281,6 @@ const SERVICES = [
     title: 'All Fittings Work',
     icon: 'fittings',
     image: 'assets/img/hero-1-kitchen.jpg',
-    from: 4500,
     text: 'Doors, locks, handles, hinges, sinks, taps, sanitary ware, lighting and finishing — supplied and installed.'
   }
 ];
@@ -348,7 +303,7 @@ const REVIEWS = [
   {"name":"Lucy Nyambura","location":"Donholm, Nairobi","rating":5,"service":"Materials Supply","date":"Apr 2026","text":"Bought gypsum boards, studs and tiles from them. Delivered to Donholm the next morning as promised."},
   {"name":"Kevin Omondi","location":"Umoja, Nairobi","rating":5,"service":"Aluminium Works","date":"Apr 2026","text":"Aluminium windows with burglar proofing for the whole house. Solid work at a fair price."},
   {"name":"Sharon Chebet","location":"Embakasi, Nairobi","rating":5,"service":"Shop Renovation","date":"Apr 2026","text":"Our salon in Embakasi looks like a completely different space now. Clients keep asking who did the work."},
-  {"name":"Anthony Njoroge","location":"Roysambu, Nairobi","rating":5,"service":"Wardrobes","date":"Mar 2026","text":"Walk-in closet for under KES 200,000 and it genuinely looks like a hotel. I highly recommend them."},
+  {"name":"Anthony Njoroge","location":"Roysambu, Nairobi","rating":5,"service":"Wardrobes","date":"Mar 2026","text":"Walk-in closet that genuinely looks like a hotel. The finishing quality is exceptional and the team handled everything. I highly recommend them."},
   {"name":"Vivian Mueni","location":"Kasarani, Nairobi","rating":5,"service":"Kitchen Cabinets","date":"Mar 2026","text":"They redid the kitchen another fundi had messed up. Proof that experience really matters — everything lines up perfectly now."},
   {"name":"Stephen Kariuki","location":"Githurai 45, Nairobi","rating":4,"service":"Gypsum Works","date":"Mar 2026","text":"Ceiling and cornice done well, and the materials were supplied the same day. Only the paint touch-ups delayed us slightly."},
   {"name":"Halima Yusuf","location":"Zimmerman, Nairobi","rating":5,"service":"Materials Supply","date":"Feb 2026","text":"Kitchen accessories, pull-out baskets and soft-close runners. Genuine items — no fake hardware like other shops sell."},
@@ -398,8 +353,8 @@ const AREAS = [
 
 /* -------------------------------------------------------------------- FAQS */
 const FAQS = [
-  { q: 'How much does a kitchen cost in Kenya?', a: 'Our kitchen cabinet packages start from about KES 185,000 including carcasses, doors, worktops and fittings. The final figure depends on the length of your kitchen run, the worktop you choose and the internals — we give an itemised quotation after a free site measurement.' },
-  { q: 'Do you supply materials to my own fundi?', a: 'Yes. We supply MDF, laminate, gypsum, aluminium, tiles, hardware and fittings at affordable wholesale-friendly prices, with delivery to your site anywhere in Kenya. You can also hire our installation team if you prefer.' },
+  { q: 'How do you quote a kitchen?', a: 'Every kitchen starts with a free site measurement. You then receive an itemised written quotation covering carcasses, doors, worktops and fittings — the figure depends on the length of your kitchen run, the worktop you choose and the internals. No commitment until you approve it.' },
+  { q: 'Do you supply materials to my own fundi?', a: 'Yes. We supply MDF, laminate, gypsum, aluminium, tiles, hardware and fittings, with delivery to your site anywhere in Kenya. You can also hire our installation team if you prefer.' },
   { q: 'Is the site visit and measurement free?', a: 'Site visits and measurements are free within Nairobi and the surrounding areas such as Ruiru, Juja, Ngong and Kiambu. For Nakuru, Naivasha, Thika and other counties we charge a small transport fee that is deducted from your project once you award us the work.' },
   { q: 'How long does a project take?', a: 'Wardrobes normally take 7–14 days, kitchens 2–4 weeks, gypsum ceilings 3–9 days and full shop renovations 3–6 weeks from the day materials are approved. We agree the timeline in writing before starting.' },
   { q: 'How do payments work?', a: 'We work on a clear milestone basis: a deposit to buy materials and start fabrication, then progressive payments as agreed in your contract. Every payment is receipted and itemised.' },

@@ -926,6 +926,19 @@ h1, h2, h3, h4 {
 .page-hero__inner { max-width: 760px; }
 .page-hero h1 { margin-bottom: 1.1rem; }
 .page-hero .lead { color: rgba(251, 248, 243, .72); max-width: 620px; }
+/* brand mark on the right side of the page hero (About page) */
+.page-hero__logo {
+  display: none;
+  position: absolute;
+  top: clamp(1.1rem, 3vw, 2.4rem);
+  right: clamp(1.2rem, 4vw, 3.5rem);
+  width: clamp(96px, 11vw, 168px);
+  height: auto;
+  z-index: 2;
+}
+@media (min-width: 1024px) {
+  .page-hero__logo { display: block; }
+}
 
 .crumbs {
   display: flex;
