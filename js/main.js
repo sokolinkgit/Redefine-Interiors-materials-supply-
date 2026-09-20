@@ -10,7 +10,8 @@
    E. Review carousel (batches of 3, 5 second refresh)
    F. Catalogue rendering, filters, services.html blocks & detail modal
    G. Quotation list (localStorage)
-   H. FAQ, forms, counters & reveal animations
+   H. FAQ (+ collapsible Q&A block), edge-scroll → Home navigation, forms,
+      counters & reveal animations
    I. Public API (window.Site) — the hooks js/content.js and js/admin.js use
    --------------------------------------------------------------------------
    Content comes from Supabase when it is reachable (js/content.js) and from
@@ -1047,24 +1048,16 @@
     if (set) modalImg.setAttribute('srcset', set); else modalImg.removeAttribute('srcset');
     modalImg.sizes = '(max-width: 900px) 92vw, 620px';
     modalImg.alt = d.imageAlt || (d.title + ' — ' + d.category);
+    /* The enlarged view is deliberately bare — the big photo, the design
+       NAME and one WhatsApp button. No summary, chips, "what is included",
+       "materials used" or notes: those live in the admin only. */
     $('[data-modal-body]', modal).innerHTML = [
-      '<span class="eyebrow">' + escapeHtml(d.category) + '</span>',
-      '<h3>' + escapeHtml(d.title) + '</h3>',
-      '<p class="muted" style="font-size:.92rem">' + escapeHtml(d.summary) + '</p>',
-      '<div class="chip-row">',
-      '  <span class="chip">' + ICONS.clock + escapeHtml(d.time) + '</span>',
-      '  <span class="chip">' + ICONS.shield + 'Workmanship guarantee</span>',
-      '  <span class="chip">' + ICONS.truck + 'Site delivery in Kenya</span>',
-      '</div>',
-      '<h4 class="display-s" style="margin-top:1.4rem">What is included</h4>',
-      '<ul class="modal__list">' + d.features.map((f) => '<li>' + ICONS.check + escapeHtml(f) + '</li>').join('') + '</ul>',
-      '<h4 class="display-s" style="margin-top:.4rem">Materials used</h4>',
-      '<div class="chip-row">' + d.materials.map((m) => '<span class="chip">' + ICONS.box + escapeHtml(m) + '</span>').join('') + '</div>',
+      '<h3 class="modal__title">' + escapeHtml(d.title) + '</h3>',
       '<div class="modal__actions">',
-      '  <button class="btn btn--wa" type="button" data-wa-quote="' + d.id + '">' + ICONS.whatsapp + 'Request quotation</button>',
-      '</div>',
-      '<p class="modal__note">Quotation on request. Send your measurements or request a site visit for an exact written quotation — we serve all parts of Kenya.</p>'
+      '  <button class="btn btn--wa btn--block" type="button" data-wa-quote="' + d.id + '">' + ICONS.whatsapp + 'Request quotation</button>',
+      '</div>'
     ].join('');
+    modal.classList.add('modal--photo');
 
     modal.classList.add('is-open');
     modal.setAttribute('aria-hidden', 'false');
@@ -1078,6 +1071,7 @@
     if (!modal) return;
     modal.classList.remove('is-open');
     modal.setAttribute('aria-hidden', 'true');
+    setTimeout(() => { if (!modal.classList.contains('is-open')) modal.classList.remove('modal--photo'); }, 420);
     if (!$('.drawer.is-open') && !$('.nav.is-open')) document.body.classList.remove('no-scroll');
     const ov = $('[data-overlay]');
     if (ov && !$('.drawer.is-open') && !$('.nav.is-open')) ov.classList.remove('is-open');
@@ -1266,6 +1260,140 @@
         btn.setAttribute('aria-expanded', String(open));
       });
     });
+
+    /* "Some questions and answers" — the whole block starts collapsed and
+       opens/closes from its heading bar. A #faq link in the URL opens it. */
+    $$('[data-collapse]').forEach((block) => {
+      const btn = $('.faq-block__toggle', block);
+      const hint = $('[data-collapse-hint]', block);
+      if (!btn) return;
+      const setOpen = (open) => {
+        block.classList.toggle('is-open', open);
+        btn.setAttribute('aria-expanded', String(open));
+        if (hint) hint.textContent = open ? 'Tap to collapse' : 'Tap to expand';
+      };
+      btn.addEventListener('click', () => setOpen(!block.classList.contains('is-open')));
+      const section = block.closest('section');
+      if (section && section.id && window.location.hash === '#' + section.id) setOpen(true);
+      window.addEventListener('hashchange', () => {
+        if (section && section.id && window.location.hash === '#' + section.id) setOpen(true);
+      });
+    });
+  }
+
+  /* ======================================================================
+     EDGE-SCROLL NAVIGATION — on any page other than Home, a visitor who
+     keeps scrolling (or swiping) past the very top or the very bottom of
+     the page is taken to the home page automatically. It only reacts to
+     a deliberate extra pull once the page is already at its edge, so a
+     normal read to the end never triggers it, and it stays quiet while the
+     menu, drawer or an enlarged photo is open.
+     ====================================================================== */
+  function initEdgeNav() {
+    const page = document.body.dataset.page;
+    if (!page || page === 'home') return;
+    const HOME = 'index.html';
+    const THRESHOLD = 160;     /* px of extra pull needed once at the edge */
+    const SETTLE = 400;        /* ms the page must rest at the edge first */
+    const GAP = 260;           /* ms of quiet that separates two wheel gestures */
+    const IGNORE = '.modal, .drawer, .nav, .table-scroll, .filters, .reviews-viewport, .admin-drawer, .admin-modal, .admin-bar';
+    let armedAt = 0;           /* when the page reached its current edge */
+    let lastEdge = '';
+    let pull = 0;
+    let gestureCounts = false; /* did the current gesture start at a settled edge? */
+    let lastWheelAt = 0;
+    let fired = false;
+
+    const uiOpen = () =>
+      document.body.classList.contains('no-scroll') ||
+      document.body.classList.contains('admin-no-scroll') ||
+      document.body.classList.contains('is-admin') ||
+      $('.modal.is-open') || $('.drawer.is-open') || $('.nav.is-open');
+
+    const edge = () => {
+      const doc = document.documentElement;
+      const y = window.scrollY || doc.scrollTop;
+      const max = Math.max(0, doc.scrollHeight - window.innerHeight);
+      if (max <= 0) return '';
+      if (y <= 1) return 'top';
+      if (max - y <= 1) return 'bottom';
+      return '';
+    };
+
+    /* remembers when the page arrived at an edge */
+    const arm = () => {
+      const e = edge();
+      if (e !== lastEdge) { lastEdge = e; armedAt = e ? Date.now() : 0; pull = 0; }
+      return e;
+    };
+
+    const settled = () => Boolean(lastEdge) && Date.now() - armedAt >= SETTLE;
+
+    const go = () => {
+      if (fired) return;
+      fired = true;
+      document.body.classList.add('is-leaving');
+      toast('Taking you to the home page…');
+      setTimeout(() => { window.location.href = HOME; }, 240);
+    };
+
+    /* delta < 0 = pulling up past the top, delta > 0 = pushing past the bottom */
+    const feed = (delta) => {
+      if (fired || !gestureCounts || uiOpen()) return;
+      const e = arm();
+      if (!e) { gestureCounts = false; pull = 0; return; }
+      const inward = (e === 'top' && delta < 0) || (e === 'bottom' && delta > 0);
+      if (!inward) { pull = 0; return; }
+      pull += Math.abs(delta);
+      if (pull >= THRESHOLD) go();
+    };
+
+    /* mouse wheel / trackpad — a gesture is a run of wheel events with no
+       quiet gap; only a gesture that BEGINS at a settled edge counts, so the
+       momentum that carries a reader to the bottom never triggers it */
+    window.addEventListener('wheel', (ev) => {
+      if (ev.target.closest && ev.target.closest(IGNORE)) return;
+      const now = Date.now();
+      if (now - lastWheelAt > GAP) { arm(); gestureCounts = settled() && !uiOpen(); pull = 0; }
+      lastWheelAt = now;
+      feed(ev.deltaY);
+    }, { passive: true });
+
+    /* touch — the finger must go down while the page already rests at an edge */
+    let touchY = null;
+    window.addEventListener('touchstart', (ev) => {
+      if (ev.touches.length !== 1 || (ev.target.closest && ev.target.closest(IGNORE))) { touchY = null; gestureCounts = false; return; }
+      touchY = ev.touches[0].clientY;
+      arm();
+      gestureCounts = settled() && !uiOpen();
+      pull = 0;
+    }, { passive: true });
+    window.addEventListener('touchmove', (ev) => {
+      if (touchY === null || ev.touches.length !== 1) return;
+      const y = ev.touches[0].clientY;
+      const delta = touchY - y;      /* finger moving up = positive = scrolling down */
+      touchY = y;
+      feed(delta);
+    }, { passive: true });
+    window.addEventListener('touchend', () => { touchY = null; gestureCounts = false; pull = 0; }, { passive: true });
+    window.addEventListener('touchcancel', () => { touchY = null; gestureCounts = false; pull = 0; }, { passive: true });
+
+    /* keyboard — one more press once already resting at the edge */
+    window.addEventListener('keydown', (ev) => {
+      if (uiOpen() || fired) return;
+      const t = ev.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+      const e = arm();
+      if (!e || !settled()) return;
+      const down = ev.key === 'ArrowDown' || ev.key === 'PageDown' || ev.key === 'End' || (ev.key === ' ' && !ev.shiftKey);
+      const up = ev.key === 'ArrowUp' || ev.key === 'PageUp' || ev.key === 'Home' || (ev.key === ' ' && ev.shiftKey);
+      if ((e === 'bottom' && down) || (e === 'top' && up)) go();
+    });
+
+    window.addEventListener('scroll', arm, { passive: true });
+    /* coming back with the browser's back button (bfcache) re-arms cleanly */
+    window.addEventListener('pageshow', () => { fired = false; document.body.classList.remove('is-leaving'); arm(); });
+    arm();
   }
 
   function initForms() {
@@ -1447,6 +1575,7 @@
     initHero();
     initReviews();
     initFaq();
+    initEdgeNav();
     initForms();
     initCounters();
     initReveal();

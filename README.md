@@ -26,7 +26,7 @@ Cloudflare Pages, an Apache/Nginx box). Nothing needs compiling.
 | File | Purpose |
 | --- | --- |
 | `index.html` | Home — 50/50 hero (copy left, slideshow right), featured designs, featured materials, stats, process, 50-review slideshow (3 per batch, 5s), FAQ, quotation form |
-| `designs.html` | Full design portfolio with category filters and a "view details" modal |
+| `designs.html` | Full design portfolio with category filters and an enlarge-photo view (photo, name and a Request-quotation button only) |
 | `materials.html` | Material catalogue with product photos, delivery & coverage |
 | `about.html` | Compact single-view page — hero with stats plus the four guiding values |
 | `contact.html` | Compact single-view page — contact cards and the quotation form |
@@ -317,6 +317,19 @@ Supabase is connected, and carries three buttons — nothing else:
   and the built-in account keeps working against the browser-only draft.
 * **Visitors pay nothing extra.** `js/admin.js` is downloaded only after the gesture (or when
   a session already exists); `css/admin.css` rules are all scoped behind `body.is-admin`.
+* **Enlarged photo view.** The enlarge button on a design card opens the photo whole on a dark
+  panel with just the design name and a **Request quotation** button — the summary, lead time,
+  guarantee/delivery chips, "what is included" and "materials used" are admin-only records.
+* **Questions and answers.** The homepage and Designs page carry a **"Some questions and
+  answers"** block (`.faq-block[data-collapse]`) that is fully collapsed by default and opens from
+  its heading bar; a `#faq` link opens it automatically.
+* **Footer.** No logo, social icons or Request-quotation / Call buttons in the footer — the
+  floating WhatsApp + Call pair covers that on every page. On phones the footer is two columns
+  (Quick links | Get in touch).
+* **Edge-scroll navigation.** On every page except Home, a deliberate extra scroll/swipe past the
+  very top or very bottom of the page (once the page has rested at that edge for a moment) takes
+  the visitor to `index.html` (`initEdgeNav()` in `js/main.js`). It ignores wheel momentum, and is
+  inert while the menu, quote drawer, enlarged photo or admin overlay is open.
 * **Page structure note.** The old `services.html` ("What we do") page was removed in favour
   of the Designs page; its nav link, footer column, homepage section and sitemap entry are gone.
 * **Live across devices.** Realtime is enabled on designs, materials, services and categories:

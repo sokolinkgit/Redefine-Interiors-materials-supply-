@@ -99,6 +99,8 @@ body {
 }
 
 body.no-scroll { overflow: hidden; }
+/* edge-scroll navigation: a soft fade while the browser moves to the home page */
+body.is-leaving > main, body.is-leaving > footer, body.is-leaving > .site-header { opacity: .55; transition: opacity .24s var(--ease); }
 
 img, svg, video { display: block; max-width: 100%; }
 img { height: auto; }
@@ -1747,6 +1749,68 @@ h1, h2, h3, h4 {
   line-height: 1.78;
 }
 
+/* "Some questions and answers" — the WHOLE block is collapsed by default and
+   opens when the visitor taps the heading bar (data-collapse) */
+.faq-block {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--white);
+  overflow: hidden;
+}
+.faq-block__head { margin: 0; font: inherit; }
+.faq-block__toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: clamp(1.1rem, 2.4vw, 1.5rem) clamp(1.1rem, 3vw, 1.8rem);
+  text-align: left;
+  transition: background .3s var(--ease);
+}
+.faq-block__toggle:hover { background: var(--cream-2); }
+.faq-block__title {
+  flex: 1 1 auto;
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: clamp(1.3rem, 2.6vw, 2rem);
+  line-height: 1.15;
+  letter-spacing: -.015em;
+}
+.faq-block__hint {
+  flex: none;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--gold-deep);
+}
+.faq-block__icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  transition: transform .4s var(--ease), background .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease);
+}
+.faq-block__icon svg { width: 18px; height: 18px; }
+.faq-block.is-open .faq-block__icon { background: var(--gold); border-color: var(--gold); color: #fff; transform: rotate(180deg); }
+.faq-block__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows .5s var(--ease);
+}
+.faq-block.is-open .faq-block__panel { grid-template-rows: 1fr; }
+.faq-block__panel > * { overflow: hidden; }
+.faq-block__inner {
+  padding: 0 clamp(1.1rem, 3vw, 1.8rem) clamp(1.2rem, 3vw, 1.8rem);
+  border-top: 1px solid var(--line);
+}
+.faq-block__inner > div:first-child { padding-top: 1.3rem; }
+.faq-block__inner .faq { border-top: 0; margin-top: .6rem; }
+
 /* ==========================================================================
    15. CONTACT & FORMS
    ========================================================================== */
@@ -1863,21 +1927,10 @@ h1, h2, h3, h4 {
 }
 .footer__links { display: grid; gap: .55rem; }
 .footer__links a:hover { color: var(--gold-soft); }
-.footer__brand .brand__text strong { color: #fff; }
-.footer__brand p { margin-top: 1.1rem; max-width: 38ch; }
-.footer__social { display: flex; gap: .5rem; margin-top: 1.2rem; }
-.footer__social a {
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, .18);
-  color: rgba(251, 248, 243, .8);
-  transition: background .3s var(--ease), color .3s var(--ease), transform .3s var(--ease), border-color .3s var(--ease);
-}
-.footer__social a:hover { background: var(--gold); color: #fff; border-color: var(--gold); transform: translateY(-3px); }
-.footer__social svg { width: 18px; height: 18px; }
+/* the footer carries no logo, social icons or CTA buttons — the floating
+   WhatsApp + Call pair is the only contact action UI at the foot of a page */
+.footer__brand h4 { font-family: var(--f-display); font-size: 1.05rem; letter-spacing: -.01em; text-transform: none; }
+.footer__brand p { margin-top: .9rem; max-width: 38ch; }
 .footer__contact li { display: flex; gap: .7rem; margin-bottom: .7rem; align-items: flex-start; }
 .footer__contact svg { width: 17px; height: 17px; color: var(--gold); flex: none; margin-top: .22rem; }
 .footer__bottom {
@@ -2064,6 +2117,53 @@ h1, h2, h3, h4 {
 .modal__list svg { width: 17px; height: 17px; color: var(--gold); flex: none; margin-top: .2rem; }
 .modal__actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: 1.4rem; }
 .modal__note { margin-top: 1rem; font-size: .76rem; color: var(--muted); }
+
+/* ENLARGED PHOTO VIEW — one column on every device: the photo as large as the
+   screen allows (whole picture visible, never cropped), the design name and a
+   single "Request quotation" button. Nothing else. */
+.modal--photo .modal__panel {
+  grid-template-columns: 1fr;
+  grid-template-rows: minmax(0, 1fr) auto;
+  width: min(960px, 100%);
+  max-height: 92vh;
+  max-height: 92dvh;
+  background: var(--ink);
+}
+.modal--photo .modal__media {
+  min-height: 0;
+  max-height: none;
+  display: grid;
+  place-items: center;
+  background: var(--ink);
+  overflow: hidden;
+}
+.modal--photo .modal__media img {
+  width: 100%;
+  height: auto;
+  max-height: calc(92vh - 128px);
+  max-height: calc(92dvh - 128px);
+  object-fit: contain;
+}
+.modal--photo .modal__body {
+  max-height: none;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1rem clamp(1rem, 3vw, 1.6rem) 1.1rem;
+  background: var(--cream);
+}
+.modal--photo .modal__title {
+  margin: 0;
+  font-size: clamp(1.05rem, 1.9vw, 1.35rem);
+  line-height: 1.25;
+  flex: 1 1 240px;
+}
+.modal--photo .modal__actions { margin: 0; flex: 0 1 auto; }
+.modal--photo .modal__actions .btn { width: auto; }
+.modal--photo .modal__close { background: rgba(255, 255, 255, .92); }
 
 /* floating actions */
 .float-wa {
@@ -2707,37 +2807,32 @@ table.price-table tbody strong { font-family: var(--f-display); font-size: 1.02r
   .brand__text span { display: none; }
   /* footer in THREE compact columns on phones — Quick links | Get in touch |
      brand & socials — which cuts the vertical scrolling significantly */
-  .footer { padding-top: 2rem; font-size: .8rem; }
+  /* footer in TWO compact columns on phones — Quick links | Get in touch.
+     The logo, social icons and the Request-quotation / Call buttons are gone
+     from the footer everywhere (the floating WhatsApp + Call pair covers
+     them); the brand line is dropped on phones too since the copyright row
+     already carries the name. */
+  .footer { padding-top: 1.6rem; font-size: .8rem; }
   .footer__grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 1rem .7rem;
-    padding-bottom: 1.3rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1rem;
+    padding-bottom: 1.1rem;
   }
   .footer__grid > :last-child { grid-column: auto; }   /* undo the tablet span */
-  .footer__brand { order: 3; }
-  .footer__brand p { display: none; }
-  .footer .brand { flex-direction: column; align-items: flex-start; gap: .5rem; }
-  .footer .brand__logo { width: 44px; height: 44px; }
-  .footer .brand__text strong { font-size: .78rem; line-height: 1.25; }
-  .footer h4 { font-size: .58rem; letter-spacing: .1em; margin-bottom: .55rem; }
-  .footer__links { gap: .4rem; font-size: .7rem; }
-  .footer__contact li { gap: .4rem; margin-bottom: .45rem; font-size: .68rem; }
+  .footer__brand { display: none; }
+  .footer h4 { font-size: .6rem; letter-spacing: .1em; margin-bottom: .55rem; }
+  .footer__links { gap: .4rem; font-size: .72rem; }
+  .footer__contact li { gap: .4rem; margin-bottom: .45rem; font-size: .7rem; }
   .footer__contact svg { width: 13px; height: 13px; margin-top: .18rem; }
-  .footer__social { margin-top: .7rem; gap: .4rem; }
-  .footer__social a { width: 32px; height: 32px; }
-  .footer__social svg { width: 14px; height: 14px; }
-  .footer__grid .btn--sm {
-    width: 100%;
-    justify-content: center;
-    white-space: normal;
-    line-height: 1.25;
-    font-size: .56rem;
-    letter-spacing: .02em;
-    padding: .45rem .4rem;
-    gap: .35rem;
-    min-height: 0;
-  }
-  .footer__grid .btn--sm svg { width: 13px; height: 13px; }
+  /* the collapsed Q&A bar stays a single tidy row on phones */
+  .faq-block__toggle { gap: .7rem; padding: .95rem 1rem; }
+  .faq-block__title { font-size: 1.12rem; }
+  .faq-block__hint { display: none; }
+  .faq-block__icon { width: 34px; height: 34px; }
+  .faq-block__icon svg { width: 16px; height: 16px; }
+  .faq-block__inner { padding: 0 1rem 1.1rem; }
+  .faq-block__inner > div:first-child { padding-top: 1rem; }
+  .faq-block__inner .lead { font-size: .88rem; }
   .footer__bottom {
     justify-content: center;
     text-align: center;
@@ -2894,6 +2989,23 @@ a, button, [role="tab"], .filter, .nav__link, .card__quick { touch-action: manip
   }
   .modal.is-open .modal__panel { transform: none; }
   .modal__body { max-height: none; padding-bottom: calc(1.6rem + env(safe-area-inset-bottom)); }
+
+  /* enlarged photo on phones/tablets: the picture fills the sheet width and
+     is shown whole; name + button sit in a compact strip under it */
+  .modal--photo .modal__panel { max-height: 94dvh; }
+  .modal--photo .modal__media { min-height: 0; max-height: none; }
+  .modal--photo .modal__media img {
+    max-height: calc(94dvh - 140px - env(safe-area-inset-bottom));
+  }
+  .modal--photo .modal__body {
+    flex-direction: column;
+    align-items: stretch;
+    gap: .7rem;
+    padding: .9rem var(--gutter) calc(.9rem + env(safe-area-inset-bottom));
+  }
+  .modal--photo .modal__title { text-align: center; flex: none; }
+  .modal--photo .modal__actions { width: 100%; }
+  .modal--photo .modal__actions .btn { width: 100%; justify-content: center; }
 }
 
 @media (max-width: 760px) {

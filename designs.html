@@ -71,7 +71,6 @@
       <div class="page-hero__inner">
         <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">Home</a> / <span>Designs Gallery</span></nav>
         <h1 class="display-l">Designs you can actually plan with</h1>
-        <p class="lead">Some of our most requested builds — kitchens, wardrobes, aluminium, gypsum and shop fit-outs. Every project is measured on site, fabricated in our workshop and installed by our own team — then backed by a workmanship guarantee.</p>
       </div>
     </div>
   </section>
@@ -82,7 +81,6 @@
       <div class="section-head section-head--center reveal">
         <span class="eyebrow">Designs Gallery</span>
         <h2 class="display-l">Filter by what you need</h2>
-        <p class="lead">Tap the <strong>enlarge</strong> button on any photo to see it wide — with what each package includes and the materials we use. Tap <strong>Quotation</strong> to send a WhatsApp message about that exact design.</p>
       </div>
 
       <div class="filters" data-filters="[data-design-grid]" data-filter-kind="design" data-all-label="All designs" role="tablist" aria-label="Filter designs by category"></div>
@@ -128,16 +126,24 @@
     </div>
   </section>
 
-  <!-- ===================== FAQ ===================== -->
-  <section class="section section--cream">
-    <div class="container split" style="align-items:start">
-      <div class="reveal">
-        <span class="eyebrow">Before you order</span>
-        <h2 class="display-l">Questions we hear daily</h2>
-        <p class="lead" style="margin-top:1rem">Ask us anything else directly on WhatsApp — we answer every question.</p>
-        <a class="btn btn--wa" style="margin-top:1.6rem" data-wa="Hello Redefine Interiors 👋 I have a question about my project."><span class="i" data-icon="whatsapp"></span> Ask a question</a>
-      </div>
-      <div class="faq reveal">
+  <!-- ===================== QUESTIONS & ANSWERS (collapsed by default) ===================== -->
+  <section class="section section--cream" id="faq">
+    <div class="container">
+      <div class="faq-block reveal" data-collapse>
+        <h2 class="faq-block__head">
+          <button class="faq-block__toggle" type="button" aria-expanded="false" aria-controls="faq-panel-designs">
+            <span class="faq-block__title">Some questions and answers</span>
+            <span class="faq-block__hint" data-collapse-hint>Tap to expand</span>
+            <span class="faq-block__icon"><span class="i" data-icon="chevronDown"></span></span>
+          </button>
+        </h2>
+        <div class="faq-block__panel" id="faq-panel-designs">
+          <div class="split faq-block__inner" style="align-items:start">
+            <div>
+              <p class="lead">Ask us anything else directly on WhatsApp — we answer every question.</p>
+              <a class="btn btn--wa" style="margin-top:1.6rem" data-wa="Hello Redefine Interiors 👋 I have a question about my project."><span class="i" data-icon="whatsapp"></span> Ask a question</a>
+            </div>
+            <div class="faq">
         <div class="faq__item">
           <button class="faq__q" type="button" aria-expanded="false">Can I get a design without paying a deposit?<span class="faq__icon"><span class="i" data-icon="plus"></span></span></button>
           <div class="faq__a"><div><p>Yes. The site visit, measurement, layout drawing and written quotation all come before any payment. You only commit financially once you approve the quotation and we agree on a start date.</p></div></div>
@@ -153,6 +159,9 @@
         <div class="faq__item">
           <button class="faq__q" type="button" aria-expanded="false">Can I see the materials before paying?<span class="faq__icon"><span class="i" data-icon="plus"></span></span></button>
           <div class="faq__a"><div><p>Yes — that is standard practice for us. We bring board samples, laminate swatches, quartz offcuts, aluminium profile sections and hardware samples to your site so you approve the exact materials that will be used.</p></div></div>
+        </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -182,15 +191,8 @@
   <div class="container">
     <div class="footer__grid">
       <div class="footer__brand">
-        <div class="brand">
-          <img class="brand__logo" src="assets/img/redlogo-512.png" alt="Redefine Interiors logo" width="52" height="52">
-          <span class="brand__text"><strong>Redefine Interiors</strong><span>&amp; Materials Supply</span></span>
-        </div>
+        <h4>Redefine Interiors &amp; Materials Supply</h4>
         <p>Interior design, fabrication, installation and material supply — kitchen cabinets, wardrobes, aluminium works, gypsum works, shop renovation and all fittings work. Serving all parts of Kenya.</p>
-        <div class="footer__social">
-          <a data-wa="Hello Redefine Interiors 👋" aria-label="WhatsApp"><span class="i" data-icon="whatsapp"></span></a>
-          <a href="tel:+254703142874" aria-label="Call us"><span class="i" data-icon="phone"></span></a>
-        </div>
       </div>
       <div>
         <h4>Quick links</h4>
@@ -209,8 +211,6 @@
           <li><span class="i" data-icon="pin"></span><span>Nairobi, Kenya — serving all 47 counties</span></li>
           <li><span class="i" data-icon="clock"></span><span>Mon – Sat: 8:00am – 6:00pm</span></li>
         </ul>
-        <a class="btn btn--wa btn--sm" style="margin-top:.6rem" data-wa="Hello Redefine Interiors 👋 I would like to request a quotation."><span class="i" data-icon="whatsapp"></span> Request quotation</a>
-        <a class="btn btn--call btn--sm" style="margin-top:.6rem" href="tel:+254703142874"><span class="i" data-icon="phone"></span> Call 0703 142 874</a>
       </div>
     </div>
     <div class="footer__bottom">

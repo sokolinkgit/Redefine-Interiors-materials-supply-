@@ -329,18 +329,25 @@
     </div>
   </section>
 
-  <!-- ===================== FAQ ===================== -->
+  <!-- ===================== QUESTIONS & ANSWERS (collapsed by default) ===================== -->
   <section class="section section--cream" id="faq">
     <div class="container">
-      <div class="split" style="align-items:start">
-        <div class="reveal">
-          <span class="eyebrow">Questions</span>
-          <h2 class="display-l">Answers before you ask</h2>
-          <p class="lead" style="margin-top:1rem">Still unsure about something? Send us a WhatsApp message — we answer every question honestly, with a written quotation to back it up.</p>
-          <a class="btn btn--wa" style="margin-top:1.6rem" data-wa="Hello Redefine Interiors 👋 I have a question about my project."><span class="i" data-icon="whatsapp"></span> Ask a question</a>
-        </div>
+      <div class="faq-block reveal" data-collapse>
+        <h2 class="faq-block__head">
+          <button class="faq-block__toggle" type="button" aria-expanded="false" aria-controls="faq-panel-home">
+            <span class="faq-block__title">Some questions and answers</span>
+            <span class="faq-block__hint" data-collapse-hint>Tap to expand</span>
+            <span class="faq-block__icon"><span class="i" data-icon="chevronDown"></span></span>
+          </button>
+        </h2>
+        <div class="faq-block__panel" id="faq-panel-home">
+          <div class="split faq-block__inner" style="align-items:start">
+            <div>
+              <p class="lead">Still unsure about something? Send us a WhatsApp message — we answer every question honestly, with a written quotation to back it up.</p>
+              <a class="btn btn--wa" style="margin-top:1.6rem" data-wa="Hello Redefine Interiors 👋 I have a question about my project."><span class="i" data-icon="whatsapp"></span> Ask a question</a>
+            </div>
 
-        <div class="faq reveal">
+            <div class="faq">
           <div class="faq__item">
             <button class="faq__q" type="button" aria-expanded="false">How do you quote a kitchen?<span class="faq__icon"><span class="i" data-icon="plus"></span></span></button>
             <div class="faq__a"><div><p>Every kitchen starts with a site measurement. You then receive an itemised written quotation covering carcasses, doors, worktops and fittings — the figure depends on the length of your kitchen run, the worktop you choose and the internals. No commitment until you approve it.</p></div></div>
@@ -364,6 +371,8 @@
           <div class="faq__item">
             <button class="faq__q" type="button" aria-expanded="false">Do you serve areas outside Nairobi?<span class="faq__icon"><span class="i" data-icon="plus"></span></span></button>
             <div class="faq__a"><div><p>Yes — we serve all parts of Kenya. We regularly complete projects in Nakuru, Naivasha, Ngong, Juja, Ruiru, Thika, Machakos, Kajiado, Eldoret and Mombasa. Distance affects transport cost only, never the quality.</p></div></div>
+          </div>
+            </div>
           </div>
         </div>
       </div>
@@ -391,15 +400,8 @@
   <div class="container">
     <div class="footer__grid">
       <div class="footer__brand">
-        <div class="brand">
-          <img class="brand__logo" src="assets/img/redlogo-512.png" alt="Redefine Interiors logo" width="52" height="52">
-          <span class="brand__text"><strong>Redefine Interiors</strong><span>&amp; Materials Supply</span></span>
-        </div>
+        <h4>Redefine Interiors &amp; Materials Supply</h4>
         <p>Interior design, fabrication, installation and material supply — kitchen cabinets, wardrobes, aluminium works, gypsum works, shop renovation and all fittings work. Serving all parts of Kenya.</p>
-        <div class="footer__social">
-          <a data-wa="Hello Redefine Interiors 👋" aria-label="WhatsApp"><span class="i" data-icon="whatsapp"></span></a>
-          <a href="tel:+254703142874" aria-label="Call us"><span class="i" data-icon="phone"></span></a>
-        </div>
       </div>
 
       <div>
@@ -420,8 +422,6 @@
           <li><span class="i" data-icon="pin"></span><span>Nairobi, Kenya — serving all 47 counties</span></li>
           <li><span class="i" data-icon="clock"></span><span>Mon – Sat: 8:00am – 6:00pm</span></li>
         </ul>
-        <a class="btn btn--wa btn--sm" style="margin-top:.6rem" data-wa="Hello Redefine Interiors 👋 I would like to request a quotation."><span class="i" data-icon="whatsapp"></span> Request quotation</a>
-        <a class="btn btn--call btn--sm" style="margin-top:.6rem" href="tel:+254703142874"><span class="i" data-icon="phone"></span> Call 0703 142 874</a>
       </div>
     </div>
 
