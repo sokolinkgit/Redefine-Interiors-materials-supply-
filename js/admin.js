@@ -322,7 +322,11 @@
       '  </div>',
       '</aside>',
 
-      /* ---- homepage slideshow ----------------------------------------- */
+      /* ---- homepage slideshow -----------------------------------------
+         Every photo from the Designs Gallery is listed; the ones currently
+         rotating on the home page are ticked, the rest are not. Tapping only
+         stages the change — "Save" writes it, and the slideshow then shows
+         exactly the ticked photos, in gallery order. */
       '<div class="admin-modal" data-admin-slides role="dialog" aria-modal="true" aria-label="Homepage slideshow" aria-hidden="true">',
       '  <div class="admin-modal__panel">',
       '    <div class="admin-modal__head">',
@@ -332,10 +336,16 @@
       '      </div>',
       '      <button class="admin-x" type="button" data-slides-close aria-label="Close">' + icon('x') + '</button>',
       '    </div>',
-      '    <p class="admin-modal__lead">Tick the design photos that rotate in the home-page frame. ',
-      '      They are the same pictures as the Designs page, so a photo you replace there is replaced here too.</p>',
+      '    <p class="admin-modal__lead">Every photo in the Designs Gallery is listed below — the ones that rotate on the ',
+      '      home page right now are ticked, all the others are not. Tap a photo to select or deselect it, then press ',
+      '<b>Save</b> — the home page slideshow then shows exactly the ticked photos, in this order.</p>',
       '    <div class="admin-modal__body" data-slides-body></div>',
       '    <p class="admin-modal__status" data-slides-status></p>',
+      '    <div class="admin-modal__foot admin-slides__foot">',
+      '      <span class="admin-slides__count" data-slides-count></span>',
+      '      <button class="btn btn--light" type="button" data-slides-cancel>Cancel</button>',
+      '      <button class="btn btn--gold" type="button" data-slides-save disabled>' + icon('check') + ' <span>Save slideshow</span></button>',
+      '    </div>',
       '  </div>',
       '</div>',
 
@@ -536,11 +546,18 @@
       if (e.key === 'Enter' && e.target.closest('[data-cat-name]')) { e.preventDefault(); e.target.blur(); }
     });
 
-    /* slideshow: tick / untick */
+    /* slideshow: tapping a photo only stages the selection — "Save" writes
+       it (the admin sees the whole choice first, nothing changes behind
+       their back while they are still picking) */
     $('[data-slides-body]', shell).addEventListener('change', (e) => {
       const box = e.target.closest('[data-slide-id]');
       if (!box) return;
-      setFeatured(box.dataset.slideId, box.checked);
+      slidesToggle(box.dataset.slideId, box.checked);
+    });
+    $('[data-slides-save]', shell).addEventListener('click', saveSlides);
+    $('[data-slides-cancel]', shell).addEventListener('click', () => {
+      /* re-rendering from the stored state drops anything only staged */
+      renderSlidesPanel();
     });
 
     document.addEventListener('keydown', (e) => {
@@ -1297,12 +1314,13 @@
       bar.className = 'admin-tools';
 
       if (el.dataset.cmsSlide === '1') {
-        /* a slide of the homepage hero: it IS a design, so keep the tools to
-           "edit the design" and "take it out of the slideshow" */
+        /* a slide of the homepage hero: "Edit" opens the slideshow picker —
+           ALL the Designs Gallery photos, the ones in the slideshow ticked
+           and the rest unticked — where the administrator selects exactly
+           which photos rotate and saves */
         bar.innerHTML =
-          '<span class="admin-tools__tag">Slideshow · ' + esc(item.title || '') + '</span>' +
-          toolBtn('design', id, 'edit', 'pencil', 'Edit this design') +
-          toolBtn('design', id, 'unfeature', 'star', 'Remove from the homepage slideshow', ' is-on');
+          '<span class="admin-tools__tag">Slideshow</span>' +
+          toolBtn('design', id, 'slideshow', 'star', 'Edit the slideshow — choose which gallery photos rotate on the home page');
       } else {
         const featured = item.featured === true;
         bar.innerHTML =
@@ -2313,22 +2331,73 @@
   }
 
   /* ======================================================================
-     10. HOMEPAGE SLIDESHOW PANEL — one tick per design photo
+     10. HOMEPAGE SLIDESHOW PANEL — every Designs Gallery photo, one tick each
+     --------------------------------------------------------------------------
+     The panel lists ALL the designs in the gallery, in gallery order. The
+     photos that currently rotate on the home page are ticked, every other
+     photo is unticked. Tapping a photo only stages the choice — nothing is
+     written until "Save". After saving, the home page slideshow shows
+     exactly the ticked photos, so the five (or however many) the
+     administrator selected are the five that visitors see.
      ====================================================================== */
+  let slidesSel = null;      // staged selection — a Set of design uuids
+  let slidesDirty = false;   // does the staged selection differ from what is saved?
+
+  /* the Designs Gallery order — position, same order the page shows them */
+  function slideOrder() {
+    return (window.Site ? window.Site.lists.designs() : []).slice()
+      .sort((a, b) => (Number(a.position) || 0) - (Number(b.position) || 0));
+  }
+
+  function slidesSyncControls() {
+    const save = $('[data-slides-save]', shell);
+    const count = $('[data-slides-count]', shell);
+    if (save) save.disabled = !slidesSel || !slidesDirty;
+    if (count) {
+      const n = slidesSel ? slidesSel.size : 0;
+      count.textContent = n + ' selected for the home page';
+    }
+  }
+
+  function updateSlidesStatus(saved) {
+    const status = $('[data-slides-status]', shell);
+    if (!status) return;
+    const n = slidesSel ? slidesSel.size : 0;
+    if (saved) {
+      status.innerHTML = (n ? icon('check') : icon('alert')) + ' <b>' + n + '</b> photo' +
+        (n === 1 ? '' : 's') + ' now rotate on the home page, in the order above.';
+      return;
+    }
+    status.innerHTML = n
+      ? '<b>' + n + '</b> photo' + (n === 1 ? '' : 's') + ' will rotate on the home page, in the order above. ' +
+        'Press <b>Save slideshow</b> to update the home page.'
+      : '<span class="admin-slide-warn">' + icon('alert') +
+        ' Nothing is ticked — the home page would have no slideshow photos.</span>';
+  }
+
   function renderSlidesPanel() {
     ensureShell();
     const body = $('[data-slides-body]', shell);
-    const status = $('[data-slides-status]', shell);
-    const designs = (window.Site ? window.Site.lists.designs() : []);
+    const designs = slideOrder();
 
     if (!designs.length) {
+      slidesSel = null;
+      slidesDirty = false;
       body.innerHTML = '<p class="admin-empty">No designs yet. Add one on the Designs page and it will appear here.</p>';
-      status.textContent = '';
+      const status = $('[data-slides-status]', shell);
+      if (status) status.textContent = '';
+      slidesSyncControls();
       return;
     }
 
+    /* the staged selection starts from what the home page shows right now:
+       the ticked photos stay ticked, every other gallery photo starts off */
+    slidesSel = new Set();
+    designs.forEach((d) => { if (d.featured === true) slidesSel.add(String(d.uuid || d.id)); });
+    slidesDirty = false;
+
     body.innerHTML = designs.map((d) => {
-      const on = d.featured === true;
+      const on = slidesSel.has(String(d.uuid || d.id));
       const hidden = d.active === false;
       return '<label class="admin-slide' + (on ? ' is-on' : '') + (hidden ? ' is-draft' : '') + '">' +
         '<input type="checkbox" data-slide-id="' + esc(String(d.uuid || d.id)) + '"' + (on ? ' checked' : '') + '>' +
@@ -2338,16 +2407,60 @@
         '<span class="admin-slide__text"><b>' + esc(d.title || 'Design (no name yet)') + '</b>' +
           '<small>' + esc(d.category || 'No category') +
           (hidden ? ' · hidden from visitors' : '') +
-          (!d.image ? ' · no photo yet' : '') + '</small></span>' +
+          (!d.image ? ' · no photo yet' : '') +
+          (on ? ' · in the slideshow' : '') + '</small></span>' +
         '</label>';
     }).join('');
 
-    const featured = designs.filter((d) => d.featured === true && d.active !== false && d.image).length;
-    status.innerHTML = featured
-      ? '<b>' + featured + '</b> photo' + (featured === 1 ? '' : 's') + ' rotate on the home page, in the order above. ' +
-        'Drag-free reordering: use the ← → tools on the Designs page.'
-      : '<span class="admin-slide-warn">' + icon('alert') +
-        ' Nothing is ticked, so the home page falls back to the first five designs with a photo.</span>';
+    updateSlidesStatus(false);
+    slidesSyncControls();
+  }
+
+  /* a tap on a photo: stage it, redraw the tick states, keep the Save button
+     honest — no database write yet */
+  function slidesToggle(id, on) {
+    if (!slidesSel) return;
+    if (on) slidesSel.add(String(id)); else slidesSel.delete(String(id));
+    const body = $('[data-slides-body]', shell);
+    $$('[data-slide-id]', body).forEach((box) => {
+      const row = box.closest('.admin-slide');
+      if (row) row.classList.toggle('is-on', box.checked);
+    });
+    slidesDirty = true;
+    updateSlidesStatus(false);
+    slidesSyncControls();
+  }
+
+  /* Save — write every design whose tick changed, then refresh the page so
+     the hero instantly plays exactly the ticked photos */
+  async function saveSlides() {
+    if (!slidesSel || !slidesDirty) return;
+    if (draftBlocks()) return;
+    const saveBtn = $('[data-slides-save]', shell);
+    if (saveBtn) saveBtn.disabled = true;
+
+    const changed = slideOrder().filter((d) =>
+      !!(d.uuid) && slidesSel.has(String(d.uuid)) !== (d.featured === true));
+    try {
+      for (let i = 0; i < changed.length; i++) {
+        const d = changed[i];
+        const on = slidesSel.has(String(d.uuid));
+        const { error } = await writeUpdate('designs', d.uuid, { is_featured: !!on });
+        if (error) throw error;
+        d.featured = !!on;                  // keep the in-memory list in step
+      }
+      slidesDirty = false;
+      if (window.Site) window.Site.refresh();
+      updateSlidesStatus(true);
+      slidesSyncControls();
+      const n = slidesSel.size;
+      toast('Slideshow updated — ' + n + ' photo' + (n === 1 ? '' : 's') + ' now on the home page');
+    } catch (err) {
+      toast(writeError(err));
+      updateSlidesStatus(false);
+    } finally {
+      slidesSyncControls();
+    }
   }
 
   /* ======================================================================
