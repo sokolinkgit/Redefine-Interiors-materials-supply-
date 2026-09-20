@@ -102,8 +102,8 @@ Everything lives in **`js/data.js`** — no HTML editing needed:
 
 | Array | What it controls |
 | --- | --- |
-| `CATEGORIES` | the filter chips of the Designs, Materials **and** Services pages (`design`, `material`, `service`) |
-| `SERVICES` | 6 services on the home page and service cards |
+| `CATEGORIES` | the filter chips of the Designs **and** Materials pages (`design`, `material`) — `service` categories are retained for admin records only |
+| `SERVICES` | 6 services kept as admin records only (the public Services page was removed in favour of Designs) |
 | `DESIGNS` | Portfolio items: title, category, image, unit, badge, lead time, summary, features, materials, **`featured`** (homepage slideshow) |
 | `MATERIALS` | Material catalogue: name, category, `swatch`, unit, badge, note |
 | `REVIEWS` | **50 reviews** — name, location, rating, service, date, text |
@@ -296,7 +296,7 @@ Supabase is connected, and carries three buttons — nothing else:
 | Button | What it does |
 | --- | --- |
 | **Slideshow** | a tick next to every design: tick = its photo rotates on the home page. The slideshow *is* the Designs page — same pictures, same order, so a photo you replace there is replaced here too |
-| **Categories** | full CRUD for the filter chips of the Designs, Materials **and** Services pages: add, rename, reorder (↑ ↓), hide from visitors (eye) and delete. Renaming updates every item using that chip |
+| **Categories** | full CRUD for the filter chips of the Designs **and** Materials pages: add, rename, reorder (↑ ↓), hide from visitors (eye) and delete. Renaming updates every item using that chip |
 | **Sign out** | leaves admin mode (if you were working in browser-only mode it asks whether to keep or discard those edits) |
 
 | Editable | Fields |
@@ -317,8 +317,8 @@ Supabase is connected, and carries three buttons — nothing else:
   and the built-in account keeps working against the browser-only draft.
 * **Visitors pay nothing extra.** `js/admin.js` is downloaded only after the gesture (or when
   a session already exists); `css/admin.css` rules are all scoped behind `body.is-admin`.
-* **SEO untouched.** The six `services.html` blocks stay in the HTML — JavaScript pours the
-  current data into them — so crawlers and no-JS visitors still read them.
+* **Page structure note.** The old `services.html` ("What we do") page was removed in favour
+  of the Designs page; its nav link, footer column, homepage section and sitemap entry are gone.
 * **Live across devices.** Realtime is enabled on designs, materials, services and categories:
   an edit made on a phone appears on the desktop within about a second.
 * **Nothing is lost.** Hiding never deletes; a chip whose items remain keeps working; and the
