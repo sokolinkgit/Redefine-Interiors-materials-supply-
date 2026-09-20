@@ -524,9 +524,14 @@ h1, h2, h3, h4 {
   display: none;
   width: 44px;
   height: 44px;
+  padding: 0;
+  flex: none;
   border-radius: 100px;
   border: 1px solid var(--line);
   background: var(--white);
+  /* the three bars must sit dead-centre inside the circle */
+  align-items: center;
+  justify-content: center;
   place-items: center;
   gap: 5px;
   flex-direction: column;
@@ -845,17 +850,16 @@ h1, h2, h3, h4 {
 }
 
 @media (max-width: 760px) {
-  /* CTAs in two columns (third spans) and a tight 2×2 stats row so the
-     whole hero — headline, buttons, 12+ years / 480+ projects — fits one
-     screen on phones */
+  /* CTAs stacked full-width — buttons are never cut off at the right edge —
+     and a tight stats row so the whole hero (headline, buttons, 12+ years /
+     480+ projects) fits one screen on phones */
   .hero__actions {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: .55rem;
     margin-top: 1.15rem;
   }
   .hero__actions .btn { width: 100%; justify-content: center; min-height: 46px; }
-  .hero__actions .btn:last-child { grid-column: 1 / -1; }
   .hero__meta { gap: .8rem .9rem; margin-top: 1.1rem; padding-top: .9rem; }
   .hero__meta-item { flex: 1 1 44%; gap: .55rem; }
   .hero__meta-item svg { width: 18px; height: 18px; }
@@ -972,6 +976,21 @@ h1, h2, h3, h4 {
 }
 @media (min-width: 1024px) {
   .page-hero__logo { display: block; }
+}
+/* About page: the hero shows the brand LOGO (from /assets) instead of a photo */
+.page-hero--logo {
+  background:
+    radial-gradient(90% 130% at 88% 6%, rgba(176, 133, 64, .24) 0%, transparent 55%),
+    radial-gradient(70% 110% at 6% 96%, rgba(176, 133, 64, .12) 0%, transparent 60%),
+    var(--ink);
+}
+.page-hero--logo::after { display: none; }
+.page-hero__brand {
+  display: block;
+  width: clamp(104px, 30vw, 190px);
+  height: auto;
+  margin-bottom: clamp(1.1rem, 3vw, 1.9rem);
+  filter: drop-shadow(0 22px 44px rgba(0, 0, 0, .5));
 }
 
 .crumbs {
@@ -1245,6 +1264,25 @@ h1, h2, h3, h4 {
 .card__price small { font-size: .74rem; color: var(--muted); }
 
 .card__actions { display: flex; align-items: center; gap: .5rem; }
+
+/* design cards: name + one OPTIONAL note input + WhatsApp quotation button */
+.card__note-input {
+  width: 100%;
+  margin-top: .55rem;
+  padding: .55rem .7rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--cream);
+  font-family: var(--f-body);
+  font-size: .78rem;
+  color: var(--ink);
+  transition: border-color .25s var(--ease), background .25s var(--ease);
+}
+.card__note-input::placeholder { color: var(--muted); opacity: .8; }
+.card__note-input:focus { outline: none; border-color: var(--gold); background: var(--white); }
+/* pinned to the bottom of the card so buttons line up across the grid */
+.card__actions--solo { width: 100%; margin-top: auto; padding-top: .7rem; }
+.card__actions--solo .btn { flex: 1; justify-content: center; }
 .icon-btn {
   display: inline-grid;
   place-items: center;
@@ -1506,15 +1544,15 @@ h1, h2, h3, h4 {
 .reviews-head {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 2rem;
+  gap: 1.4rem;
   align-items: end;
-  margin-bottom: clamp(2rem, 4vw, 3rem);
+  margin-bottom: clamp(1.3rem, 2.6vw, 2rem);
 }
 .rating-summary {
   display: flex;
   align-items: center;
-  gap: 1.4rem;
-  padding: 1.1rem 1.4rem;
+  gap: 1rem;
+  padding: .75rem 1rem;
   border-radius: var(--radius);
   border: 1px solid var(--line);
   background: var(--white);
@@ -1522,20 +1560,20 @@ h1, h2, h3, h4 {
 }
 .rating-summary__score {
   font-family: var(--f-display);
-  font-size: 2.6rem;
+  font-size: 1.9rem;
   line-height: 1;
   color: var(--ink);
 }
-.rating-summary__meta span { display: block; font-size: .76rem; color: var(--muted); }
+.rating-summary__meta span { display: block; font-size: .68rem; color: var(--muted); }
 .stars { display: inline-flex; gap: 2px; color: var(--gold); }
-.stars svg { width: 15px; height: 15px; }
-.stars--lg svg { width: 18px; height: 18px; }
+.stars svg { width: 13px; height: 13px; }
+.stars--lg svg { width: 15px; height: 15px; }
 
 .reviews-viewport { overflow: hidden; }
 .reviews-track {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: clamp(1rem, 2vw, 1.6rem);
+  gap: clamp(.7rem, 1.4vw, 1.1rem);
 }
 .reviews-track.is-swapping { opacity: 0; transform: translateY(10px); }
 .reviews-track {
@@ -1546,7 +1584,7 @@ h1, h2, h3, h4 {
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 1.7rem 1.6rem 1.5rem;
+  padding: 1.05rem 1.1rem 1rem;
   border-radius: var(--radius);
   background: var(--white);
   border: 1px solid var(--line);
@@ -1556,91 +1594,91 @@ h1, h2, h3, h4 {
 .review-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-m); }
 .review-card__quote {
   position: absolute;
-  top: 1.1rem;
-  right: 1.3rem;
+  top: .65rem;
+  right: .85rem;
   font-family: var(--f-display);
-  font-size: 4rem;
+  font-size: 2.3rem;
   line-height: .7;
   color: var(--gold-soft);
   opacity: .55;
 }
-.review-card__head { display: flex; align-items: center; gap: .85rem; }
+.review-card__head { display: flex; align-items: center; gap: .7rem; }
 .avatar {
   display: grid;
   place-items: center;
-  width: 46px;
-  height: 46px;
+  width: 38px;
+  height: 38px;
   flex: none;
   border-radius: 50%;
   background: linear-gradient(140deg, var(--ink), #4A3B29);
   color: var(--gold-soft);
   font-family: var(--f-display);
-  font-size: 1.05rem;
+  font-size: .85rem;
   font-weight: 600;
   letter-spacing: .02em;
 }
-.review-card__who strong { display: block; font-size: .95rem; }
+.review-card__who strong { display: block; font-size: .84rem; }
 .review-card__who span {
   display: inline-flex;
   align-items: center;
   gap: .3rem;
-  font-size: .76rem;
+  font-size: .68rem;
   color: var(--muted);
 }
 .review-card__who svg { width: 12px; height: 12px; color: var(--gold); }
-.review-card__stars { margin-top: 1rem; display: flex; align-items: center; gap: .6rem; }
+.review-card__stars { margin-top: .55rem; display: flex; align-items: center; gap: .5rem; }
 .review-card__stars em {
   font-style: normal;
-  font-size: .7rem;
+  font-size: .62rem;
   letter-spacing: .08em;
   text-transform: uppercase;
   color: var(--muted);
 }
 .review-card__text {
-  margin-top: .9rem;
-  font-size: .9rem;
+  margin-top: .55rem;
+  font-size: .8rem;
   color: var(--ink-3);
-  line-height: 1.72;
+  line-height: 1.55;
   flex: 1;
 }
 .review-card__foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: .8rem;
+  gap: .5rem;
   flex-wrap: wrap;
-  margin-top: 1.2rem;
-  padding-top: 1rem;
+  margin-top: .7rem;
+  padding-top: .6rem;
   border-top: 1px solid var(--line);
 }
 .review-card__service {
   display: inline-flex;
   align-items: center;
-  gap: .4rem;
-  font-size: .72rem;
+  gap: .35rem;
+  font-size: .62rem;
   font-weight: 600;
-  letter-spacing: .06em;
+  letter-spacing: .05em;
   text-transform: uppercase;
   color: var(--gold-deep);
 }
-.review-card__service svg { width: 13px; height: 13px; }
+.review-card__service svg { width: 12px; height: 12px; }
 .review-card__verified {
   display: inline-flex;
   align-items: center;
-  gap: .35rem;
-  font-size: .7rem;
+  gap: .3rem;
+  font-size: .62rem;
   color: var(--wa-dark);
   font-weight: 600;
 }
-.review-card__verified svg { width: 14px; height: 14px; }
+.review-card__verified svg { width: 12px; height: 12px; }
 
 .reviews-dots {
   display: flex;
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
-  gap: .4rem;
-  margin-top: clamp(1.6rem, 3vw, 2.4rem);
+  gap: .35rem;
+  margin-top: clamp(1rem, 2vw, 1.5rem);
 }
 .reviews-dot {
   width: 9px;
@@ -1658,12 +1696,12 @@ h1, h2, h3, h4 {
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
-  margin-top: 1.2rem;
+  margin-top: .9rem;
 }
 .reviews-controls__arrows { display: flex; gap: .5rem; }
 .review-nav {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
   border-radius: 100px;
@@ -1673,7 +1711,7 @@ h1, h2, h3, h4 {
   transition: background .25s var(--ease), color .25s var(--ease), transform .25s var(--ease);
 }
 .review-nav:hover { background: var(--ink); color: #fff; border-color: var(--ink); transform: translateY(-2px); }
-.review-nav svg { width: 17px; height: 17px; }
+.review-nav svg { width: 15px; height: 15px; }
 .reviews-progress {
   position: relative;
   flex: 1;
@@ -2473,14 +2511,30 @@ table.price-table tbody strong { font-family: var(--f-display); font-size: 1.02r
   .trustbar__inner { grid-template-columns: repeat(2, 1fr); }
   .steps { gap: 0; }
   .reviews-head { grid-template-columns: 1fr; align-items: start; }
-  .stats { grid-template-columns: repeat(2, 1fr); }
-  .breadcrumb-cards { grid-template-columns: 1fr; }
+  /* stats & hero cards: ONE compact row even on phones — tiny boxes */
+  .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .5rem; }
+  .stat { padding: .8rem .35rem; border-radius: var(--radius-sm); }
+  .stat strong { font-size: clamp(.95rem, 3.4vw, 1.5rem); }
+  .stat span { font-size: .55rem; letter-spacing: .05em; line-height: 1.3; margin-top: .2rem; }
+  .breadcrumb-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; margin-top: 1.5rem; }
+  .breadcrumb-card { padding: .65rem .55rem; }
+  .breadcrumb-card strong { font-size: clamp(.8rem, 2.9vw, 1.1rem); line-height: 1.2; }
+  .breadcrumb-card span { display: block; font-size: .54rem; letter-spacing: .05em; line-height: 1.35; margin-top: .18rem; }
   .quote-band { grid-template-columns: 1fr; }
 
   /* mobile navigation — the "dashboard": a full-screen sheet with every
      page button stacked vertically. The sticky header is lifted above the
      sheet while it is open (body.nav-open), so the hamburger — which morphs
-     into an ✕ — always stays visible and tappable to collapse it again. */
+     into an ✕ — always stays visible and tappable to collapse it again.
+     IMPORTANT: `backdrop-filter` on the header would make it the containing
+     block of the fixed-position sheet (trapping the menu inside the small
+     header box), so the blur is switched off on phones and the header gets
+     a solid background instead. */
+  .site-header {
+    background: var(--cream);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
   .menu-toggle { display: flex; }
   .nav {
     position: fixed;
@@ -2491,12 +2545,27 @@ table.price-table tbody strong { font-family: var(--f-display); font-size: 1.02r
     align-items: stretch;
     justify-content: center;
     gap: .55rem;
-    padding: calc(var(--header-h) + env(safe-area-inset-top) + 1rem) 1.5rem calc(1.6rem + env(safe-area-inset-bottom));
+    /* extra top clearance: at the very top of the page the dark topbar (40px)
+       still sits above the sticky header, and the header floats ABOVE the
+       sheet — the buttons must never hide behind either */
+    padding: calc(var(--header-h) + 56px + env(safe-area-inset-top)) 1.5rem calc(1.6rem + env(safe-area-inset-bottom));
     background: var(--cream);
     transform: translateX(103%);
     visibility: hidden;
     transition: transform .45s var(--ease-out), visibility 0s linear .45s;
     overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  /* small "Menu" heading above the page buttons */
+  .nav::before {
+    content: "Menu";
+    margin-bottom: .5rem;
+    text-align: center;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+    color: var(--muted);
   }
   .nav.is-open {
     transform: none;
@@ -2532,9 +2601,11 @@ table.price-table tbody strong { font-family: var(--f-display); font-size: 1.02r
   .modal__panel { grid-template-columns: 1fr; max-height: 94vh; }
   .modal__media { min-height: 240px; max-height: 42vh; }
   .reviews-track { grid-template-columns: 1fr; }
-  .review-card { padding: 1.35rem 1.25rem; }
-  .review-card__text { font-size: .87rem; }
-  .review-card__quote { font-size: 3rem; top: .8rem; }
+  .review-card { padding: .9rem .95rem .85rem; }
+  .review-card__text { font-size: .76rem; }
+  .review-card__quote { font-size: 1.8rem; top: .5rem; right: .7rem; }
+  .review-card__stars em { font-size: .58rem; }
+  .avatar { width: 34px; height: 34px; font-size: .75rem; }
 }
 
 @media (max-width: 760px) {
@@ -2550,11 +2621,62 @@ table.price-table tbody strong { font-family: var(--f-display); font-size: 1.02r
     gap: .75rem !important;
   }
   .form-grid { grid-template-columns: 1fr; }
+  /* quote band, contact cards & form: small boxes on phones */
+  .quote-band { padding: 1.4rem 1.15rem; gap: 1.1rem; border-radius: var(--radius); }
+  .quote-band h2 { font-size: 1.25rem; }
+  .quote-band p { font-size: .82rem; }
+  .contact-cards { gap: .6rem; }
+  .contact-card { padding: .75rem .8rem; gap: .7rem; }
+  .contact-card__icon { width: 36px; height: 36px; border-radius: 10px; }
+  .contact-card__icon svg { width: 17px; height: 17px; }
+  .contact-card strong { font-size: .8rem; }
+  .contact-card span, .contact-card a { font-size: .74rem; }
+  .form-card { padding: 1.05rem .95rem; border-radius: var(--radius); }
   /* header keeps only the quote-list and menu buttons — WhatsApp/Call live in
      the floating pair (and the mobile action bar) so they are never duplicated */
   .header__cta { gap: .45rem; }
   .brand__text span { display: none; }
-  .footer__grid { grid-template-columns: 1fr; }
+  /* footer in THREE compact columns on phones — Quick links | Get in touch |
+     brand & socials — which cuts the vertical scrolling significantly */
+  .footer { padding-top: 2rem; font-size: .8rem; }
+  .footer__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem .7rem;
+    padding-bottom: 1.3rem;
+  }
+  .footer__grid > :last-child { grid-column: auto; }   /* undo the tablet span */
+  .footer__brand { order: 3; }
+  .footer__brand p { display: none; }
+  .footer .brand { flex-direction: column; align-items: flex-start; gap: .5rem; }
+  .footer .brand__logo { width: 44px; height: 44px; }
+  .footer .brand__text strong { font-size: .78rem; line-height: 1.25; }
+  .footer h4 { font-size: .58rem; letter-spacing: .1em; margin-bottom: .55rem; }
+  .footer__links { gap: .4rem; font-size: .7rem; }
+  .footer__contact li { gap: .4rem; margin-bottom: .45rem; font-size: .68rem; }
+  .footer__contact svg { width: 13px; height: 13px; margin-top: .18rem; }
+  .footer__social { margin-top: .7rem; gap: .4rem; }
+  .footer__social a { width: 32px; height: 32px; }
+  .footer__social svg { width: 14px; height: 14px; }
+  .footer__grid .btn--sm {
+    width: 100%;
+    justify-content: center;
+    white-space: normal;
+    line-height: 1.25;
+    font-size: .56rem;
+    letter-spacing: .02em;
+    padding: .45rem .4rem;
+    gap: .35rem;
+    min-height: 0;
+  }
+  .footer__grid .btn--sm svg { width: 13px; height: 13px; }
+  .footer__bottom {
+    justify-content: center;
+    text-align: center;
+    gap: .3rem .9rem;
+    font-size: .64rem;
+    padding-block: .9rem;
+  }
+  .footer__bottom > span:nth-of-type(2) { display: none; }
   .media-stack__badge { right: 10px; bottom: -10px; }
   .step { grid-template-columns: 60px 1fr; gap: 1rem; }
   .step__num { font-size: 1.5rem; }
@@ -2565,7 +2687,9 @@ table.price-table tbody strong { font-family: var(--f-display); font-size: 1.02r
   .float-call { bottom: calc(clamp(1rem, 3vw, 2rem) + 66px); padding: .7rem; }
   .float-call__label { display: none; }
   .back-top { bottom: calc(clamp(1rem, 3vw, 2rem) + 132px); right: calc(clamp(1rem, 3vw, 2rem)); width: 40px; height: 40px; }
-  .stat { padding: 1.2rem 1rem; }
+  .stat { padding: .6rem .3rem; }
+  .stat strong { font-size: .92rem; }
+  .stat span { font-size: .5rem; letter-spacing: .03em; }
   .card__quick { opacity: 1; transform: none; }
 
   /* compact 2-col card tuning */
@@ -2574,6 +2698,8 @@ table.price-table tbody strong { font-family: var(--f-display); font-size: 1.02r
   .card__media--photo { aspect-ratio: 1 / 1; }
   .card__body { padding: .75rem .7rem .8rem; }
   .card__body h3 { font-size: .88rem; line-height: 1.25; }
+  .card__note-input { font-size: .66rem; padding: .5rem .55rem; margin-top: .45rem; border-radius: 8px; }
+  .card__actions--solo { padding-top: .55rem; }
   .card__summary {
     font-size: .76rem;
     line-height: 1.45;
