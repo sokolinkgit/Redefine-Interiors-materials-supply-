@@ -19,7 +19,7 @@
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/img/favicon.svg">
 
-<!-- hero: phones preload the first slideshow image (full-screen dashboard); desktops preload the dark backdrop -->
+<!-- hero: phones preload the first slideshow image (shown under the intro text); desktops preload the dark backdrop -->
 <link rel="preload" as="image" href="assets/img/sm/hero-1-kitchen-480.jpg" media="(max-width: 900px)" fetchpriority="high">
 <link rel="preload" as="image" href="assets/img/hero-bg-dark.jpg" media="(min-width: 901px)" fetchpriority="high">
 
@@ -80,10 +80,6 @@
     </nav>
 
     <div class="header__cta">
-      <button class="quote-btn" type="button" data-open-drawer aria-label="Open your quotation list">
-        <span class="i" data-icon="cart"></span>
-        <span class="quote-btn__count" data-quote-count>0</span>
-      </button>
       <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="primary-nav">
         <span></span><span></span><span></span>
       </button>
@@ -93,7 +89,7 @@
 
 <main id="main">
 
-  <!-- ===================== HERO — 50/50 SPLIT ON DESKTOP · FULL-SCREEN DASHBOARD ON PHONES =====================
+  <!-- ===================== HERO — 50/50 SPLIT ON DESKTOP · TEXT ABOVE, SLIDESHOW BELOW ON PHONES =====================
        The slideshow below rotates the DESIGNS ticked as featured (admin bar → Slideshow).
        js/main.js rebuilds .hero__slides and .hero__dots from that list, so the pictures on
        this page are literally the ones on designs.html. What follows is the no-JavaScript
@@ -252,7 +248,7 @@
   <section class="section section--cream">
     <div class="container split">
       <div class="reveal">
-        <span class="eyebrow">Why Redefine</span>
+        <span class="eyebrow">Why Redefine Interiors &amp; Materials Supply</span>
         <h2 class="display-l">The contractor who actually shows up</h2>
         <p class="lead" style="margin-top:1.1rem">
           Bad interiors work in Kenya is rarely about talent — it is about materials that were swapped, measurements rushed and
@@ -276,18 +272,6 @@
           <span class="media-frame__tag">Ruiru · Family kitchen</span>
         </div>
         <div class="media-stack__badge"><strong data-count="480" data-suffix="+">480+</strong><span>Projects completed</span></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== STATS ===================== -->
-  <section class="section section--tight section--dark">
-    <div class="container">
-      <div class="stats">
-        <div class="stat reveal"><strong data-count="12" data-suffix="+">12+</strong><span>Years of experience</span></div>
-        <div class="stat reveal"><strong data-count="480" data-suffix="+">480+</strong><span>Projects completed</span></div>
-        <div class="stat reveal"><strong data-count="47">47</strong><span>Counties served</span></div>
-        <div class="stat reveal"><strong data-count="100" data-suffix="%">100%</strong><span>Clients who refer us</span></div>
       </div>
     </div>
   </section>
@@ -341,125 +325,6 @@
           <button class="review-nav" type="button" data-reviews-prev aria-label="Previous reviews"><span class="i" data-icon="arrowLeft"></span></button>
           <button class="review-nav" type="button" data-reviews-next aria-label="Next reviews"><span class="i" data-icon="arrowRight"></span></button>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== QUOTE BAND ===================== -->
-  <section class="section section--cream">
-    <div class="container">
-      <div class="quote-band reveal">
-        <div>
-          <span class="eyebrow">Ready when you are</span>
-          <h2 class="display-m">Get a real quotation today — not next month</h2>
-          <p style="margin-top:.9rem;color:rgba(251,248,243,.78);max-width:56ch">
-            Send a photo of your space on WhatsApp and we will tell you what it takes, what it costs and how long it will
-            take. Site visits within Nairobi and its environs.
-          </p>
-        </div>
-        <div style="display:grid;gap:.6rem">
-          <a class="btn btn--wa btn--lg btn--block" data-wa="Hello Redefine Interiors 👋 Here is a photo of my space. Please send me a quotation."><span class="i" data-icon="whatsapp"></span> WhatsApp 0703 142 874</a>
-          <a class="btn btn--call btn--block" href="tel:+254703142874"><span class="i" data-icon="phone"></span> Call 0703 142 874</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== QUOTATION FORM ===================== -->
-  <section class="section section--cream2" id="request">
-    <div class="container contact-grid">
-      <div class="reveal">
-        <span class="eyebrow">Request a quotation</span>
-        <h2 class="display-l">Tell us about your project</h2>
-        <p class="lead" style="margin-top:1rem">Fill this in and it opens WhatsApp with your details already written out — so we can quote you accurately the first time.</p>
-
-        <div class="contact-cards" style="margin-top:2rem">
-          <div class="contact-card">
-            <span class="contact-card__icon"><span class="i" data-icon="whatsapp"></span></span>
-            <div><strong>WhatsApp — fastest reply</strong>
-              <a href="tel:+254703142874">0703 142 874</a>
-            </div>
-          </div>
-          <div class="contact-card">
-            <span class="contact-card__icon"><span class="i" data-icon="phone"></span></span>
-            <div><strong>Call the office</strong><a href="tel:+254703142874">0703 142 874</a></div>
-          </div>
-          <div class="contact-card">
-            <span class="contact-card__icon"><span class="i" data-icon="pin"></span></span>
-            <div><strong>Coverage</strong><span>All parts of Kenya — Nairobi, Nakuru, Naivasha, Ngong, Juja, Ruiru, Thika, Mombasa, Kisumu, Eldoret</span></div>
-          </div>
-          <div class="contact-card">
-            <span class="contact-card__icon"><span class="i" data-icon="clock"></span></span>
-            <div><strong>Working hours</strong><span>Mon – Sat: 8:00am – 6:00pm · Sunday: by appointment</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="form-card reveal">
-        <form data-quote-form novalidate>
-          <div class="form-grid">
-            <div class="field">
-              <label for="h-name">Your name</label>
-              <input id="h-name" name="name" type="text" placeholder="e.g. Grace Wanjiru" required>
-              <span class="field__error"></span>
-            </div>
-            <div class="field">
-              <label for="h-phone">Phone / WhatsApp</label>
-              <input id="h-phone" name="phone" type="tel" placeholder="07xx xxx xxx" required>
-              <span class="field__error"></span>
-            </div>
-            <div class="field">
-              <label for="h-location">Project location</label>
-              <input id="h-location" name="location" type="text" placeholder="e.g. Ruiru, Kiambu" required>
-              <span class="field__error"></span>
-            </div>
-            <div class="field">
-              <label for="h-service">Service needed</label>
-              <select id="h-service" name="service" required>
-                <option value="">Choose a service…</option>
-                <option>Kitchen cabinets</option>
-                <option>Wardrobes &amp; closets</option>
-                <option>Aluminium works</option>
-                <option>Gypsum works</option>
-                <option>Shop renovation</option>
-                <option>All fittings work</option>
-                <option>Materials supply only</option>
-                <option>Full house fit-out</option>
-              </select>
-              <span class="field__error"></span>
-            </div>
-            <div class="field">
-              <label for="h-budget">Budget range (optional)</label>
-              <select id="h-budget" name="budget">
-                <option value="">Select a range…</option>
-                <option>Below KES 100,000</option>
-                <option>KES 100,000 – 250,000</option>
-                <option>KES 250,000 – 500,000</option>
-                <option>KES 500,000 – 1,000,000</option>
-                <option>Above KES 1,000,000</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="h-timeline">When should we start?</label>
-              <select id="h-timeline" name="timeline">
-                <option value="">Select a timeline…</option>
-                <option>Immediately</option>
-                <option>Within 2 weeks</option>
-                <option>Within a month</option>
-                <option>Just planning / budgeting</option>
-              </select>
-            </div>
-            <div class="field field--full">
-              <label for="h-details">Project details</label>
-              <textarea id="h-details" name="details" placeholder="Tell us the room sizes, what you would like done, and anything you have already bought…"></textarea>
-            </div>
-            <div class="field field--full">
-              <button class="btn btn--wa btn--lg btn--block" type="submit"><span class="i" data-icon="send"></span> Send my request on WhatsApp</button>
-              <span class="field__error" data-form-note hidden></span>
-              <p class="form-note"><span class="i" data-icon="shield"></span> Your details go straight to our WhatsApp inbox — we never share them or add you to bulk lists.</p>
-            </div>
-          </div>
-        </form>
       </div>
     </div>
   </section>
