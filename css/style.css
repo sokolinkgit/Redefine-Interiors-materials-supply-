@@ -484,6 +484,10 @@ h1, h2, h3, h4 {
 .nav__link:hover::after, .nav__link.is-active::after { width: 42%; }
 .nav__link.is-active { color: var(--ink); font-weight: 600; }
 
+/* the ✕ CLOSE button at the foot of the mobile dashboard sheet —
+   injected by js/main.js, so hide it on desktop where the nav is a row */
+.nav__close { display: none; }
+
 .header__cta { display: flex; align-items: center; gap: .6rem; }
 
 .quote-btn {
@@ -759,88 +763,75 @@ h1, h2, h3, h4 {
   .hero__meta-item strong { font-size: 1.02rem; }
 }
 
-/* FULL-SCREEN DASHBOARD ON PHONES: the slideshow fills the whole hero and the
-   copy floats over it — never a small window under the text. */
+/* STACKED ON PHONES: the headline, paragraph and buttons come FIRST on the
+   dark backdrop, and the image slideshow sits BELOW them as its own block —
+   no text is ever written over the photos. */
 @media (max-width: 900px) {
   .hero {
+    display: block;
     overflow: hidden;
-    display: flex;
-    min-height: 540px;
-    min-height: calc(100svh - var(--header-h));
   }
   .hero__grid {
     grid-template-columns: 1fr;
-    position: relative;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
     align-items: stretch;
-    flex: 1;
-    max-width: none;
-    padding-inline: 0;
-    padding-block: 0;
-    gap: 0;
-    text-align: left;
+    gap: clamp(1.2rem, 3.5vh, 1.8rem);
+    padding-block: clamp(1.8rem, 5vh, 2.8rem) calc(clamp(1.4rem, 4vh, 2rem) + env(safe-area-inset-bottom));
   }
-  /* the plain dark backdrop is redundant behind a full-bleed slideshow, so it
-     is hidden on phones (and no longer preloaded there) */
-  .hero__bg { display: none; }
+  /* the photos sit BELOW the text now, so the dark backdrop is only a
+     canvas for the copy — skip its image download on phones but keep the
+     scrim/grain so the panel is not a flat, plain fill */
+  .hero__bg img { display: none; }
+  .hero__bg {
+    background:
+      radial-gradient(120% 70% at 88% 0%, rgba(176, 133, 64, .20) 0%, transparent 60%),
+      linear-gradient(172deg, #141110 0%, #1D1712 55%, #241C14 100%);
+  }
+  .hero__scrim { background: none; }
+  .hero__copy {
+    position: relative;
+    z-index: 5;
+    max-width: 34rem;
+  }
+  /* the stats strip is intentionally dropped from the hero on phones —
+     the layout is: text above, slideshow below, nothing else */
+  .hero__meta { display: none; }
   .hero__stage {
-    position: absolute;
-    inset: 0;
+    position: relative;
+    z-index: 4;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
-    gap: 0;
-    padding: 0;
+    gap: .8rem;
+    min-width: 0;
   }
   .hero__frame {
-    position: absolute;
-    inset: 0;
+    position: relative;
+    inset: auto;
     width: 100%;
-    height: 100%;
-    max-height: none;
-    aspect-ratio: auto;
-    min-height: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    max-height: 60vh;
     margin: 0;
-    border: 0;
-    border-radius: 0;
-    box-shadow: none;
+    border-radius: var(--radius);
+    border: 1px solid rgba(255, 255, 255, .16);
+    box-shadow: 0 30px 70px -38px rgba(0, 0, 0, .95);
+    overflow: hidden;
     background: #0d0b09;
   }
-  /* legibility scrim over the slideshow — darkest where the copy sits */
-  .hero__frame::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    pointer-events: none;
-    background: linear-gradient(180deg,
-      rgba(8, 6, 4, .80) 0%,
-      rgba(8, 6, 4, .44) 30%,
-      rgba(8, 6, 4, .30) 48%,
-      rgba(8, 6, 4, .86) 80%,
-      rgba(8, 6, 4, .94) 100%);
-  }
+  /* photos must be seen clearly — no dimming scrim over the slideshow */
+  .hero__frame::after { content: none; }
   .hero__slide { transition: opacity .8s var(--ease), visibility .8s; }
-  /* static, full-bleed images stay tack-sharp — no ken-burns zoom on phones */
+  /* static images stay tack-sharp — no ken-burns zoom on phones */
   .hero__media img {
     transform: none;
     filter: saturate(1.07) brightness(1.03) contrast(1.02);
   }
   .hero__slide.is-active .hero__media img { animation: none; transform: none; }
-  .hero__copy {
-    position: relative;
-    z-index: 5;
-    max-width: 34rem;
-    margin-top: auto;
-    /* compact so the CTA buttons and the stats row stay on the first screen */
-    padding: clamp(1rem, 3vh, 2.2rem) var(--gutter) .8rem;
-  }
   .hero__controls {
     position: relative;
     z-index: 5;
-    padding: 0 var(--gutter) calc(.8rem + env(safe-area-inset-bottom));
+    padding: 0 .2rem;
     background: none;
     border: 0;
     backdrop-filter: none;
@@ -850,9 +841,7 @@ h1, h2, h3, h4 {
 }
 
 @media (max-width: 760px) {
-  /* CTAs stacked full-width — buttons are never cut off at the right edge —
-     and a tight stats row so the whole hero (headline, buttons, 12+ years /
-     480+ projects) fits one screen on phones */
+  /* CTAs stacked full-width — buttons are never cut off at the right edge */
   .hero__actions {
     display: grid;
     grid-template-columns: 1fr;
@@ -860,11 +849,6 @@ h1, h2, h3, h4 {
     margin-top: 1.15rem;
   }
   .hero__actions .btn { width: 100%; justify-content: center; min-height: 46px; }
-  .hero__meta { gap: .8rem .9rem; margin-top: 1.1rem; padding-top: .9rem; }
-  .hero__meta-item { flex: 1 1 44%; gap: .55rem; }
-  .hero__meta-item svg { width: 18px; height: 18px; }
-  .hero__meta-item strong { font-size: .98rem; }
-  .hero__meta-item span { font-size: .58rem; }
   .hero__arrows .arrow-btn { width: 42px; height: 42px; }
   .hero__dot { width: 34px; height: 5px; }
   .hero__dot.is-active { width: 52px; }
@@ -872,16 +856,8 @@ h1, h2, h3, h4 {
 
 @media (max-width: 560px) {
   .hero h1 { margin-top: .8rem; }
-  .hero__sub {
-    font-size: .88rem;
-    margin-top: .7rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+  .hero__sub { font-size: .88rem; margin-top: .7rem; }
   .hero__actions { gap: .5rem; margin-top: 1rem; }
-  .hero__meta { margin-top: .95rem; padding-top: .75rem; }
   .hero__actions .btn { min-height: 42px; font-size: .8rem; padding: .55rem .8rem; }
   .hero__eyebrow { font-size: .6rem; letter-spacing: .12em; padding: .42rem .8rem .42rem .6rem; }
   .hero__controls { justify-content: space-between; }
@@ -1157,8 +1133,10 @@ h1, h2, h3, h4 {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(12, 10, 8, .28) 0%, transparent 42%, rgba(12, 10, 8, .55) 100%);
-  opacity: .85;
+  /* faint scrim only at the very edges — the photo itself stays bright
+     and is seen clearly */
+  background: linear-gradient(180deg, rgba(12, 10, 8, .10) 0%, transparent 45%, rgba(12, 10, 8, .30) 100%);
+  opacity: .7;
   transition: opacity .4s var(--ease);
 }
 .card__badges {
@@ -1201,18 +1179,19 @@ h1, h2, h3, h4 {
   gap: .4rem;
   padding: .42rem .8rem;
   border-radius: 100px;
-  background: rgba(255, 255, 255, .92);
-  color: var(--ink);
+  background: linear-gradient(140deg, #C69C46, var(--gold-deep));
+  color: #fff;
   font-size: .68rem;
-  font-weight: 600;
-  letter-spacing: .06em;
+  font-weight: 700;
+  letter-spacing: .08em;
   text-transform: uppercase;
+  box-shadow: 0 10px 22px -10px rgba(20, 17, 14, .8);
   opacity: 0;
   transform: translateY(8px);
-  transition: opacity .35s var(--ease), transform .35s var(--ease), background .3s var(--ease);
+  transition: opacity .35s var(--ease), transform .35s var(--ease), filter .3s var(--ease);
 }
 .card:hover .card__quick, .card:focus-within .card__quick { opacity: 1; transform: none; }
-.card__quick:hover { background: var(--gold); color: #fff; }
+.card__quick:hover { filter: brightness(1.1); }
 .card__quick svg { width: 14px; height: 14px; }
 
 .card__body {
@@ -1265,21 +1244,7 @@ h1, h2, h3, h4 {
 
 .card__actions { display: flex; align-items: center; gap: .5rem; }
 
-/* design cards: name + one OPTIONAL note input + WhatsApp quotation button */
-.card__note-input {
-  width: 100%;
-  margin-top: .55rem;
-  padding: .55rem .7rem;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--cream);
-  font-family: var(--f-body);
-  font-size: .78rem;
-  color: var(--ink);
-  transition: border-color .25s var(--ease), background .25s var(--ease);
-}
-.card__note-input::placeholder { color: var(--muted); opacity: .8; }
-.card__note-input:focus { outline: none; border-color: var(--gold); background: var(--white); }
+/* design & material cards: name + one WhatsApp request button */
 /* pinned to the bottom of the card so buttons line up across the grid */
 .card__actions--solo { width: 100%; margin-top: auto; padding-top: .7rem; }
 .card__actions--solo .btn { flex: 1; justify-content: center; }
@@ -1312,15 +1277,6 @@ h1, h2, h3, h4 {
   gap: .4rem;
   font-size: .74rem;
   color: var(--muted);
-}
-.card--material .card__note {
-  margin-top: .75rem;
-  font-size: .8rem;
-  color: var(--muted);
-  padding: .7rem .85rem;
-  background: var(--cream);
-  border-radius: 10px;
-  border: 1px dashed var(--line);
 }
 
 .qty {
@@ -2522,10 +2478,12 @@ table.price-table tbody strong { font-family: var(--f-display); font-size: 1.02r
   .breadcrumb-card span { display: block; font-size: .54rem; letter-spacing: .05em; line-height: 1.35; margin-top: .18rem; }
   .quote-band { grid-template-columns: 1fr; }
 
-  /* mobile navigation — the "dashboard": a full-screen sheet with every
-     page button stacked vertically. The sticky header is lifted above the
-     sheet while it is open (body.nav-open), so the hamburger — which morphs
-     into an ✕ — always stays visible and tappable to collapse it again.
+  /* mobile navigation — the "dashboard": a 70%-wide sheet that slides in
+     from the RIGHT, leaving 30% of the page dimmed beside it — a tap out
+     there (or on the ✕ button pinned to the sheet's foot) collapses it.
+     The sticky header is lifted above the sheet while it is open
+     (body.nav-open), so the hamburger — which morphs into an ✕ — also
+     stays visible and tappable to collapse it again.
      IMPORTANT: `backdrop-filter` on the header would make it the containing
      block of the fixed-position sheet (trapping the menu inside the small
      header box), so the blur is switched off on phones and the header gets
@@ -2538,34 +2496,44 @@ table.price-table tbody strong { font-family: var(--f-display); font-size: 1.02r
   .menu-toggle { display: flex; }
   .nav {
     position: fixed;
-    inset: 0;
-    z-index: 130;
+    inset: 0 0 0 auto;
+    width: 70%;
+    min-width: 250px;
+    max-width: 400px;
+    z-index: 140;               /* above the dimmed .overlay (130), below the header */
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    justify-content: center;
+    justify-content: flex-start;
     gap: .55rem;
-    /* extra top clearance: at the very top of the page the dark topbar (40px)
-       still sits above the sticky header, and the header floats ABOVE the
-       sheet — the buttons must never hide behind either */
-    padding: calc(var(--header-h) + 56px + env(safe-area-inset-top)) 1.5rem calc(1.6rem + env(safe-area-inset-bottom));
-    background: var(--cream);
+    /* top clearance: the header floats ABOVE the sheet */
+    padding: calc(var(--header-h) + 20px + env(safe-area-inset-top)) 1.1rem calc(1rem + env(safe-area-inset-bottom));
+    /* rich cabinet-wood gradient instead of the flat plain sheet */
+    background:
+      radial-gradient(140% 90% at 100% 0%, rgba(176, 133, 64, .22) 0%, transparent 55%),
+      linear-gradient(168deg, #191410 0%, #231B13 48%, #2E2318 100%);
+    border-left: 1px solid rgba(176, 133, 64, .38);
+    box-shadow: -30px 0 70px -34px rgba(0, 0, 0, .8);
     transform: translateX(103%);
     visibility: hidden;
     transition: transform .45s var(--ease-out), visibility 0s linear .45s;
     overflow-y: auto;
     overscroll-behavior: contain;
+    counter-reset: navi;
   }
-  /* small "Menu" heading above the page buttons */
+  /* "Dashboard" heading at the top of the sheet */
   .nav::before {
-    content: "Menu";
-    margin-bottom: .5rem;
+    content: "Dashboard";
+    display: block;
+    padding-bottom: .85rem;
+    margin-bottom: .15rem;
     text-align: center;
-    font-size: .68rem;
+    font-size: .74rem;
     font-weight: 700;
-    letter-spacing: .3em;
+    letter-spacing: .34em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--gold-soft);
+    border-bottom: 1px solid rgba(228, 206, 158, .28);
   }
   .nav.is-open {
     transform: none;
@@ -2577,21 +2545,80 @@ table.price-table tbody strong { font-family: var(--f-display); font-size: 1.02r
     background: rgba(251, 248, 243, .97);
     border-bottom-color: var(--line);
   }
+  /* the page buttons are centred vertically inside the sheet */
+  .nav__link:first-of-type { margin-top: auto; }
   .nav__link {
+    counter-increment: navi;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
     width: 100%;
-    max-width: 480px;
-    margin-inline: auto;
-    padding: clamp(.95rem, 2.4vh, 1.35rem) 1.2rem;
-    font-size: clamp(1.05rem, 3.6vw, 1.3rem);
+    padding: clamp(.85rem, 2vh, 1.1rem) 1rem;
+    font-size: clamp(.98rem, 3.4vw, 1.14rem);
     font-weight: 600;
-    text-align: center;
-    border: 1px solid var(--line);
+    letter-spacing: .01em;
+    text-align: left;
+    color: var(--cream);
+    border: 1px solid rgba(255, 255, 255, .13);
     border-radius: var(--radius-sm);
-    background: var(--white);
-    box-shadow: 0 12px 28px -24px rgba(20, 17, 14, .55);
+    background: rgba(255, 255, 255, .055);
   }
-  .nav__link::after { display: none; }
-  .nav__link.is-active { color: var(--gold-deep); border-color: var(--gold); }
+  /* small gold number on the left of every page button */
+  .nav__link::before {
+    content: counter(navi, decimal-leading-zero);
+    flex: none;
+    font-family: var(--f-display);
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    color: var(--gold);
+  }
+  /* slim gold chevron on the right */
+  .nav__link::after {
+    content: "›";
+    margin-left: auto;
+    font-size: 1.15rem;
+    line-height: 1;
+    color: rgba(228, 206, 158, .65);
+    position: static;
+    width: auto;
+    height: auto;
+    background: none;
+    transform: none;
+  }
+  .nav__link:active { background: rgba(255, 255, 255, .1); }
+  .nav__link:hover { color: var(--gold-soft); }
+  /* neutralise the desktop gold-underline ::after rules on the chevron */
+  .nav__link:hover::after, .nav__link.is-active::after { width: auto; height: auto; background: none; }
+  .nav__link.is-active {
+    color: var(--gold-soft);
+    border-color: var(--gold);
+    background: rgba(176, 133, 64, .18);
+    box-shadow: inset 3px 0 0 0 var(--gold);
+  }
+  /* ✕ close button pinned to the bottom of the sheet */
+  .nav__close {
+    margin-top: auto;
+    margin-bottom: 0;
+    width: 100%;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .55rem;
+    padding: .8rem 1rem;
+    border: 1px solid rgba(228, 206, 158, .55);
+    border-radius: var(--radius-sm);
+    background: rgba(176, 133, 64, .14);
+    color: var(--gold-soft);
+    font-size: .82rem;
+    font-weight: 700;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    transition: background .25s var(--ease), color .25s var(--ease), border-color .25s var(--ease);
+  }
+  .nav__close:hover, .nav__close:active { background: var(--gold); color: #fff; border-color: var(--gold); }
+  .nav__close svg { width: 15px; height: 15px; }
 }
 
 @media (max-width: 900px) {
@@ -2599,13 +2626,55 @@ table.price-table tbody strong { font-family: var(--f-display); font-size: 1.02r
   .split--reverse > :first-child { order: 2; }
   .contact-grid { grid-template-columns: 1fr; }
   .modal__panel { grid-template-columns: 1fr; max-height: 94vh; }
-  .modal__media { min-height: 240px; max-height: 42vh; }
-  .reviews-track { grid-template-columns: 1fr; }
-  .review-card { padding: .9rem .95rem .85rem; }
-  .review-card__text { font-size: .76rem; }
-  .review-card__quote { font-size: 1.8rem; top: .5rem; right: .7rem; }
-  .review-card__stars em { font-size: .58rem; }
-  .avatar { width: 34px; height: 34px; font-size: .75rem; }
+  .modal__media { min-height: 260px; max-height: 52vh; }
+
+  /* CLIENT REVIEWS ON PHONES — three SMALL boxes stacked per screen,
+     refreshing every 5 s. Everything is shrunk: paddings, avatars,
+     star sizes and the body text, so a batch never eats the viewport. */
+  .reviews-track { grid-template-columns: 1fr; gap: .55rem; }
+  .review-card { padding: .65rem .8rem .55rem; border-radius: 13px; }
+  .review-card:hover { transform: none; }
+  .review-card__quote { font-size: 1.5rem; top: .45rem; right: .65rem; }
+  .review-card__head { gap: .5rem; }
+  .avatar { width: 28px; height: 28px; font-size: .64rem; }
+  .review-card__who strong { font-size: .76rem; }
+  .review-card__who span { font-size: .6rem; gap: .22rem; }
+  .review-card__who svg { width: 10px; height: 10px; }
+  .review-card__stars { margin-top: .3rem; gap: .35rem; }
+  .review-card__stars .stars svg { width: 10px; height: 10px; }
+  .review-card__stars em { font-size: .54rem; }
+  .review-card__text {
+    margin-top: .3rem;
+    font-size: .72rem;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .review-card__foot { margin-top: .45rem; padding-top: .38rem; }
+  .review-card__service { font-size: .54rem; gap: .25rem; }
+  .review-card__verified { font-size: .54rem; gap: .22rem; }
+  .review-card__service svg, .review-card__verified svg { width: 10px; height: 10px; }
+
+  /* the 4.9 summary stays ONE compact horizontal pill — score + stars on a
+     single line, the long text lines are dropped on phones */
+  .rating-summary {
+    flex-direction: row;
+    align-items: center;
+    gap: .6rem;
+    padding: .5rem .8rem;
+    width: auto;
+    justify-self: start;
+  }
+  .rating-summary__score { font-size: 1.35rem; }
+  .rating-summary__meta { display: flex; align-items: center; }
+  .rating-summary__meta > span:not(.stars) { display: none; }
+  .stars--lg svg { width: 11px; height: 11px; }
+
+  /* 17 dot buttons would wrap into a clutter on phones — the arrows, the
+     counter and the auto-refresh already do the job */
+  .reviews-dots { display: none; }
 }
 
 @media (max-width: 760px) {
@@ -2698,7 +2767,6 @@ table.price-table tbody strong { font-family: var(--f-display); font-size: 1.02r
   .card__media--photo { aspect-ratio: 1 / 1; }
   .card__body { padding: .75rem .7rem .8rem; }
   .card__body h3 { font-size: .88rem; line-height: 1.25; }
-  .card__note-input { font-size: .66rem; padding: .5rem .55rem; margin-top: .45rem; border-radius: 8px; }
   .card__actions--solo { padding-top: .55rem; }
   .card__summary {
     font-size: .76rem;
@@ -2744,16 +2812,12 @@ table.price-table tbody strong { font-family: var(--f-display); font-size: 1.02r
   .service-card__price { font-size: .72rem; }
   .service-card__price b { font-size: .92rem; }
   .service-card .btn--sm { min-height: 36px; padding: .5rem .7rem; font-size: .68rem; }
-
-  /* material note hide on compact cards */
-  .card--material .card__note { display: none; }
 }
 
 @media (max-width: 520px) {
-  /* icon-only header on small phones: premium mark + WhatsApp + Call + quote + menu */
+  /* icon-only header on small phones: premium mark + menu */
   .brand__logo { width: 42px; height: 42px; border-radius: 12px; }
   .brand__text { display: none; }
-  .rating-summary { flex-direction: column; align-items: flex-start; gap: .6rem; width: 100%; }
   .card__quick span { display: none; }
   .reviews-controls { justify-content: center; }
   .hero__actions .btn { width: 100%; }
@@ -2903,8 +2967,8 @@ a, button, [role="tab"], .filter, .nav__link, .card__quick { touch-action: manip
    and that every catalogue grid is 2 columns to cut long scrolling.
    ========================================================================== */
 @media (max-width: 900px) {
-  /* hero dashboard is handled in section 6 (full-screen overlay on phones) —
-     just hint the compositor for buttery cross-fades */
+  /* the stacked phone hero (text above, slideshow below) is handled in
+     section 6 — just hint the compositor for buttery cross-fades */
   .hero__slide {
     will-change: opacity;
   }

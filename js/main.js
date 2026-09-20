@@ -63,6 +63,7 @@
     palette: SVG('<path d="M12 22a9 9 0 1 1 9-9c0 1.9-1.6 2.9-3 2.9h-1.4a2 2 0 0 0-1.4 3.4A2 2 0 0 1 12 22z"/><circle cx="8.2" cy="11.4" r="1.1"/><circle cx="12" cy="7.6" r="1.1"/><circle cx="15.8" cy="11.4" r="1.1"/>'),
     bulb: SVG('<path d="M9.2 18h5.6M10.2 21.5h3.6"/><path d="M12 2.5a6.8 6.8 0 0 0-3.9 12.4V18h7.8v-3.1A6.8 6.8 0 0 0 12 2.5z"/>'),
     image: SVG('<rect x="3" y="4" width="18" height="16" rx="2.4"/><circle cx="9" cy="10" r="1.7"/><path d="m4 18 5.2-5.2 4 4 3-3L20 17"/>'),
+    expand: SVG('<path d="m21 3-7 7M3 21l7-7"/><path d="M21 9V3h-6"/><path d="M3 15v6h6"/>'),
     send: SVG('<path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4z"/>'),
     x: SVG('<path d="M18.5 5.5 5.5 18.5M5.5 5.5l13 13"/>'),
     plus: SVG('<path d="M12 5.5v13M5.5 12h13"/>'),
@@ -163,10 +164,9 @@
 
   const MSG = {
     general: 'Hello ' + BUSINESS.name + ' 👋\n\nI found you online and I would like to request a quotation.',
-    design: (item, note) => 'Hello ' + BUSINESS.name + ' 👋\n\nI would like to request a quotation for this design:\n\n*' +
+    design: (item) => 'Hello ' + BUSINESS.name + ' 👋\n\nI would like to request a quotation for this design:\n\n*' +
       item.title + '*\nCategory: ' + item.category +
       (item.unit ? '\nScope: ' + item.unit : '') +
-      (note ? '\nMy note: ' + note : '') +
       '\n\nMy location: ______\nPreferred start date: ______\n\nPlease send me a detailed quotation. Thank you!',
     material: (item) => 'Hello ' + BUSINESS.name + ' 👋\n\nI would like to request a quotation for this material:\n\n*' +
       item.name + '*\nUnit: ' + item.unit +
@@ -253,6 +253,17 @@
      C. HEADER, MOBILE NAV & SCROLL UI
      ====================================================================== */
 
+  /* Dimmed area shown beside the 70%-wide dashboard sheet — a tap there
+     is the "outside" that closes the sheet. */
+  function navOverlayOpen() {
+    const ov = $('[data-overlay]');
+    if (ov) ov.classList.add('is-open');
+  }
+  function navOverlayClose() {
+    const ov = $('[data-overlay]');
+    if (ov && !$('.drawer.is-open') && !$('.modal.is-open')) ov.classList.remove('is-open');
+  }
+
   /* Collapses the mobile menu ("dashboard") sheet. Shared by the header
      toggle, the nav links, the overlay, the Escape key and the drawer. */
   function closeNav() {
@@ -266,6 +277,7 @@
       toggle.setAttribute('aria-label', 'Open menu');
     }
     document.body.classList.remove('nav-open');
+    navOverlayClose();
     if (!$('.drawer.is-open') && !$('.modal.is-open')) {
       document.body.classList.remove('no-scroll');
     }
@@ -278,9 +290,9 @@
     const progress = $('[data-scroll-progress] span');
     const backTop = $('[data-back-top]');
 
-    /* The mobile menu ("dashboard") is a full-screen sheet of page buttons;
-       the header stays above it so the hamburger (which turns into an ✕)
-       always stays tappable to collapse it again. */
+    /* The mobile menu ("dashboard") is a 70%-wide sheet of page buttons
+       sliding in from the right; a tap on the dimmed 30% beside it, on the
+       ✕ button pinned to its foot or on the hamburger collapses it again. */
     if (toggle && nav) {
       toggle.addEventListener('click', () => {
         const open = nav.classList.toggle('is-open');
@@ -289,7 +301,18 @@
         toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
         document.body.classList.toggle('no-scroll', open);
         document.body.classList.toggle('nav-open', open);
+        if (open) navOverlayOpen(); else navOverlayClose();
       });
+      /* the ✕ CLOSE button pinned to the bottom of the sheet */
+      if (!$('.nav__close', nav)) {
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'nav__close';
+        closeBtn.setAttribute('aria-label', 'Close dashboard');
+        closeBtn.innerHTML = ICONS.x + '<span>Close dashboard</span>';
+        closeBtn.addEventListener('click', closeNav);
+        nav.appendChild(closeBtn);
+      }
     }
 
     /* picking a page collapses the dashboard automatically */
@@ -509,7 +532,9 @@
       const next = $('[data-reviews-next]', root);
       if (!track) return;
 
-      const batchSize = () => (window.innerWidth <= 900 ? 1 : 3);
+      /* 3 reviews per batch on every screen — on phones they stack as
+         small compact cards, and the batch refreshes every 5 seconds */
+      const batchSize = () => 3;
       let index = 0;
       let timer = null;
       let paused = false;
@@ -619,12 +644,6 @@
         }
       }, { passive: true });
 
-      let lastSize = batchSize();
-      window.addEventListener('resize', () => {
-        const size = batchSize();
-        if (size !== lastSize) { lastSize = size; render(0); }
-      });
-
       render(0);
       start();
     });
@@ -640,9 +659,9 @@
     ' data-cms="' + kind + '" data-cms-id="' + escapeHtml(String(item.uuid || item.id || item.slug || '')) + '"' +
     (item.active === false ? ' data-cms-hidden="1"' : '');
 
-  /* Design cards are deliberately bare: photo, NAME, one OPTIONAL note
-     input (folded into the WhatsApp message) and the WhatsApp quotation
-     button — no badges, no description, no cart. */
+  /* Design cards are deliberately bare: a clear photo with an ENLARGE
+     (expand) button that opens the wide detail view, the NAME and the
+     WhatsApp quotation button — no badges, no description, no cart, no note field. */
   function designCard(d) {
     const alt = d.imageAlt || (d.title + ' — ' + d.category + ' by Redefine Interiors');
     return [
@@ -650,12 +669,10 @@
       '  <div class="card__media">',
       '    ' + responsiveImg(d.image, alt, CARD_SIZES, { xs: d.image480, sm: d.image760 }),
       '    <span class="card__cat">' + ICONS.spark + escapeHtml(d.category) + '</span>',
-      '    <button class="card__quick" type="button" data-view="' + d.id + '">' + ICONS.image + '<span>View details</span></button>',
+      '    <button class="card__quick" type="button" data-view="' + d.id + '" aria-label="Enlarge ' + escapeHtml(d.title) + ' photo">' + ICONS.expand + '<span>View</span></button>',
       '  </div>',
       '  <div class="card__body">',
       '    <h3>' + escapeHtml(d.title) + '</h3>',
-      '    <input class="card__note-input" type="text" data-design-note="' + escapeHtml(d.id) + '"' +
-             ' placeholder="Add a note (optional)" aria-label="Optional note for the ' + escapeHtml(d.title) + ' quotation request">',
       '    <div class="card__actions card__actions--solo">',
       '      <button class="btn btn--wa btn--sm" type="button" data-wa-quote="' + d.id + '">' + ICONS.whatsapp + 'Quotation</button>',
       '    </div>',
@@ -671,6 +688,8 @@
     (label ? '<span class="swatch__label">' + escapeHtml(label) + '</span>' : '') +
     '</span>';
 
+  /* Material cards are minimal: a clear photo, the NAME and a single
+     WhatsApp "Request quotation" button — no cart, no measurements/units. */
   function materialCard(m) {
     const badge = m.badge ? '<span class="badge badge--ink">' + escapeHtml(m.badge) + '</span>' : '';
     const alt = m.imageAlt || (m.name + ' supplied by Redefine Interiors Kenya');
@@ -691,13 +710,8 @@
       '  </div>',
       '  <div class="card__body">',
       '    <h3>' + escapeHtml(m.name) + '</h3>',
-      '    <p class="card__note">' + escapeHtml(m.note) + '</p>',
-      '    <div class="card__price-row">',
-      '      <div class="card__price"><em>Quotation on request</em><strong>' + escapeHtml(m.unit) + '</strong></div>',
-      '      <div class="card__actions">',
-      '        <button class="icon-btn" type="button" data-add="material" data-id="' + m.id + '" title="Add to quotation list" aria-label="Add ' + escapeHtml(m.name) + ' to quotation list">' + ICONS.cart + '</button>',
-      '        <button class="btn btn--wa btn--sm" type="button" data-wa-material="' + m.id + '">' + ICONS.whatsapp + 'Quotation</button>',
-      '      </div>',
+      '    <div class="card__actions card__actions--solo">',
+      '      <button class="btn btn--wa btn--sm" type="button" data-wa-material="' + m.id + '">' + ICONS.whatsapp + 'Request quotation</button>',
       '    </div>',
       '  </div>',
       '</article>'
@@ -983,10 +997,7 @@
       const waDesign = e.target.closest('[data-wa-quote]');
       if (waDesign) {
         const d = DESIGNS.find((x) => x.id === waDesign.dataset.waQuote);
-        if (d) {
-          const noteEl = document.querySelector('[data-design-note="' + d.id + '"]');
-          openWa(MSG.design(d, noteEl ? noteEl.value.trim() : ''));
-        }
+        if (d) openWa(MSG.design(d));
         return;
       }
       const waMaterial = e.target.closest('[data-wa-material]');
