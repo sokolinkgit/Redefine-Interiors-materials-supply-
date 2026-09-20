@@ -222,14 +222,42 @@
     return SiteContent;
   }
 
+  /* turn idb: / leftover data: photo refs into URLs the <img> tags can show,
+     without mutating the store rows themselves (those must keep idb: keys) */
+  async function hydrateDisplayed() {
+    const store = window.SiteStore;
+    if (!store || !store.resolveUrl) return;
+    const isRef = (s) => !!(s && (store.isMediaRef(s) || /^data:/i.test(s)));
+    const bump = async (item) => {
+      if (!item) return;
+      const r = item._row || {};
+      const full = r.image_url || item.image;
+      const sm = r.image_url_760 || item.image760;
+      const xs = r.image_url_480 || item.image480;
+      if (isRef(full) || isRef(sm) || isRef(xs)) {
+        item.image = await store.resolveUrl(full);
+        item.image760 = sm ? await store.resolveUrl(sm) : '';
+        item.image480 = xs ? await store.resolveUrl(xs) : '';
+      }
+    };
+    for (let t = 0; t < TABLES.length; t++) {
+      const list = TARGET[TABLES[t]]();
+      if (!list) continue;
+      for (let i = 0; i < list.length; i++) await bump(list[i]);
+    }
+  }
+  SiteContent.hydrateDisplayed = hydrateDisplayed;
+
   /* ------------------------------------------------- 1. the browser-only store
      Used while the built-in administrator is signed in on a device whose
      Supabase project has no matching auth user yet. */
   async function loadLocal() {
     const store = window.SiteStore;
     if (!store || !store.active()) return SiteContent;
+    if (store.ready) { try { await store.ready; } catch (e) { /* ignore */ } }
     const tables = store.tables();
     applyRows(tables);
+    try { await hydrateDisplayed(); } catch (e) { /* photos may lag one refresh */ }
     SiteContent.status = 'local';
     SiteContent.source = 'local';
     SiteContent.error = null;
@@ -246,6 +274,7 @@
        back. The draft ends when it is published (cloud account) or discarded
        (sign-out), or is set aside for this tab with "Not now". */
     const st = window.SiteStore;
+    if (st && st.ready) { try { await st.ready; } catch (e) { /* ignore */ } }
     if (st && st.active() && !(st.draftPaused && st.draftPaused())) return loadLocal();
 
     if (cfg.cms && sb) {

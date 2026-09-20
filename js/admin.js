@@ -59,6 +59,10 @@
     panel: null         // 'categories' | 'slideshow' | null
   };
 
+  /* typed at sign-in, kept only in memory so a device-only session can still
+     retry the online account when the admin publishes or bulk-uploads */
+  let sessionCreds = null;
+
   /* ======================================================================
      1. ICONS the site does not already have
      ====================================================================== */
@@ -370,6 +374,7 @@
       '      <button class="admin-x" type="button" data-bulk-close aria-label="Close">' + icon('x') + '</button>',
       '    </div>',
       '    <p class="admin-modal__lead" data-bulk-lead></p>',
+      '    <p class="admin-bulk__warn" data-bulk-warn hidden></p>',
       '    <div class="admin-modal__body admin-bulk">',
       '      <label class="admin-bulk__cat"><span>Category for these photos <em>(optional)</em></span>',
       '        <select data-bulk-cat></select></label>',
@@ -377,7 +382,7 @@
       '        <span class="admin-drop__cta">' + icon('upload') + '<b>Choose photos</b>',
       '          <small>Tap to open your gallery and select as many as you like · JPG, PNG or WebP up to 8 MB each</small></span>',
       '      </div>',
-      '      <input type="file" accept="image/*" multiple data-bulk-files hidden>',
+      '      <input type="file" accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif,.heic,.heif" multiple data-bulk-files hidden>',
       '      <ul class="admin-bulk__list" data-bulk-list></ul>',
       '    </div>',
       '    <div class="admin-modal__foot admin-bulk__foot">',
@@ -489,7 +494,10 @@
     $('[data-bar="slideshow"]', shell).addEventListener('click', () => openPanel('slideshow'));
     $('[data-bar="categories"]', shell).addEventListener('click', () => openPanel('categories'));
     $('[data-bar="signout"]', shell).addEventListener('click', () => signOut());
-    $('[data-bar="publish"]', shell).addEventListener('click', () => { if (store.pauseDraft) store.pauseDraft(false); publishDraft(); });
+    $('[data-bar="publish"]', shell).addEventListener('click', () => {
+      if (store.pauseDraft) store.pauseDraft(false);
+      onPublishClick();
+    });
     $('[data-bar="discard"]', shell).addEventListener('click', () => discardDraft());
 
     $('[data-slides-close]', shell).addEventListener('click', closePanels);
@@ -768,7 +776,10 @@
       };
     }
     if (store.rememberSession) store.rememberSession(BUILTIN && BUILTIN.sessionHours);
-    return { admin: localAdmin(), notice: '' };
+    return {
+      admin: localAdmin(),
+      notice: 'Signed in on this device only. Photos stay on this phone until the online account is connected — other devices will not see them yet.'
+    };
   }
 
   async function signIn(identifier, password) {
@@ -778,15 +789,64 @@
     if (sb) {
       let cloud = { error: null };
       try { cloud = await cloudSignIn(id, password); } catch (e) { cloud = { error: e }; }
-      if (cloud.admin) return cloud;
+      if (cloud.admin) {
+        sessionCreds = { id: id, password: password };
+        return cloud;
+      }
       /* the owner's own account always works, whatever the cloud said */
-      if (builtin) return localSignIn();
+      if (builtin) {
+        sessionCreds = { id: id, password: password };
+        return localSignIn();
+      }
       const reason = cloud.error && cloud.error.message ? friendly(cloud.error.message) : 'Sign-in failed.';
       return { error: reason };
     }
 
-    if (builtin) return localSignIn();
+    if (builtin) {
+      sessionCreds = { id: id, password: password };
+      return localSignIn();
+    }
     return { error: 'Wrong phone number/e-mail or password.' };
+  }
+
+  /* a device-only session retries the online account with the password just
+     typed, so bulk uploads can go live the moment that account exists */
+  async function promoteToCloud() {
+    if (!sb || !sessionCreds) return false;
+    if (state.admin && !state.admin.local) return true;
+    try {
+      const cloud = await cloudSignIn(sessionCreds.id, sessionCreds.password);
+      if (!(cloud && cloud.admin)) return false;
+      state.admin = cloud.admin;
+      if (store && store.forgetSession) store.forgetSession();
+      return true;
+    } catch (e) { return false; }
+  }
+
+  async function ensureCloudWrites() {
+    if (writePath() === 'cloud') return true;
+    const promoted = await promoteToCloud();
+    if (!promoted) return false;
+    if (store && store.active() && store.hasRows && store.hasRows()) {
+      await publishDraft();
+    }
+    /* if a leftover draft is still sitting here, set it aside so new live
+       writes are what this device (and every other device) shows */
+    if (store && store.active() && store.hasRows && store.hasRows() && store.pauseDraft) {
+      store.pauseDraft(true);
+    }
+    if (window.SiteContent && SiteContent.load) await SiteContent.load();
+    updateBar();
+    decorate();
+    return writePath() === 'cloud';
+  }
+
+  async function onPublishClick() {
+    if (writePath() === 'cloud') return publishDraft();
+    const ok = await ensureCloudWrites();
+    if (!ok) {
+      toast('Publishing needs the online account. Create it in Supabase → Authentication → Users with this phone number and the same password, then sign in again.', 'warn');
+    }
   }
 
   function localAdmin() {
@@ -861,6 +921,7 @@
       try { await sb.auth.signOut(); } catch (e) { /* ignore */ }
     }
 
+    sessionCreds = null;
     if (store && store.forgetSession) store.forgetSession();
 
     /* changes saved on this device stay — the website keeps showing them
@@ -882,7 +943,7 @@
     else if (window.console) console.info('[admin] ' + msg);
   }
 
-  function enter(admin, silent) {
+  async function enter(admin, silent) {
     state.admin = admin;
     state.active = true;
     ensureShell();
@@ -890,9 +951,10 @@
     /* the built-in account: snapshot what the visitor sees and keep working
        from this device's own copy (js/store.js) */
     if (admin.local && store) {
+      if (store.ready) { try { await store.ready; } catch (e) { /* ignore */ } }
       if (store.pauseDraft) store.pauseDraft(false);
       store.begin();
-      if (window.SiteContent && SiteContent.loadLocal) SiteContent.loadLocal();
+      if (window.SiteContent && SiteContent.loadLocal) await SiteContent.loadLocal();
     }
 
     document.body.classList.add('is-admin');
@@ -904,7 +966,7 @@
 
     if (!silent) {
       toast(admin.local
-        ? 'Admin mode on — your changes are saved on this device'
+        ? 'Admin mode on — changes stay on this device until you publish them to the website'
         : 'Admin mode on — every change goes live straight away');
     }
 
@@ -912,6 +974,13 @@
        changes: offer to put them live */
     if (!admin.local && store && store.active() && store.hasRows && store.hasRows()) {
       setTimeout(() => offerPublish(!silent ? 'signin' : 'resume'), silent ? 900 : 400);
+    } else if (admin.local && sessionCreds) {
+      setTimeout(async () => {
+        const ok = await promoteToCloud();
+        if (!ok) return;
+        updateBar();
+        if (store && store.active() && store.hasRows && store.hasRows()) offerPublish('signin');
+      }, 800);
     }
   }
 
@@ -970,6 +1039,51 @@
     return new File([blob], (name || 'photo') + '.jpg', { type: blob.type || 'image/jpeg' });
   }
 
+
+  async function localImageToFile(url, name) {
+    const src = String(url || '');
+    if (!src) return null;
+    if (store && store.getPhotoBlob && store.isMediaRef && store.isMediaRef(src)) {
+      const blob = await store.getPhotoBlob(src);
+      if (!blob) return null;
+      return new File([blob], (name || 'photo') + '.jpg', { type: blob.type || 'image/jpeg' });
+    }
+    if (/^data:|^blob:/i.test(src)) return dataUrlToFile(src, name);
+    return null;
+  }
+
+  function isImageFile(file) {
+    if (!file) return false;
+    if (file.type && /^image\//.test(file.type)) return true;
+    return /\.(jpe?g|png|webp|gif|avif|heic|heif)$/i.test(file.name || '');
+  }
+
+  async function hasCloudSession() {
+    if (!sb) return false;
+    try {
+      const { data } = await sb.auth.getSession();
+      return !!(data && data.session);
+    } catch (e) { return false; }
+  }
+
+  async function mapPool(items, limit, fn) {
+    const n = items.length;
+    const out = new Array(n);
+    let i = 0;
+    const workers = [];
+    const run = async () => {
+      while (i < n) {
+        const idx = i++;
+        out[idx] = await fn(items[idx], idx);
+      }
+    };
+    const count = Math.max(1, Math.min(limit || 1, n));
+    for (let w = 0; w < count; w++) workers.push(run());
+    await Promise.all(workers);
+    return out;
+  }
+
+
   async function publishDraft() {
     if (publishing || !sb) return;
     if (writePath() !== 'cloud') {
@@ -1002,12 +1116,15 @@
           const label = row.title || row.name || row.slug || row.code || ('item ' + (i + 1));
           say(table + ' — ' + label);
 
-          /* photos kept on the device go to the bucket first */
-          if (/^data:/i.test(String(row.image_url || ''))) {
-            const file = await dataUrlToFile(row.image_url, slugify(label));
+          /* photos kept on the device (IndexedDB idb: refs, or leftover data: URLs) go to the bucket first */
+          const src = String(row.image_url || '');
+          const localPhoto = (store && store.isMediaRef && store.isMediaRef(src)) || /^data:|^blob:/i.test(src);
+          if (localPhoto) {
+            const file = await localImageToFile(src, slugify(label));
+            if (!file) throw new Error('A photo saved on this device could not be read. Try uploading it again.');
             const up = await uploadPhoto(folder, file, label, (m) => say(label + ': ' + m));
             row.image_url = up.full; row.image_url_760 = up.sm; row.image_url_480 = up.xs;
-            store.update(table, local[i].id, { image_url: up.full, image_url_760: up.sm, image_url_480: up.xs });
+            if (store.update) await store.update(table, local[i].id, { image_url: up.full, image_url_760: up.sm, image_url_480: up.xs });
           }
 
           const localId = String(row.id || '');
@@ -1086,15 +1203,19 @@
       .filter(Boolean).join(' · ');
 
     const pending = !a.local && store && store.active() && store.hasRows && store.hasRows();
+    const localPending = !!(a.local && store && store.active && store.active());
     const publishBtn = $('[data-bar="publish"]', shell);
     const discardBtn = $('[data-bar="discard"]', shell);
-    if (publishBtn) publishBtn.style.display = pending ? '' : 'none';
+    if (publishBtn) publishBtn.style.display = (pending || localPending) ? '' : 'none';
     if (discardBtn) discardBtn.style.display = pending ? '' : 'none';
+    if (publishBtn) {
+      publishBtn.innerHTML = icon('upload') + (localPending && !pending ? ' Publish to the website' : ' Publish device changes');
+    }
 
     if (a.local) {
-      el.className = 'admin-bar__status';
-      el.innerHTML = icon('check') + '<span><b>Saved on this device.</b> ' +
-        esc(numbers || 'Ready') + ' — every change you make is kept and shown here.</span>';
+      el.className = 'admin-bar__status admin-bar__status--warn';
+      el.innerHTML = icon('alert') + '<span><b>Only on this device.</b> ' +
+        esc(numbers || 'Ready') + ' — other phones and computers cannot see these photos until you publish them to the website.</span>';
     } else if (pending) {
       el.className = 'admin-bar__status admin-bar__status--warn';
       el.innerHTML = icon('alert') + '<span><b>Changes waiting on this device.</b> Publish them so everybody sees them.</span>';
@@ -1117,10 +1238,9 @@
   function writePath() {
     if (!state.active || !state.admin) return null;
     if (state.admin.local) return store ? 'local' : null;
-    const sc = window.SiteContent || {};
-    /* an online administrator writes to the cloud — also while this device
-       is still showing its own unpublished draft (status 'local') */
-    return sb && (sc.status === 'live' || sc.status === 'empty' || sc.status === 'local') ? 'cloud' : null;
+    /* an online administrator always writes to the cloud — also while this
+       device is still showing its own unpublished draft */
+    return sb ? 'cloud' : null;
   }
 
   async function reloadContent(silent) {
@@ -1297,17 +1417,23 @@
   }
 
   const localFail = () => ({ error: new Error(store && store.outOfSpace && store.outOfSpace()
-    ? 'This device has run out of space for saved changes. Publish or remove some photos and try again.'
+    ? 'This device could not save that change. Photos are no longer stored in the tiny browser quota — try again, or sign in with the online account so they go to the website.'
     : 'That change could not be saved on this device. Try again.') });
 
   async function writeUpdate(table, id, patch) {
-    if (writePath() === 'local') { return store.update(table, id, patch) ? { error: null } : localFail(); }
+    if (writePath() === 'local') {
+      const row = await store.update(table, id, patch);
+      return row ? { error: null } : localFail();
+    }
     const { error } = await sb.from(table).update(patch).eq('id', id);
     return { error: error };
   }
 
   async function writeInsert(table, payload) {
-    if (writePath() === 'local') { return store.insert(table, payload) ? { error: null } : localFail(); }
+    if (writePath() === 'local') {
+      const row = await store.insert(table, payload);
+      return row ? { error: null } : localFail();
+    }
     const { error } = await sb.from(table).insert(payload);
     return { error: error };
   }
@@ -1539,53 +1665,49 @@
     if (/row-level security|42501|policy/i.test(msg)) {
       return 'Supabase refused the upload — your admin session may have expired. Sign out and sign in again.';
     }
-    if (/over the size limit|too large|413/i.test(msg)) return 'That photo is bigger than the 8 MB limit.';
+    if (/over the size limit|too large|413|quota|storage.*limit|exceeded/i.test(msg)) {
+      return 'The website photo library is full or that file is over the 8 MB limit. Delete unused photos and try again.';
+    }
     if (/mime|type/i.test(msg)) return 'That file type is not allowed — use JPG, PNG, WebP, AVIF or GIF.';
     if (/bucket not found/i.test(msg)) return 'The “site-media” bucket does not exist yet — run supabase/schema.sql §8.';
     return msg || 'Upload failed.';
   }
 
-  /* a browser-only session has no bucket to write to: shrink the photo and
-     keep it inside the local record as a data URL instead */
-  function readAsDataUrl(file) {
-    return new Promise((resolve, reject) => {
-      const r = new FileReader();
-      r.onload = () => resolve(String(r.result || ''));
-      r.onerror = () => reject(new Error('That file could not be read.'));
-      r.readAsDataURL(file);
-    });
-  }
-
   async function uploadLocal(file, onStatus) {
     const up = cfg.upload || {};
     const maxBytes = up.maxBytes || 8 * 1024 * 1024;
-    if (!file || !/^image\//.test(file.type)) throw new Error('Choose a JPG, PNG, WebP or AVIF photo.');
+    if (!isImageFile(file)) throw new Error('Choose a JPG, PNG, WebP or AVIF photo.');
     if (file.size > maxBytes) {
       throw new Error('That photo is ' + (file.size / 1048576).toFixed(1) + ' MB — the limit is ' +
         Math.round(maxBytes / 1048576) + ' MB.');
     }
     if (onStatus) onStatus('Preparing the photo…');
     const img = await loadImageFile(file);
-    /* a device can only hold a few megabytes of saved changes, so the copy
-       kept here is smaller than the online renditions (it is re-cut at full
-       size from the original when the changes are published) */
-    const blob = await canvasBlob(img, Math.min(up.maxWidth || 1600, 1100), 0.72);
-    const url = await readAsDataUrl(blob);
-    return { full: url, sm: '', xs: '' };
+    /* photos live in IndexedDB (not localStorage), so we can keep a full-size
+       copy. It is re-cut into 1600/760/480 when the changes are published. */
+    const blob = await canvasBlob(img, up.maxWidth || 1600, up.quality || 0.86);
+    if (onStatus) onStatus('Saving the photo on this device…');
+    if (!store || !store.putPhoto) {
+      throw new Error('This browser cannot store photos locally. Sign in with the online account so they go to the website.');
+    }
+    const ref = await store.putPhoto(blob);
+    const preview = store.resolveUrl ? await store.resolveUrl(ref) : '';
+    return { full: ref, sm: '', xs: '', preview: preview };
   }
 
   async function uploadPhoto(folder, file, baseName, onStatus) {
-    if (writePath() === 'local') return uploadLocal(file, onStatus);
+    const live = writePath() === 'cloud' || await hasCloudSession();
+    if (!live) return uploadLocal(file, onStatus);
 
     const up = cfg.upload || {};
     const widths = up.widths && up.widths.length ? up.widths : [1600, 760, 480];
     const maxBytes = up.maxBytes || 8 * 1024 * 1024;
 
-    if (!file || !/^image\//.test(file.type)) throw new Error('Choose a JPG, PNG, WebP or AVIF photo.');
+    if (!isImageFile(file)) throw new Error('Choose a JPG, PNG, WebP or AVIF photo.');
     if (file.size > maxBytes) throw new Error('That photo is ' + (file.size / 1048576).toFixed(1) + ' MB — the limit is ' + Math.round(maxBytes / 1048576) + ' MB.');
 
     const img = await loadImageFile(file);
-    const stem = (folder || 'misc') + '/' + (slugify(baseName) || 'photo') + '-' + Date.now().toString(36);
+    const stem = (folder || 'misc') + '/' + (slugify(baseName) || 'photo') + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
     const urls = {};
 
     for (let i = 0; i < widths.length; i++) {
@@ -1603,7 +1725,7 @@
       urls[w] = sb.storage.from(cfg.mediaBucket).getPublicUrl(path).data.publicUrl;
     }
 
-    return { full: urls[widths[0]], sm: urls[760] || '', xs: urls[480] || '' };
+    return { full: urls[widths[0]], sm: urls[760] || '', xs: urls[480] || '', preview: urls[widths[0]] };
   }
 
   /* ======================================================================
@@ -1622,13 +1744,14 @@
 
   function imageFieldHtml(f, row) {
     const src = row[f.key] || '';
+    const preview = row._preview || ((store && store.isMediaRef && store.isMediaRef(src)) ? '' : src);
     const variants = (f.variants || []).map((k) =>
       '<input type="hidden" data-fkey="' + k + '" value="' + esc(row[k] || '') + '">').join('');
     return [
       '<div class="admin-field admin-field--image" data-field="' + f.key + '">',
       '  <label>' + esc(f.label) + (f.required ? ' <em>*</em>' : '') + '</label>',
       '  <div class="admin-drop" data-drop tabindex="0" role="button" aria-label="Choose or drop a photo">',
-      '    <img data-preview alt=""' + (src ? ' src="' + esc(src) + '"' : ' class="is-empty"') + '>',
+      '    <img data-preview alt=""' + (preview ? ' src="' + esc(preview) + '"' : ' class="is-empty"') + '>',
       '    <span class="admin-drop__cta">' + icon('upload') +
              '<b>' + (src ? 'Replace photo' : 'Add a photo') + '</b>' +
              '<small>Drop it here or click to choose · JPG, PNG or WebP up to 8 MB</small></span>',
@@ -1739,7 +1862,7 @@
     return true;
   }
 
-  function openEditor(kind, id) {
+  async function openEditor(kind, id) {
     const col = COLLECTIONS[kind];
     if (!col) return;
     if (!writePath()) {
@@ -1757,6 +1880,9 @@
       : (item && writePath() === 'local'
         ? Object.assign({}, localRows(col.table).filter((r) => String(r.id) === String(item.uuid))[0] || {})
         : defaultRow(kind));
+    if (store && store.resolveUrl && row.image_url) {
+      try { row._preview = await store.resolveUrl(row.image_url); } catch (e) { row._preview = ''; }
+    }
 
     state.editing = { kind: kind, uuid: item ? item.uuid : null, item: item || {} };
     state.dirty = false;
@@ -1864,11 +1990,11 @@
         urlInput.value = res.full;
         if (variantInputs[0]) variantInputs[0].value = res.sm;
         if (variantInputs[1]) variantInputs[1].value = res.xs;
-        setPreview(res.full);
+        setPreview(res.preview || res.full);
         status.textContent = '';
         state.dirty = true;
         toast(writePath() === 'local'
-          ? 'Photo ready — it is stored with your browser-only copy. Remember to save.'
+          ? 'Photo ready on this device — remember to save. Publish to the website so other devices can see it.'
           : 'Photo uploaded — remember to save');
       } catch (err) {
         status.textContent = '';
@@ -2023,7 +2149,15 @@
      ====================================================================== */
   const bulk = { kind: 'design', files: [], busy: false };
 
-  function openBulk(kind) {
+  function setBulkWarn(on, text) {
+    const warn = $('[data-bulk-warn]', shell);
+    if (!warn) return;
+    if (!on) { warn.hidden = true; warn.textContent = ''; return; }
+    warn.hidden = false;
+    warn.textContent = text || '';
+  }
+
+  async function openBulk(kind) {
     const col = COLLECTIONS[kind];
     if (!col || !col.bulk) return;
     if (!writePath()) { toast('Uploading is unavailable — see the message in the bar.'); openBar(); return; }
@@ -2031,9 +2165,20 @@
     ensureShell();
     bulk.kind = kind; bulk.files = []; bulk.busy = false;
 
+    /* if the online account exists, switch to it so these photos go live */
+    if (writePath() !== 'cloud') {
+      const live = await ensureCloudWrites();
+      if (live) toast('Connected to the website — these photos will appear on every device.');
+    }
+
+    const live = writePath() === 'cloud';
     $('[data-bulk-kind]', shell).textContent = col.plural;
-    $('[data-bulk-lead]', shell).textContent = 'Every photo you pick becomes a new ' + col.label.toLowerCase() +
-      ' on the website straight away — photo and “Request quotation” button only. Open any of them afterwards with ✎ to add a name and details.';
+    $('[data-bulk-lead]', shell).textContent = live
+      ? 'Every photo you pick becomes a new ' + col.label.toLowerCase() +
+        ' on the website straight away — photo and “Request quotation” button only. Open any of them afterwards with ✎ to add a name and details. You can pick as many as you like.'
+      : 'Every photo you pick becomes a new ' + col.label.toLowerCase() +
+        ' on this device. They will not appear on other phones or computers until you publish them to the website.';
+    setBulkWarn(!live, 'These photos stay on this device only. Sign in with the online account (the same phone number, after it has been created in Supabase) and tap “Publish to the website” so every device sees them.');
 
     const sel = $('[data-bulk-cat]', shell);
     const cats = categoryOptions(kind);
@@ -2067,7 +2212,7 @@
     const up = cfg.upload || {};
     const maxBytes = up.maxBytes || 8 * 1024 * 1024;
     Array.prototype.forEach.call(fileList || [], (file) => {
-      if (!/^image\//.test(file.type)) return;
+      if (!isImageFile(file)) return;
       const entry = { file: file, preview: URL.createObjectURL(file), state: '', note: '' };
       if (file.size > maxBytes) { entry.state = 'error'; entry.note = 'bigger than ' + Math.round(maxBytes / 1048576) + ' MB — it will be skipped'; entry.skip = true; }
       bulk.files.push(entry);
@@ -2093,6 +2238,15 @@
     $('[data-bulk-start]', shell).addEventListener('click', runBulk);
   }
 
+  function bulkPayload(kind, category, code, position, res) {
+    return kind === 'design'
+      ? { code: code, title: '', category: category, image_url: res.full, image_url_760: res.sm, image_url_480: res.xs,
+          image_alt: '', badge: '', lead_time: '', unit: '', summary: '', features: [], materials: [],
+          is_featured: false, position: position, is_active: true }
+      : { code: code, name: '', category: category, image_url: res.full, image_url_760: res.sm, image_url_480: res.xs,
+          image_alt: '', swatch: 'mdf', icon: 'box', unit: '', badge: '', note: '', position: position, is_active: true };
+  }
+
   async function runBulk() {
     if (bulk.busy) return;
     const kind = bulk.kind;
@@ -2102,47 +2256,60 @@
     const todo = bulk.files.filter((f) => (!f.state || f.state === 'error') && !f.skip);
     if (!todo.length) return;
 
+    /* last chance to put these photos on the live website */
+    if (writePath() !== 'cloud') await ensureCloudWrites();
+    const live = writePath() === 'cloud';
+    setBulkWarn(!live, 'These photos stay on this device only. Other phones and computers will not see them until you publish them to the website.');
+
     bulk.busy = true;
     renderBulkList();
-    const nextCode = codeAllocator(kind);
+    const nextCodeFn = codeAllocator(kind);
     let position = maxPosition(kind);
-    let ok = 0, failed = 0;
+    const jobs = todo.map((f) => {
+      position += 10;
+      return { f: f, code: nextCodeFn(), position: position };
+    });
+    let ok = 0, failed = 0, done = 0;
+    const uid = state.admin && state.admin.id ? state.admin.id : null;
+    const tick = () => {
+      status.textContent = 'Photo ' + Math.min(done + 1, jobs.length) + ' of ' + jobs.length +
+        (ok || failed ? ' · ' + ok + ' added' + (failed ? ', ' + failed + ' failed' : '') : '') + '…';
+      renderBulkList();
+    };
 
-    for (let i = 0; i < todo.length; i++) {
-      const f = todo[i];
-      f.state = 'busy'; f.note = 'uploading…'; renderBulkList();
-      status.textContent = 'Photo ' + (i + 1) + ' of ' + todo.length + '…';
+    const work = async (job) => {
+      const f = job.f;
+      f.state = 'busy'; f.note = 'uploading…'; tick();
       try {
         const stem = f.file.name.replace(/\.[^.]+$/, '');
-        const res = await uploadPhoto(col.folder, f.file, stem, (m) => { f.note = m; renderBulkList(); });
-        position += 10;
-        const payload = kind === 'design'
-          ? { code: nextCode(), title: '', category: category, image_url: res.full, image_url_760: res.sm, image_url_480: res.xs,
-              image_alt: '', badge: '', lead_time: '', unit: '', summary: '', features: [], materials: [],
-              is_featured: false, position: position, is_active: true }
-          : { code: nextCode(), name: '', category: category, image_url: res.full, image_url_760: res.sm, image_url_480: res.xs,
-              image_alt: '', swatch: 'mdf', icon: 'box', unit: '', badge: '', note: '', position: position, is_active: true };
-        if (writePath() !== 'local') {
-          payload.created_by = state.admin && state.admin.id ? state.admin.id : null;
-          payload.updated_by = payload.created_by;
-        }
+        const res = await uploadPhoto(col.folder, f.file, stem, (m) => { f.note = m; });
+        const payload = bulkPayload(kind, category, job.code, job.position, res);
+        if (live) { payload.created_by = uid; payload.updated_by = uid; }
         const { error } = await writeInsert(col.table, payload);
         if (error) throw error;
-        f.state = 'done'; f.note = 'on the website';
+        f.state = 'done';
+        f.note = live ? 'on the website' : 'saved on this device';
         ok += 1;
       } catch (err) {
         f.state = 'error'; f.note = writeError(err) || uploadError(err);
         failed += 1;
       }
-      renderBulkList();
-    }
+      done += 1;
+      tick();
+    };
+
+    /* a few at a time so a hundred photos finish in minutes, not one-by-one */
+    await mapPool(jobs, live ? 3 : 1, work);
 
     bulk.busy = false;
     renderBulkList();
-    status.textContent = ok + ' added' + (failed ? ' · ' + failed + ' failed — tap Upload to retry those' : '');
+    status.textContent = ok + ' added' + (failed ? ' · ' + failed + ' failed — tap Upload to retry those' : '') +
+      (ok && !live ? ' · still only on this device until you publish' : '');
     await reloadContent(true);
-    toast(ok ? ok + ' photo' + (ok === 1 ? '' : 's') + ' added — open any with ✎ to add a name' : 'Nothing was added');
-    if (!failed) setTimeout(() => { if (!bulk.busy) closePanels(); }, 900);
+    if (ok && live) toast(ok + ' photo' + (ok === 1 ? '' : 's') + ' added to the website — open any with ✎ to add a name');
+    else if (ok) toast(ok + ' photo' + (ok === 1 ? '' : 's') + ' saved on this device only. Publish to the website so other devices can see them.', 'warn');
+    else toast('Nothing was added');
+    if (!failed && live) setTimeout(() => { if (!bulk.busy) closePanels(); }, 900);
   }
 
   /* ======================================================================

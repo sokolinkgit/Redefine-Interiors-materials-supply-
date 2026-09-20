@@ -266,7 +266,8 @@ not in the repository; the owner has it.
 The site first tries Supabase with those credentials. If an Auth user with that phone number
 and password exists, you get the full session and everything you change is published for
 everybody straight away. If it does not exist yet, the site signs you in **on that device** —
-the bar simply says *"Saved on this device"* and your edits are kept there (`js/store.js`).
+the bar says *"Only on this device"* and your edits are kept there (`js/store.js`, photos in
+IndexedDB). They will not appear on other phones or computers until you publish them.
 The sign-in is remembered on the device for 12 hours (`defaultAdmin.sessionHours`), so moving
 between pages or reloading never drops admin mode.
 
@@ -276,10 +277,12 @@ that device too — until it is published or discarded. Nothing "populates back"
 
 **Publishing device edits.** The first time the *online* admin account signs in on a device
 that holds unpublished changes, the site asks *"Publish the changes saved on this device?"*
-(the bar also gets **Publish device changes** / **Discard** buttons). Publishing uploads any
+(the bar also gets **Publish to the website** / **Discard** buttons). Publishing uploads any
 photos that were kept on the device to the `site-media` bucket, then makes the cloud tables
 match the device exactly — edits applied, additions inserted, deletions deleted — and clears
-the device copy. *Not now* sets the draft aside for that tab.
+the device copy. *Not now* sets the draft aside for that tab. A device-only session shows
+the same **Publish to the website** button so you can retry the online account after it
+has been created.
 
 Other administrators sign in with the **e-mail address *or* phone number** of their Supabase
 Auth account plus their password. The first account you create in the project becomes the
@@ -299,8 +302,9 @@ on every block they may change:
 * a **`+` tile** at the end of each grid creates one new item
 * an **Upload many photos** tile (Designs and Materials) opens the gallery with multi-select:
   every photo picked becomes its own item immediately — photo + "Request quotation" only,
-  optionally under a chosen category. Visitors see these straight away; the name and details
-  are added later with ✎. A card, the enlarged view and the slideshow all cope with a missing
+  optionally under a chosen category. When you are signed in with the online account they
+  go live on every device; names and details are added later with ✎. There is no 30-photo
+  cap. A card, the enlarged view and the slideshow all cope with a missing
   name (`.card--nameless`); the WhatsApp message then references the item by its code.
 
 The **admin bar** is pinned to the very top of every page and the page is pushed down by
@@ -320,7 +324,7 @@ Supabase is connected, and carries three buttons — nothing else:
 | Materials | photo (optional — the designed swatch shows without one), alt, name *(optional)*, note, category, unit, badge, swatch, icon, order, publish |
 | Services | photo, alt, title, card text, category, icon, slug, eyebrow, block heading, block paragraph, 3 highlight pairs, checklist, WhatsApp button label, second button label + link, order, publish |
 | Categories | name, which page it belongs to, order, show in the filters |
-| Photos | resized in the browser to **1600 / 760 / 480 px** and uploaded to the public `site-media` bucket (a device-only session keeps one ≤1100 px copy on the device and re-cuts the full set when the changes are published) |
+| Photos | resized in the browser to **1600 / 760 / 480 px** and uploaded to the public `site-media` bucket so every device sees them. A device-only session keeps the photo in IndexedDB on that phone (not in the tiny localStorage quota) and re-cuts the full set when you tap **Publish to the website** |
 
 ### Safety nets
 
@@ -355,8 +359,11 @@ Supabase is connected, and carries three buttons — nothing else:
   inert while the menu, quote drawer, enlarged photo or admin overlay is open.
 * **Page structure note.** The old `services.html` ("What we do") page was removed in favour
   of the Designs page; its nav link, footer column, homepage section and sitemap entry are gone.
-* **Live across devices.** Realtime is enabled on designs, materials, services and categories:
-  an edit made on a phone appears on the desktop within about a second.
+* **Live across devices.** Bulk-uploaded photos go to the `site-media` bucket and the
+  designs/materials tables as soon as you are signed in with the online account, so a
+  second phone or computer sees the same catalogue after a refresh (or within about a
+  second via realtime). Device-only sessions keep photos in IndexedDB on that phone
+  until you tap **Publish to the website**.
 * **Nothing is lost.** Hiding never deletes; a chip whose items remain keeps working; and the
   seed in `supabase/schema.sql` never overwrites an edit you made.
 

@@ -169,7 +169,7 @@
      only lives on this device (an unpublished data: URL) has no address and
      is left out. */
   const publicUrl = (src) => {
-    if (!src || /^data:|^blob:/i.test(src)) return '';
+    if (!src || /^data:|^blob:|^idb:/i.test(src)) return '';
     try { return new URL(src, window.location.href).href; } catch (e) { return ''; }
   };
   const photoLine = (item, label) => {
