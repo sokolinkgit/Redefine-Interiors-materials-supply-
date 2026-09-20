@@ -786,12 +786,22 @@
       wrap.innerHTML = publishable(SERVICES).map(serviceCard).join('');
     });
 
-    /* designs (optional data-limit to show a preview grid) */
+    /* designs (optional data-limit to show a preview grid)
+       Visitors see the first six on the home page and "View all designs" for
+       the rest — but in admin mode the limit is lifted so every design, with
+       its ★ feature toggle, is right here on the page: the administrator can
+       set images to be featured without pressing View More first. */
     $$('[data-design-grid]').forEach((grid) => {
       const list = publishable(DESIGNS);
-      const limit = parseInt(grid.dataset.limit, 10);
+      const limit = showHidden ? 0 : parseInt(grid.dataset.limit, 10);
       grid.innerHTML = (limit ? list.slice(0, limit) : list).map(designCard).join('');
     });
+
+    /* "Why us" photo: always the current Designs Gallery photo of the bound
+       design, so an uploaded/replaced photo shows there too (issue: the
+       section used to show a frozen picture that was no longer the
+       original gallery photo) */
+    hydrateWhyImage();
 
     /* materials */
     $$('[data-material-grid]').forEach((grid) => {
@@ -806,6 +816,35 @@
     });
 
     renderFilters();
+  }
+
+  /* ---- "Why Redefine Interiors & Materials Supply" photo ---------------
+     The split section on the home page keeps a static <img> in the HTML (the
+     no-JavaScript fallback), but on every render its source is replaced with
+     the CURRENT photo of the design bound in data-why-design — the same
+     picture that card shows in the Designs Gallery. A photo the
+     administrator uploaded or replaced in the gallery therefore appears here
+     as well, instead of an old, unrelated image. When the bound design is
+     missing (renamed id, deleted), the first visible design with a photo is
+     used, so the section never shows a picture that is not in the gallery. */
+  function hydrateWhyImage() {
+    const frame = $('[data-why-design]');
+    if (!frame) return;
+    const code = String(frame.dataset.whyDesign || '');
+    const list = publishable(DESIGNS);
+    let d = code ? list.find((x) => x && (String(x.id) === code || String(x.uuid) === code)) : null;
+    if (!d || !d.image) d = list.find((x) => x && x.image);
+    if (!d || !d.image) return;
+
+    const img = $('img', frame);
+    if (!img) return;
+    const alt = d.imageAlt || ((d.title || 'U-shaped family kitchen') +
+      (d.category ? ' — ' + d.category : '') + ' by Redefine Interiors');
+    img.outerHTML = responsiveImg(d.image, alt, '(max-width: 760px) 100vw, (max-width: 1024px) 46vw',
+      { xs: d.image480, sm: d.image760, full: true });
+
+    const tag = $('.media-frame__tag', frame);
+    if (tag && d.title) tag.textContent = d.title;
   }
 
   /* ---- category filters: built from the CATEGORIES table, rebuilt after

@@ -733,6 +733,16 @@ body.has-admin-bar .scroll-progress { top: var(--admin-bar-h, 0px); }
   border-top: 1px solid var(--line);
 }
 .admin-modal__status i { font-style: italic; }
+/* slideshow panel: the status line sits directly above the Save footer, so
+   the double border-top (status + foot) is dropped */
+[data-admin-slides] .admin-modal__status { border-top: 0; padding-bottom: .3rem; }
+.admin-slides__foot { align-items: center; }
+.admin-slides__count {
+  flex: 1;
+  min-width: 0;
+  font-size: .78rem;
+  color: var(--muted);
+}
 .admin-modal__foot {
   display: flex;
   gap: .6rem;
