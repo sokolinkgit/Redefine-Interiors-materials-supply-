@@ -105,10 +105,17 @@
 
   /* ------------------------------------------- already signed in? resume */
   async function resume() {
-    if (!sb) return;
+    let has = false;
+    /* the built-in account: remembered on this device for a few hours */
+    try { has = !!(window.SiteStore && window.SiteStore.sessionAlive && window.SiteStore.sessionAlive()); } catch (e) { has = false; }
+    if (!has && sb) {
+      try {
+        const { data } = await sb.auth.getSession();
+        has = !!(data && data.session);
+      } catch (err) { has = false; }
+    }
+    if (!has) return;
     try {
-      const { data } = await sb.auth.getSession();
-      if (!data || !data.session) return;
       const admin = await loadAdmin();
       if (admin && admin.resume) admin.resume();
     } catch (err) { /* no session, no admin */ }

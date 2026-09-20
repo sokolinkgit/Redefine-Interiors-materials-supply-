@@ -163,15 +163,41 @@
   const waLink = (message, number) =>
     'https://wa.me/' + (number || WA_NUMBER) + '?text=' + encodeURIComponent(message);
 
+  /* The photo of the item travels with the message as a full web address —
+     WhatsApp turns it into a picture preview inside the chat, so both sides
+     see exactly which design or material the quotation is about. A photo that
+     only lives on this device (an unpublished data: URL) has no address and
+     is left out. */
+  const publicUrl = (src) => {
+    if (!src || /^data:|^blob:/i.test(src)) return '';
+    try { return new URL(src, window.location.href).href; } catch (e) { return ''; }
+  };
+  const photoLine = (item, label) => {
+    const u = publicUrl(item.image);
+    return u ? '\n\n📷 ' + (label || 'Photo') + ':\n' + u : '';
+  };
+  const itemRef = (item, kindWord) => {
+    const name = String(item.title || item.name || '').trim();
+    const code = String(item.code || item.id || '').trim();
+    const ref = code ? ' (ref ' + code + ')' : '';
+    if (name) return '*' + name + '*' + ref;
+    return '*' + (publicUrl(item.image) ? kindWord + ' in the photo below' : kindWord + ' on your website') + '*' + ref;
+  };
+
   const MSG = {
     general: 'Hello ' + BUSINESS.name + ' 👋\n\nI found you online and I would like to request a quotation.',
-    design: (item) => 'Hello ' + BUSINESS.name + ' 👋\n\nI would like to request a quotation for this design:\n\n*' +
-      item.title + '*\nCategory: ' + item.category +
+    design: (item) => 'Hello ' + BUSINESS.name + ' 👋\n\nI would like to request a quotation for this design:\n\n' +
+      itemRef(item, 'Design') +
+      (item.category ? '\nCategory: ' + item.category : '') +
       (item.unit ? '\nScope: ' + item.unit : '') +
+      photoLine(item, 'Photo of the design') +
       '\n\nMy location: ______\nPreferred start date: ______\n\nPlease send me a detailed quotation. Thank you!',
-    material: (item) => 'Hello ' + BUSINESS.name + ' 👋\n\nI would like to request a quotation for this material:\n\n*' +
-      item.name + '*\nUnit: ' + item.unit +
-      '\nQuantity needed: ______\n\nMy delivery location: ______\n\nPlease confirm availability and quote me. Thank you!',
+    material: (item) => 'Hello ' + BUSINESS.name + ' 👋\n\nI would like to request a quotation for this material:\n\n' +
+      itemRef(item, 'Material') +
+      (item.category ? '\nCategory: ' + item.category : '') +
+      (item.unit ? '\nUnit: ' + item.unit : '') +
+      photoLine(item, 'Photo of the material') +
+      '\n\nQuantity needed: ______\nMy delivery location: ______\n\nPlease confirm availability and quote me. Thank you!',
     service: (s) => 'Hello ' + BUSINESS.name + ' 👋\n\nI would like a quotation for *' + s.title + '*.\n\n' +
       'My location: ______\n\nPlease advise on the next step.'
   };
@@ -376,7 +402,7 @@
 
   function heroSlideMarkup(d, i) {
     const hidden = d.active === false;
-    const alt = d.imageAlt || (d.title + ' — ' + d.category + ' by Redefine Interiors');
+    const alt = d.imageAlt || ((d.title || 'Interior design') + (d.category ? ' — ' + d.category : '') + ' by Redefine Interiors');
     return [
       '<div class="hero__slide' + (i === 0 ? ' is-active' : '') + '"' +
         ' data-cms="design" data-cms-id="' + escapeHtml(String(d.uuid || d.id || i)) + '" data-cms-slide="1"' +
@@ -664,16 +690,17 @@
      (expand) button that opens the wide detail view, the NAME and the
      WhatsApp quotation button — no badges, no description, no cart, no note field. */
   function designCard(d) {
-    const alt = d.imageAlt || (d.title + ' — ' + d.category + ' by Redefine Interiors');
+    const name = String(d.title || '').trim();
+    const alt = d.imageAlt || ((name || 'Interior design') + (d.category ? ' — ' + d.category : '') + ' by Redefine Interiors');
     return [
-      '<article class="card reveal' + (d.active === false ? ' is-draft' : '') + '" data-cat="' + escapeHtml(d.category) + '"' + cmsAttrs('design', d) + '>',
+      '<article class="card reveal' + (d.active === false ? ' is-draft' : '') + (name ? '' : ' card--nameless') + '" data-cat="' + escapeHtml(d.category || '') + '"' + cmsAttrs('design', d) + '>',
       '  <div class="card__media">',
       '    ' + responsiveImg(d.image, alt, CARD_SIZES, { xs: d.image480, sm: d.image760 }),
-      '    <span class="card__cat">' + ICONS.spark + escapeHtml(d.category) + '</span>',
-      '    <button class="card__quick" type="button" data-view="' + d.id + '" aria-label="Enlarge ' + escapeHtml(d.title) + ' photo">' + ICONS.expand + '<span>View</span></button>',
+      (d.category ? '    <span class="card__cat">' + ICONS.spark + escapeHtml(d.category) + '</span>' : ''),
+      '    <button class="card__quick" type="button" data-view="' + d.id + '" aria-label="Enlarge ' + escapeHtml(name || 'design') + ' photo">' + ICONS.expand + '<span>View</span></button>',
       '  </div>',
       '  <div class="card__body">',
-      '    <h3>' + escapeHtml(d.title) + '</h3>',
+      (name ? '    <h3>' + escapeHtml(name) + '</h3>' : ''),
       '    <div class="card__actions card__actions--solo">',
       '      <button class="btn btn--wa btn--sm" type="button" data-wa-quote="' + d.id + '">' + ICONS.whatsapp + 'Quotation</button>',
       '    </div>',
@@ -693,24 +720,25 @@
      WhatsApp "Request quotation" button — no cart, no measurements/units. */
   function materialCard(m) {
     const badge = m.badge ? '<span class="badge badge--ink">' + escapeHtml(m.badge) + '</span>' : '';
-    const alt = m.imageAlt || (m.name + ' supplied by Redefine Interiors Kenya');
+    const name = String(m.name || '').trim();
+    const alt = m.imageAlt || ((name || 'Building material') + ' supplied by Redefine Interiors Kenya');
     const media = m.image
       ? '  <div class="card__media card__media--photo">' +
         '    ' + responsiveImg(m.image, alt, CARD_SIZES, { xs: m.image480, sm: m.image760 }) +
-        '    <span class="card__cat">' + (ICONS[m.icon] || ICONS.box) + escapeHtml(m.category) + '</span>' +
+        (m.category ? '    <span class="card__cat">' + (ICONS[m.icon] || ICONS.box) + escapeHtml(m.category) + '</span>' : '') +
         '  </div>'
       : '  <div class="card__media card__media--swatch">' +
         swatch(m.swatch, m.icon, m.category) +
         '  </div>';
 
     return [
-      '<article class="card card--material reveal' + (m.active === false ? ' is-draft' : '') + '" data-cat="' + escapeHtml(m.category) + '"' + cmsAttrs('material', m) + '>',
+      '<article class="card card--material reveal' + (m.active === false ? ' is-draft' : '') + (name ? '' : ' card--nameless') + '" data-cat="' + escapeHtml(m.category || '') + '"' + cmsAttrs('material', m) + '>',
       media,
       '  <div class="card__badges card__badges--overlay">',
       (badge ? '    ' + badge : ''),
       '  </div>',
       '  <div class="card__body">',
-      '    <h3>' + escapeHtml(m.name) + '</h3>',
+      (name ? '    <h3>' + escapeHtml(name) + '</h3>' : ''),
       '    <div class="card__actions card__actions--solo">',
       '      <button class="btn btn--wa btn--sm" type="button" data-wa-material="' + m.id + '">' + ICONS.whatsapp + 'Request quotation</button>',
       '    </div>',
@@ -1047,12 +1075,13 @@
     const set = srcsetFor(d);
     if (set) modalImg.setAttribute('srcset', set); else modalImg.removeAttribute('srcset');
     modalImg.sizes = '(max-width: 900px) 92vw, 620px';
-    modalImg.alt = d.imageAlt || (d.title + ' — ' + d.category);
+    const name = String(d.title || '').trim();
+    modalImg.alt = d.imageAlt || ((name || 'Interior design') + (d.category ? ' — ' + d.category : ''));
     /* The enlarged view is deliberately bare — the big photo, the design
-       NAME and one WhatsApp button. No summary, chips, "what is included",
-       "materials used" or notes: those live in the admin only. */
+       NAME (when one has been given) and one WhatsApp button. No summary,
+       chips, "what is included", "materials used" or notes. */
     $('[data-modal-body]', modal).innerHTML = [
-      '<h3 class="modal__title">' + escapeHtml(d.title) + '</h3>',
+      (name ? '<h3 class="modal__title">' + escapeHtml(name) + '</h3>' : ''),
       '<div class="modal__actions">',
       '  <button class="btn btn--wa btn--block" type="button" data-wa-quote="' + d.id + '">' + ICONS.whatsapp + 'Request quotation</button>',
       '</div>'
@@ -1135,7 +1164,7 @@
       body.innerHTML = quote.map((row) => {
         const item = findItem(row.type, row.id);
         if (!item) return '';
-        const title = item.title || item.name;
+        const title = item.title || item.name || (row.type === 'design' ? 'Design' : 'Material') + (item.code ? ' ' + item.code : '');
         const unit = item.unit || 'complete installation';
         const thumb = item.image
           ? '<div class="quote-item__thumb"><img src="' + item.image + '" alt="' + escapeHtml(title) + '" loading="lazy"></div>'
@@ -1179,9 +1208,10 @@
     const lines = quote.map((row, i) => {
       const item = findItem(row.type, row.id);
       if (!item) return '';
-      const title = item.title || item.name;
+      const title = item.title || item.name || (row.type === 'design' ? 'Design' : 'Material') + (item.code ? ' ' + item.code : '');
       const unit = item.unit || 'complete installation';
-      return (i + 1) + '. *' + title + '* — ' + unit + ' × ' + row.qty;
+      const photo = publicUrl(item.image);
+      return (i + 1) + '. *' + title + '* — ' + unit + ' × ' + row.qty + (photo ? '\n   📷 ' + photo : '');
     }).filter(Boolean);
 
     return 'Hello ' + BUSINESS.name + ' 👋\n\nI would like to request a quotation for the following:\n\n' +

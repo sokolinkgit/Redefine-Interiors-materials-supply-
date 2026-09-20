@@ -64,11 +64,22 @@
     } catch (e) { return null; }
   }
 
+  /* returns false when the browser refused (storage quota / private mode) so
+     the caller can roll back instead of pretending the change was kept */
+  let lastError = null;
   function save() {
-    if (!alive || !data) return;
+    if (!alive || !data) return false;
     data.savedAt = nowIso();
-    try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) { /* quota / private mode */ }
+    try {
+      localStorage.setItem(KEY, JSON.stringify(data));
+      lastError = null;
+      return true;
+    } catch (e) {
+      lastError = e;
+      return false;
+    }
   }
+  const quotaHit = (e) => !!e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.code === 22 || e.code === 1014);
 
   function ensure() { if (!data) data = read() || blank(); return data; }
 
@@ -204,7 +215,7 @@
     copy.created_at = copy.created_at || nowIso();
     copy.updated_at = nowIso();
     list.push(copy);
-    save();
+    if (!save()) { list.pop(); return null; }
     return copy;
   }
 
@@ -212,8 +223,13 @@
     const list = table(name);
     const row = list.filter((r) => String(r.id) === String(id))[0];
     if (!row) return null;
+    const before = Object.assign({}, row);
     Object.assign(row, patch, { updated_at: nowIso() });
-    save();
+    if (!save()) {
+      Object.keys(row).forEach((k) => { delete row[k]; });
+      Object.assign(row, before);
+      return null;
+    }
     return row;
   }
 
@@ -254,10 +270,46 @@
     return TABLES.reduce((n, t) => n + d.tables[t].length, 0);
   }
 
+  /* --------------------------------------------------- remembered sign-in
+     The built-in administrator has no Supabase session to come back to, so
+     the sign-in itself is remembered here (with an expiry) — otherwise every
+     page change would silently drop admin mode and the draft with it.        */
+  const SESSION_KEY = 'redefine_admin_local_session_v1';
+  function rememberSession(hours) {
+    if (!alive) return false;
+    const ttl = Math.max(1, Number(hours) || 12) * 3600 * 1000;
+    try { localStorage.setItem(SESSION_KEY, JSON.stringify({ at: Date.now(), exp: Date.now() + ttl })); return true; }
+    catch (e) { return false; }
+  }
+  function sessionAlive() {
+    if (!alive) return false;
+    try {
+      const raw = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+      return !!(raw && raw.exp && raw.exp > Date.now());
+    } catch (e) { return false; }
+  }
+  function forgetSession() {
+    if (alive) { try { localStorage.removeItem(SESSION_KEY); } catch (e) { /* ignore */ } }
+  }
+
+  /* "Not now" on the publish prompt: the draft stays, but this tab shows the
+     live content until the tab is closed */
+  const LATER_KEY = 'redefine_draft_later_v1';
+  const draftPaused = () => { try { return sessionStorage.getItem(LATER_KEY) === '1'; } catch (e) { return false; } };
+  const pauseDraft = (on) => { try { if (on) sessionStorage.setItem(LATER_KEY, '1'); else sessionStorage.removeItem(LATER_KEY); } catch (e) { /* ignore */ } };
+
   window.SiteStore = {
     key: KEY,
     available: alive,
     active: () => !!(ensure().active),
+    hasRows: () => count() > 0,
+    lastError: () => lastError,
+    outOfSpace: () => quotaHit(lastError),
+    rememberSession: rememberSession,
+    sessionAlive: sessionAlive,
+    forgetSession: forgetSession,
+    draftPaused: draftPaused,
+    pauseDraft: pauseDraft,
     savesAt: () => (ensure().savedAt),
     tables: () => ensure().tables,
     begin: begin,
