@@ -6,10 +6,11 @@
    Nothing else on the page has to know where the content came from.
 
    Three sources, in order of preference:
-     1. Supabase              → status 'live'    (the normal, published site)
-     2. Browser-local edits   → status 'local'   (admin signed in with the
-                                built-in account while the database has no
-                                matching user — see js/store.js)
+     1. Browser-local draft   → status 'local'   (the administrator edited on
+                                this device with the built-in account — the
+                                draft wins here until it is published or
+                                discarded — see js/store.js)
+     2. Supabase              → status 'live'    (the normal, published site)
      3. js/data.js            → status 'offline' / 'disabled'
 
    Exposes window.SiteContent = { ready, load, loadLocal, status, counts, … }
@@ -239,6 +240,14 @@
 
   /* ------------------------------------------------------- 2. Supabase tables */
   async function load() {
+    /* A draft saved on this device is the newest version of the content the
+       administrator has — it must win over the cloud copy on every page and
+       after every refresh, otherwise a deleted or edited item comes straight
+       back. The draft ends when it is published (cloud account) or discarded
+       (sign-out), or is set aside for this tab with "Not now". */
+    const st = window.SiteStore;
+    if (st && st.active() && !(st.draftPaused && st.draftPaused())) return loadLocal();
+
     if (cfg.cms && sb) {
       try {
         const results = await withTimeout(

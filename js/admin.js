@@ -119,7 +119,8 @@
       plural: 'Designs',
       where: 'the Designs page and the homepage grid',
       list: () => (window.Site ? window.Site.lists.designs() : []),
-      title: (r) => r.title || 'Untitled design',
+      title: (r) => r.title || 'Design (no name yet)',
+      bulk: true,
       fields: [
         { key: 'image_url', label: 'Photo', type: 'image', required: true, group: 'Photo',
           variants: ['image_url_760', 'image_url_480'],
@@ -128,13 +129,14 @@
           help: 'Leave blank to use “<Title> — <Category> by Redefine Interiors”.' },
         { key: 'is_featured', label: 'Show in the homepage slideshow', type: 'toggle', group: 'Homepage slideshow',
           default: false, help: 'Tick to rotate this photo on the home page. The slideshow plays the ticked designs in the order of the Designs page.' },
-        { key: 'title', label: 'Title', type: 'text', required: true, group: 'Text under the photo',
-          placeholder: 'Modern L-Shaped Kitchen Cabinets' },
+        { key: 'title', label: 'Name', type: 'text', group: 'Text under the photo',
+          placeholder: 'Modern L-Shaped Kitchen Cabinets',
+          help: 'Optional. Without a name visitors see just the photo and the quotation button — add it any time.' },
         { key: 'summary', label: 'Summary', type: 'textarea', group: 'Text under the photo',
-          help: 'Two or three sentences. Visitors read this in the detail pop-up that opens from the enlarge button (cards show only the photo, the name and the WhatsApp button).' },
+          help: 'Kept for your records and the WhatsApp conversation — visitors never see it. Cards and the enlarged photo show only the picture, the name and the WhatsApp button.' },
         { key: 'features', label: 'What is included', type: 'lines', group: 'Text under the photo',
-          help: 'One line each. They all appear in the detail pop-up.' },
-        { key: 'materials', label: 'Materials used', type: 'lines', group: 'Text under the photo', help: 'One line each.' },
+          help: 'One line each. Kept for your records — not shown to visitors.' },
+        { key: 'materials', label: 'Materials used', type: 'lines', group: 'Text under the photo', help: 'One line each. Kept for your records — not shown to visitors.' },
         { key: 'category', label: 'Category', type: 'combo', options: () => categoryOptions('design'), group: 'Card details',
           help: 'Drives the filters on the Designs page. Add a new one in the bar above → Categories.' },
         { key: 'lead_time', label: 'Typical time', type: 'text', group: 'Card details', placeholder: '2 – 3 weeks' },
@@ -154,14 +156,16 @@
       plural: 'Materials',
       where: 'the Materials page and the homepage grid',
       list: () => (window.Site ? window.Site.lists.materials() : []),
-      title: (r) => r.name || 'Untitled material',
+      title: (r) => r.name || 'Material (no name yet)',
+      bulk: true,
       fields: [
         { key: 'image_url', label: 'Photo', type: 'image', group: 'Photo',
           variants: ['image_url_760', 'image_url_480'],
           help: 'Optional. Without a photo the card shows the designed swatch below instead.' },
         { key: 'image_alt', label: 'Alt text', type: 'text', group: 'Photo' },
-        { key: 'name', label: 'Name', type: 'text', required: true, group: 'Text under the photo',
-          placeholder: '18mm MDF Board' },
+        { key: 'name', label: 'Name', type: 'text', group: 'Text under the photo',
+          placeholder: '18mm MDF Board',
+          help: 'Optional. Without a name visitors see just the photo and the quotation button — add it any time.' },
         { key: 'note', label: 'Note', type: 'textarea', group: 'Text under the photo',
           help: 'Kept for your records — material cards show only the photo, the name and the WhatsApp request button, so visitors never see this.' },
         { key: 'category', label: 'Category', type: 'combo', options: () => categoryOptions('material'), group: 'Card details',
@@ -262,6 +266,8 @@
       '    <span class="admin-bar__who" data-bar-who></span>',
       '    <span class="admin-bar__status" data-bar-status></span>',
       '    <span class="admin-bar__actions">',
+      '      <button class="admin-chip admin-chip--go" type="button" data-bar="publish" style="display:none">' + icon('upload') + ' Publish device changes</button>',
+      '      <button class="admin-chip" type="button" data-bar="discard" style="display:none">' + icon('trash') + ' Discard</button>',
       '      <button class="admin-chip" type="button" data-bar="slideshow">' + icon('star') + ' Slideshow</button>',
       '      <button class="admin-chip" type="button" data-bar="categories">' + icon('tag') + ' Categories</button>',
       '      <button class="admin-chip admin-chip--danger" type="button" data-bar="signout">' + icon('logout') + ' Sign out</button>',
@@ -279,12 +285,12 @@
       '    <form class="admin-login__form" data-login-form novalidate>',
       '      <div class="field">',
       '        <label for="admin-id">Phone number or e-mail</label>',
-      '        <input id="admin-id" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="0703142874" required>',
+      '        <input id="admin-id" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Phone number or e-mail" required>',
       '      </div>',
       '      <div class="field">',
       '        <label for="admin-pw">Password</label>',
       '        <span class="admin-pw">',
-      '          <input id="admin-pw" type="password" autocomplete="current-password" placeholder="••••••••" required>',
+      '          <input id="admin-pw" type="password" autocomplete="new-password" placeholder="Password" required>',
       '          <button class="admin-pw__eye" type="button" data-pw-toggle aria-label="Show password">' + icon('eye') + '</button>',
       '        </span>',
       '      </div>',
@@ -353,6 +359,34 @@
       '  </div>',
       '</div>',
 
+      /* ---- upload many photos ----------------------------------------- */
+      '<div class="admin-modal" data-admin-bulk role="dialog" aria-modal="true" aria-label="Upload many photos" aria-hidden="true">',
+      '  <div class="admin-modal__panel">',
+      '    <div class="admin-modal__head">',
+      '      <div>',
+      '        <span class="admin-eyebrow">' + icon('upload') + ' <span data-bulk-kind>Designs</span></span>',
+      '        <h3>Upload many photos</h3>',
+      '      </div>',
+      '      <button class="admin-x" type="button" data-bulk-close aria-label="Close">' + icon('x') + '</button>',
+      '    </div>',
+      '    <p class="admin-modal__lead" data-bulk-lead></p>',
+      '    <div class="admin-modal__body admin-bulk">',
+      '      <label class="admin-bulk__cat"><span>Category for these photos <em>(optional)</em></span>',
+      '        <select data-bulk-cat></select></label>',
+      '      <div class="admin-drop admin-drop--bulk" data-bulk-drop tabindex="0" role="button" aria-label="Choose photos">',
+      '        <span class="admin-drop__cta">' + icon('upload') + '<b>Choose photos</b>',
+      '          <small>Tap to open your gallery and select as many as you like · JPG, PNG or WebP up to 8 MB each</small></span>',
+      '      </div>',
+      '      <input type="file" accept="image/*" multiple data-bulk-files hidden>',
+      '      <ul class="admin-bulk__list" data-bulk-list></ul>',
+      '    </div>',
+      '    <div class="admin-modal__foot admin-bulk__foot">',
+      '      <span class="admin-bulk__status" data-bulk-status aria-live="polite"></span>',
+      '      <button class="btn btn--gold" type="button" data-bulk-start disabled>' + icon('upload') + ' <span>Upload</span></button>',
+      '    </div>',
+      '  </div>',
+      '</div>',
+
       /* ---- confirm ---------------------------------------------------- */
       '<div class="admin-confirm" data-admin-confirm role="alertdialog" aria-modal="true" aria-hidden="true">',
       '  <div class="admin-confirm__panel">',
@@ -391,13 +425,9 @@
     const err = $('[data-login-error]', shell);
     const submit = $('[data-login-submit]', shell);
 
-    if (BUILTIN && BUILTIN.prefilled) {
-      $('#admin-id', shell).value = BUILTIN.phone;
-      $('#admin-pw', shell).value = fromB64(BUILTIN.passwordB64);
-    }
-    $('[data-login-foot]', shell).innerHTML = BUILTIN
-      ? 'The built-in account is <b>' + esc(BUILTIN.phone) + '</b>. Other administrators sign in with the phone number or e-mail of their Supabase account.'
-      : 'Accounts live in Supabase → Authentication → Users. The first account you create becomes the owner.';
+    /* the form is never pre-filled: the number and the password are typed
+       every time, and cleared again whenever the panel closes */
+    $('[data-login-foot]', shell).textContent = 'For staff of Redefine Interiors only. Forgotten the password? Ask the site owner.';
 
     scrim.addEventListener('click', () => {
       if (login.classList.contains('is-open')) closeLogin();
@@ -459,9 +489,13 @@
     $('[data-bar="slideshow"]', shell).addEventListener('click', () => openPanel('slideshow'));
     $('[data-bar="categories"]', shell).addEventListener('click', () => openPanel('categories'));
     $('[data-bar="signout"]', shell).addEventListener('click', () => signOut());
+    $('[data-bar="publish"]', shell).addEventListener('click', () => { if (store.pauseDraft) store.pauseDraft(false); publishDraft(); });
+    $('[data-bar="discard"]', shell).addEventListener('click', () => discardDraft());
 
     $('[data-slides-close]', shell).addEventListener('click', closePanels);
     $('[data-cats-close]', shell).addEventListener('click', closePanels);
+    $('[data-bulk-close]', shell).addEventListener('click', () => { if (!bulk.busy) closePanels(); });
+    wireBulk();
 
     /* categories: tabs, add, rename, reorder, hide, delete */
     $$('[data-cats-tab]', shell).forEach((tab) => tab.addEventListener('click', () => showCatTab(tab.dataset.catsTab)));
@@ -515,14 +549,26 @@
     ensureShell();
     const login = $('[data-admin-login]', shell);
     $('[data-login-error]', shell).textContent = '';
+    clearLoginForm();
     login.classList.add('is-open');
     $('[data-admin-scrim]', shell).classList.add('is-open');
     document.body.classList.add('admin-no-scroll');
     setTimeout(() => { const f = $('#admin-id', shell); if (f) f.focus(); }, 120);
   }
 
+  function clearLoginForm() {
+    if (!shell) return;
+    const id = $('#admin-id', shell);
+    const pw = $('#admin-pw', shell);
+    if (id) id.value = '';
+    if (pw) { pw.value = ''; pw.type = 'password'; }
+    const eye = $('[data-pw-toggle]', shell);
+    if (eye) { eye.innerHTML = icon('eye'); eye.setAttribute('aria-label', 'Show password'); }
+  }
+
   function closeLogin() {
     if (!shell) return;
+    clearLoginForm();
     $('[data-admin-login]', shell).classList.remove('is-open');
     if (!$('[data-admin-drawer]', shell).classList.contains('is-open') && !state.panel) {
       $('[data-admin-scrim]', shell).classList.remove('is-open');
@@ -568,10 +614,10 @@
     state.panel = which;
     if (which === 'categories') {
       showCatTab(kind || state.catsKind || 'design', true);
-    } else {
+    } else if (which === 'slideshow') {
       renderSlidesPanel();
     }
-    const box = $('[data-admin-' + (which === 'categories' ? 'cats' : 'slides') + ']', shell);
+    const box = $('[data-admin-' + (which === 'categories' ? 'cats' : which === 'bulk' ? 'bulk' : 'slides') + ']', shell);
     box.classList.add('is-open');
     box.setAttribute('aria-hidden', 'false');
     $('[data-admin-scrim]', shell).classList.add('is-open');
@@ -581,7 +627,7 @@
   function closePanels() {
     if (!shell) return;
     state.panel = null;
-    $$('[data-admin-slides], [data-admin-cats]', shell).forEach((el) => {
+    $$('[data-admin-slides], [data-admin-cats], [data-admin-bulk]', shell).forEach((el) => {
       el.classList.remove('is-open');
       el.setAttribute('aria-hidden', 'true');
     });
@@ -625,12 +671,44 @@
     } catch (e) { return null; }
   }
 
-  const b64 = (text) => {
-    try { return btoa(unescape(encodeURIComponent(String(text)))); } catch (e) { return ''; }
-  };
-  const fromB64 = (text) => {
-    try { return decodeURIComponent(escape(atob(String(text || '')))); } catch (e) { return ''; }
-  };
+  /* SHA-256 in plain JavaScript for pages served over plain http (there
+     crypto.subtle is switched off), so the password is never compared in the
+     clear and never has to be stored in any recoverable form */
+  function sha256Sync(str) {
+    const K = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2];
+    const bytes = new TextEncoder().encode(str);
+    const l = bytes.length;
+    const words = [];
+    for (let i = 0; i < l; i++) words[i >> 2] |= bytes[i] << (24 - (i % 4) * 8);
+    words[l >> 2] |= 0x80 << (24 - (l % 4) * 8);
+    words[(((l + 8) >> 6) << 4) + 15] = l * 8;
+    let h0 = 0x6a09e667, h1 = 0xbb67ae85, h2 = 0x3c6ef372, h3 = 0xa54ff53a, h4 = 0x510e527f, h5 = 0x9b05688c, h6 = 0x1f83d9ab, h7 = 0x5be0cd19;
+    const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+    const w = new Array(64);
+    for (let j = 0; j < words.length; j += 16) {
+      for (let t = 0; t < 64; t++) {
+        if (t < 16) w[t] = words[j + t] | 0;
+        else {
+          const s0 = rotr(w[t - 15], 7) ^ rotr(w[t - 15], 18) ^ (w[t - 15] >>> 3);
+          const s1 = rotr(w[t - 2], 17) ^ rotr(w[t - 2], 19) ^ (w[t - 2] >>> 10);
+          w[t] = (w[t - 16] + s0 + w[t - 7] + s1) | 0;
+        }
+      }
+      let a = h0, b = h1, c = h2, d = h3, e = h4, f = h5, g = h6, h = h7;
+      for (let t = 0; t < 64; t++) {
+        const S1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
+        const ch = (e & f) ^ (~e & g);
+        const t1 = (h + S1 + ch + K[t] + w[t]) | 0;
+        const S0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
+        const maj = (a & b) ^ (a & c) ^ (b & c);
+        const t2 = (S0 + maj) | 0;
+        h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+      }
+      h0 = (h0 + a) | 0; h1 = (h1 + b) | 0; h2 = (h2 + c) | 0; h3 = (h3 + d) | 0;
+      h4 = (h4 + e) | 0; h5 = (h5 + f) | 0; h6 = (h6 + g) | 0; h7 = (h7 + h) | 0;
+    }
+    return [h0, h1, h2, h3, h4, h5, h6, h7].map((x) => ('00000000' + (x >>> 0).toString(16)).slice(-8)).join('');
+  }
 
   /* is this the account coded into js/config.js? */
   async function matchesBuiltin(identifier, password) {
@@ -644,9 +722,9 @@
     if (!phoneOk && !emailOk) return false;
 
     const salted = (cfg.passwordSalt || 'redefine-interiors::2026::') + String(password);
-    const hash = await sha256Hex(salted);
-    if (hash) return hash === BUILTIN.passwordHash;
-    return b64(password) === BUILTIN.passwordB64;             // no crypto.subtle
+    let hash = await sha256Hex(salted);
+    if (!hash) { try { hash = sha256Sync(salted); } catch (e) { hash = null; } }
+    return !!hash && hash === BUILTIN.passwordHash;
   }
 
   /* Supabase Auth, e-mail or phone — unchanged behaviour */
@@ -682,14 +760,15 @@
   }
 
   /* the browser-only way in: it needs somewhere to keep the draft */
-  function localSignIn(notice) {
+  function localSignIn() {
     if (!store || !store.available) {
       return {
-        error: 'This browser is not allowing local storage (a private window?), so the built-in account has ' +
-          'nowhere to save your edits. Open the site in a normal window, or sign in with a Supabase account.'
+        error: 'This browser is blocking saved data (a private window?), so your changes could not be kept. ' +
+          'Open the site in a normal window and sign in again.'
       };
     }
-    return { admin: localAdmin(), notice: notice || '' };
+    if (store.rememberSession) store.rememberSession(BUILTIN && BUILTIN.sessionHours);
+    return { admin: localAdmin(), notice: '' };
   }
 
   async function signIn(identifier, password) {
@@ -697,15 +776,17 @@
     const builtin = await matchesBuiltin(id, password);
 
     if (sb) {
-      const cloud = await cloudSignIn(id, password);
+      let cloud = { error: null };
+      try { cloud = await cloudSignIn(id, password); } catch (e) { cloud = { error: e }; }
       if (cloud.admin) return cloud;
-      const reason = cloud.error && cloud.error.message ? friendly(cloud.error.message) : 'Supabase sign-in failed.';
-      if (builtin) return localSignIn(reason + ' — signed in on this device only.');
+      /* the owner's own account always works, whatever the cloud said */
+      if (builtin) return localSignIn();
+      const reason = cloud.error && cloud.error.message ? friendly(cloud.error.message) : 'Sign-in failed.';
       return { error: reason };
     }
 
     if (builtin) return localSignIn();
-    return { error: 'Supabase is not available and that is not the built-in administrator account.' };
+    return { error: 'Wrong phone number/e-mail or password.' };
   }
 
   function localAdmin() {
@@ -725,11 +806,9 @@
     if (/email not confirmed/i.test(m)) return 'That account is not confirmed yet. Confirm it in Supabase → Authentication → Users.';
     if (/phone not confirmed/i.test(m)) return 'That phone number is not confirmed yet. Confirm it in Supabase → Authentication → Users.';
     if (/rate limit|too many/i.test(m)) return 'Too many attempts. Wait a minute and try again.';
-    if (/fetch|network|failed to fetch/i.test(m)) return 'Cannot reach Supabase. Check the connection and try again.';
-    if (/sms|phone provider|twilio|messagebird/i.test(m)) {
-      return 'Phone sign-in is not enabled on this Supabase project (Authentication → Providers → Phone). Sign in with the account e-mail instead.';
-    }
-    if (/not an administrator/i.test(m)) return m;
+    if (/fetch|network|failed to fetch/i.test(m)) return 'No connection right now. Check the internet and try again.';
+    if (/sms|phone provider|twilio|messagebird/i.test(m)) return 'Wrong phone number/e-mail or password.';
+    if (/not an administrator/i.test(m)) return 'That account is not an administrator of this website.';
     return m || 'Sign-in failed.';
   }
 
@@ -738,8 +817,7 @@
     if (error) return { error: new Error('Signed in, but the admin check failed: ' + error.message) };
     if (!data || !data.id) {
       await sb.auth.signOut();
-      return { error: new Error('That Supabase account is not an administrator yet. In the SQL Editor run:  select public.grant_admin(\'' +
-        (BUILTIN ? BUILTIN.phoneE164 : 'phone') + '\');') };
+      return { error: new Error('That account is not an administrator of this website.') };
     }
     try { await sb.rpc('admin_touch_login'); } catch (e) { /* cosmetic */ }
     data.local = false;
@@ -748,14 +826,21 @@
 
   /* called by js/ghost.js when a session already exists (page reload, next page) */
   async function resume() {
-    if (!sb) return false;
-    const { data } = await sb.auth.getSession();
-    if (!data || !data.session) return false;
-    const { data: admin } = await sb.rpc('current_admin');
-    if (!admin || !admin.id) return false;
-    admin.local = false;
-    enter(admin, true);
-    return true;
+    if (store && store.ready) { try { await store.ready; } catch (e) { /* ignore */ } }
+    if (sb) {
+      try {
+        const { data } = await sb.auth.getSession();
+        if (data && data.session) {
+          const { data: admin } = await sb.rpc('current_admin');
+          if (admin && admin.id) { admin.local = false; enter(admin, true); return true; }
+        }
+      } catch (e) { /* fall through to the device sign-in */ }
+    }
+    if (BUILTIN && store && store.sessionAlive && store.sessionAlive()) {
+      enter(localAdmin(), true);
+      return true;
+    }
+    return false;
   }
 
   async function signOut() {
@@ -764,7 +849,7 @@
     const ok = await confirmDialog({
       title: 'Sign out of admin mode?',
       text: local
-        ? 'The website keeps the browser-only changes until you say otherwise.'
+        ? 'Your changes stay saved on this device.'
         : 'The website stays exactly as it is for visitors.',
       yesLabel: 'Sign out',
       noLabel: 'Stay signed in',
@@ -776,22 +861,13 @@
       try { await sb.auth.signOut(); } catch (e) { /* ignore */ }
     }
 
-    /* browser-only edits: ask once whether they should stay on this device */
-    if (writePath() === 'local' && store && store.active()) {
-      const keep = await confirmDialog({
-        title: 'Keep the changes on this device?',
-        text: 'They were never published to Supabase — only this browser can see them. Keeping them makes this browser show your draft; discarding brings the published site back.',
-        yesLabel: 'Keep them',
-        noLabel: 'Discard',
-        danger: false
-      });
-      if (!keep) {
-        store.clear();
-        if (window.SiteContent && SiteContent.restore) SiteContent.restore();
-        if (window.SiteContent && SiteContent.load) await SiteContent.load();
-      } else if (window.SiteContent && SiteContent.loadLocal) {
-        await SiteContent.loadLocal();
-      }
+    if (store && store.forgetSession) store.forgetSession();
+
+    /* changes saved on this device stay — the website keeps showing them
+       here, and they are published the next time the online account signs
+       in on this device */
+    if (local && store && store.active() && window.SiteContent && SiteContent.loadLocal) {
+      await SiteContent.loadLocal();
     }
 
     exit();
@@ -812,8 +888,9 @@
     ensureShell();
 
     /* the built-in account: snapshot what the visitor sees and keep working
-       from this browser's own copy (js/store.js) */
+       from this device's own copy (js/store.js) */
     if (admin.local && store) {
+      if (store.pauseDraft) store.pauseDraft(false);
       store.begin();
       if (window.SiteContent && SiteContent.loadLocal) SiteContent.loadLocal();
     }
@@ -827,8 +904,152 @@
 
     if (!silent) {
       toast(admin.local
-        ? 'Admin mode on — saving in this browser only (see the bar)'
-        : 'Admin mode on — every change is published to Supabase');
+        ? 'Admin mode on — your changes are saved on this device'
+        : 'Admin mode on — every change goes live straight away');
+    }
+
+    /* the online account arriving on a device that holds unpublished
+       changes: offer to put them live */
+    if (!admin.local && store && store.active() && store.hasRows && store.hasRows()) {
+      setTimeout(() => offerPublish(!silent ? 'signin' : 'resume'), silent ? 900 : 400);
+    }
+  }
+
+  /* ---- changes saved on a device → published for everybody ------------- */
+  let publishing = false;
+
+  async function offerPublish(why) {
+    if (publishing || !store || !store.active()) return;
+    const n = store.count ? store.count() : 0;
+    const ok = await confirmDialog({
+      title: 'Publish the changes saved on this device?',
+      text: 'This device holds changes to the designs, materials or categories that visitors elsewhere cannot see yet' +
+        (n ? ' (' + n + ' items in total)' : '') + '. Publish them now so the whole website matches what you see here?',
+      yesLabel: 'Publish now',
+      noLabel: 'Not now',
+      danger: false
+    });
+    if (ok) return publishDraft();
+    /* set aside for this tab: the admin edits the live content directly */
+    if (store.pauseDraft) store.pauseDraft(true);
+    if (window.SiteContent && SiteContent.load) await SiteContent.load();
+    updateBar();
+    toast('Kept for later — use “Publish device changes” in the bar whenever you are ready');
+  }
+
+  async function discardDraft() {
+    const ok = await confirmDialog({
+      title: 'Discard the changes saved on this device?',
+      text: 'The website on this device goes back to the published version. This cannot be undone.',
+      yesLabel: 'Discard',
+      noLabel: 'Keep',
+      danger: true
+    });
+    if (!ok) return;
+    store.clear();
+    if (store.pauseDraft) store.pauseDraft(false);
+    if (window.SiteContent && SiteContent.restore) SiteContent.restore();
+    if (window.SiteContent && SiteContent.load) await SiteContent.load();
+    updateBar();
+    toast('Device changes discarded');
+  }
+
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const CLOUD_ONLY = ['created_at', 'updated_at', 'created_by', 'updated_by'];
+  const KEY_OF = {
+    designs: (r) => 'code:' + String(r.code || ''),
+    materials: (r) => 'code:' + String(r.code || ''),
+    services: (r) => 'slug:' + String(r.slug || ''),
+    categories: (r) => 'cat:' + String(r.kind || '') + '/' + String(r.name || '').toLowerCase()
+  };
+
+  /* a photo that was kept inside the device copy (data: URL) → the bucket */
+  async function dataUrlToFile(url, name) {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    return new File([blob], (name || 'photo') + '.jpg', { type: blob.type || 'image/jpeg' });
+  }
+
+  async function publishDraft() {
+    if (publishing || !sb) return;
+    if (writePath() !== 'cloud') {
+      toast('Publishing needs the online account — sign in with it first');
+      return;
+    }
+    publishing = true;
+    const status = $('[data-bar-status]', shell);
+    const say = (m) => { if (status) status.innerHTML = icon('refresh') + '<span><b>Publishing…</b> ' + esc(m) + '</span>'; };
+    const uid = state.admin && state.admin.id ? state.admin.id : null;
+
+    try {
+      const tables = store.tables();
+      const order = ['categories', 'designs', 'materials', 'services'];
+      let done = 0;
+
+      for (let t = 0; t < order.length; t++) {
+        const table = order[t];
+        const folder = { designs: 'designs', materials: 'materials', services: 'services' }[table] || 'misc';
+        const local = (tables[table] || []).slice();
+        say(table + ' — reading the published copy…');
+        const { data: cloudRows, error: readErr } = await sb.from(table).select('*');
+        if (readErr) throw readErr;
+        const byId = {}; const byKey = {};
+        (cloudRows || []).forEach((r) => { byId[String(r.id)] = r; byKey[KEY_OF[table](r)] = r; });
+        const keep = {};
+
+        for (let i = 0; i < local.length; i++) {
+          const row = Object.assign({}, local[i]);
+          const label = row.title || row.name || row.slug || row.code || ('item ' + (i + 1));
+          say(table + ' — ' + label);
+
+          /* photos kept on the device go to the bucket first */
+          if (/^data:/i.test(String(row.image_url || ''))) {
+            const file = await dataUrlToFile(row.image_url, slugify(label));
+            const up = await uploadPhoto(folder, file, label, (m) => say(label + ': ' + m));
+            row.image_url = up.full; row.image_url_760 = up.sm; row.image_url_480 = up.xs;
+            store.update(table, local[i].id, { image_url: up.full, image_url_760: up.sm, image_url_480: up.xs });
+          }
+
+          const localId = String(row.id || '');
+          CLOUD_ONLY.forEach((k) => { delete row[k]; });
+          delete row.id;
+          row.updated_by = uid;
+
+          let target = UUID_RE.test(localId) && byId[localId] ? byId[localId] : byKey[KEY_OF[table](row)];
+          if (target) {
+            keep[String(target.id)] = true;
+            const { error } = await sb.from(table).update(row).eq('id', target.id);
+            if (error) throw error;
+          } else {
+            row.created_by = uid;
+            if (UUID_RE.test(localId)) row.id = localId;
+            const { data: ins, error } = await sb.from(table).insert(row).select('id').single();
+            if (error) throw error;
+            if (ins && ins.id) keep[String(ins.id)] = true;
+          }
+          done += 1;
+        }
+
+        /* whatever the admin deleted on the device is deleted for everybody */
+        const gone = (cloudRows || []).filter((r) => !keep[String(r.id)]);
+        for (let g = 0; g < gone.length; g++) {
+          say(table + ' — removing ' + (gone[g].title || gone[g].name || gone[g].slug || ''));
+          const { error } = await sb.from(table).delete().eq('id', gone[g].id);
+          if (error) throw error;
+        }
+      }
+
+      store.clear();
+      if (store.pauseDraft) store.pauseDraft(false);
+      if (window.SiteContent && SiteContent.load) await SiteContent.load();
+      updateBar();
+      decorate();
+      toast('Published — the whole website now shows these changes (' + done + ' items)');
+    } catch (err) {
+      updateBar();
+      toast('Publishing stopped: ' + writeError(err) + ' Nothing on this device was lost — try again.');
+    } finally {
+      publishing = false;
     }
   }
 
@@ -864,30 +1085,31 @@
       c.services ? c.services + ' services' : '', c.categories ? c.categories + ' categories' : '']
       .filter(Boolean).join(' · ');
 
+    const pending = !a.local && store && store.active() && store.hasRows && store.hasRows();
+    const publishBtn = $('[data-bar="publish"]', shell);
+    const discardBtn = $('[data-bar="discard"]', shell);
+    if (publishBtn) publishBtn.style.display = pending ? '' : 'none';
+    if (discardBtn) discardBtn.style.display = pending ? '' : 'none';
+
     if (a.local) {
+      el.className = 'admin-bar__status';
+      el.innerHTML = icon('check') + '<span><b>Saved on this device.</b> ' +
+        esc(numbers || 'Ready') + ' — every change you make is kept and shown here.</span>';
+    } else if (pending) {
       el.className = 'admin-bar__status admin-bar__status--warn';
-      el.innerHTML = icon('alert') + '<span><b>This device only.</b> ' +
-        (sc.status === 'offline'
-          ? 'Supabase is not reachable'
-          : 'No Supabase admin account matches this login yet') +
-        ' — changes are saved in this browser (' + esc(numbers || 'no content loaded') +
-        '). To publish for everybody, create the account in Supabase → Authentication → Users with this phone number, then run ' +
-        '<code>select public.grant_admin(\'' + esc((BUILTIN && BUILTIN.phoneE164) || '') + '\');</code></span>';
+      el.innerHTML = icon('alert') + '<span><b>Changes waiting on this device.</b> Publish them so everybody sees them.</span>';
     } else if (sc.status === 'live') {
-      el.className = 'admin-bar__status' + (sc.categoriesMissing ? ' admin-bar__status--warn' : '');
-      el.innerHTML = icon(sc.categoriesMissing ? 'alert' : 'cloud') + '<span><b>Connected to Supabase.</b> ' + esc(numbers) +
-        (sc.categoriesMissing
-          ? ' — the chips still come from js/data.js: re-run supabase/schema.sql (§12) to manage them here.'
-          : '') + '</span>';
+      el.className = 'admin-bar__status';
+      el.innerHTML = icon('cloud') + '<span><b>Live.</b> ' + esc(numbers) + ' — changes go live straight away.</span>';
     } else if (sc.status === 'empty') {
       el.className = 'admin-bar__status admin-bar__status--warn';
-      el.innerHTML = icon('alert') + '<span><b>Connected, but the tables are empty.</b> Add items with the + tiles, or run supabase/schema.sql.</span>';
+      el.innerHTML = icon('alert') + '<span><b>Live, but nothing is published yet.</b> Add items with the + tiles.</span>';
     } else if (sc.status === 'offline') {
       el.className = 'admin-bar__status admin-bar__status--warn';
-      el.innerHTML = icon('alert') + '<span><b>Supabase is not reachable</b> (' + esc(sc.error || 'network') + ').</span>';
+      el.innerHTML = icon('alert') + '<span><b>No connection right now.</b> Check the internet and reload.</span>';
     } else {
-      el.className = 'admin-bar__status admin-bar__status--warn';
-      el.innerHTML = icon('alert') + '<span><b>Built-in content.</b> js/config.js or js/content.js is not loading Supabase.</span>';
+      el.className = 'admin-bar__status';
+      el.innerHTML = icon('check') + '<span><b>Ready.</b> ' + esc(numbers || '') + '</span>';
     }
   }
 
@@ -896,7 +1118,9 @@
     if (!state.active || !state.admin) return null;
     if (state.admin.local) return store ? 'local' : null;
     const sc = window.SiteContent || {};
-    return (sc.status === 'live' || sc.status === 'empty') ? 'cloud' : null;
+    /* an online administrator writes to the cloud — also while this device
+       is still showing its own unpublished draft (status 'local') */
+    return sb && (sc.status === 'live' || sc.status === 'empty' || sc.status === 'local') ? 'cloud' : null;
   }
 
   async function reloadContent(silent) {
@@ -1010,6 +1234,18 @@
         btn.innerHTML = icon('plus') + '<span>Add ' + esc(col.label.toLowerCase()) + '</span>' +
           '<small>It appears at the end of ' + esc(col.where) + '</small>';
         grid.appendChild(btn);
+
+        if (col.bulk) {
+          const many = document.createElement('button');
+          many.type = 'button';
+          many.className = 'admin-add admin-add--bulk';
+          many.dataset.adminAct = 'bulk';
+          many.dataset.adminKind = g.kind;
+          many.innerHTML = icon('upload') + '<span>Upload many photos</span>' +
+            '<small>Pick several photos from your gallery — each becomes a ' + esc(col.label.toLowerCase()) +
+            ' straight away. Names can be added later.</small>';
+          grid.appendChild(many);
+        }
       });
     });
   }
@@ -1032,7 +1268,9 @@
     }
     if (act === 'slideshow') return openPanel('slideshow');
     if (act === 'new') return openEditor(kind, null);
+    if (act === 'bulk') return openBulk(kind);
     if (act === 'edit') return openEditor(kind, id);
+    if (['feature', 'unfeature', 'dup', 'move-left', 'move-right', 'toggle', 'delete'].indexOf(act) !== -1 && draftBlocks()) return;
     if (act === 'feature') return setFeatured(id, !(findDesign(id) || {}).featured);
     if (act === 'unfeature') return setFeatured(id, false);
     if (act === 'dup') return duplicateRecord(kind, id);
@@ -1058,14 +1296,18 @@
     return (store && store.tables()[table]) || [];
   }
 
+  const localFail = () => ({ error: new Error(store && store.outOfSpace && store.outOfSpace()
+    ? 'This device has run out of space for saved changes. Publish or remove some photos and try again.'
+    : 'That change could not be saved on this device. Try again.') });
+
   async function writeUpdate(table, id, patch) {
-    if (writePath() === 'local') { store.update(table, id, patch); return { error: null }; }
+    if (writePath() === 'local') { return store.update(table, id, patch) ? { error: null } : localFail(); }
     const { error } = await sb.from(table).update(patch).eq('id', id);
     return { error: error };
   }
 
   async function writeInsert(table, payload) {
-    if (writePath() === 'local') { store.insert(table, payload); return { error: null }; }
+    if (writePath() === 'local') { return store.insert(table, payload) ? { error: null } : localFail(); }
     const { error } = await sb.from(table).insert(payload);
     return { error: error };
   }
@@ -1109,6 +1351,27 @@
     do { max += 1; code = prefix + String(max).padStart(2, '0'); }
     while (list.some((it) => String(it.code || it.id) === code));
     return code;
+  }
+
+  /* several new items in one go: successive codes without a re-render between */
+  function codeAllocator(kind) {
+    const used = {};
+    (COLLECTIONS[kind].list() || []).forEach((it) => { used[String(it.code || it.id || '')] = true; });
+    return () => {
+      let code;
+      do { code = nextCodeAfter(kind, used); } while (used[code]);
+      used[code] = true;
+      return code;
+    };
+  }
+  function nextCodeAfter(kind, used) {
+    const prefix = { design: 'd', material: 'm' }[kind];
+    let max = 0;
+    Object.keys(used).forEach((c) => {
+      const m = /^([a-z])(\d+)$/i.exec(c);
+      if (m && m[1].toLowerCase() === prefix) max = Math.max(max, parseInt(m[2], 10));
+    });
+    return prefix + String(max + 1).padStart(2, '0');
   }
 
   const slugify = (s) => String(s || '').toLowerCase().trim()
@@ -1222,13 +1485,16 @@
   function writeError(err) {
     const e = err || {};
     const msg = String(e.message || e);
+    if (/violates check constraint .*(title|name)_check/i.test(msg)) {
+      return 'The online database still insists on a name for every item. Run the latest supabase/schema.sql once and photo-only items will publish.';
+    }
     if (e.code === '42501' || /row-level security|new row violates/i.test(msg)) {
-      return 'Supabase refused that change — your admin session may have expired. Sign out and sign in again.';
+      return 'That change was refused online — your session may have expired. Sign out and sign in again.';
     }
     if (e.code === '23505' || /duplicate key/i.test(msg)) {
       return 'That reference (code or slug) already exists. Change it and save again.';
     }
-    if (/Failed to fetch|NetworkError|fetch/i.test(msg)) return 'Cannot reach Supabase — check the connection.';
+    if (/Failed to fetch|NetworkError|fetch/i.test(msg)) return 'No connection right now — check the internet.';
     if (/column .*is_featured.* does not exist/i.test(msg)) {
       return 'The database does not have the slideshow column yet — run §12 of supabase/schema.sql.';
     }
@@ -1300,7 +1566,10 @@
     }
     if (onStatus) onStatus('Preparing the photo…');
     const img = await loadImageFile(file);
-    const blob = await canvasBlob(img, up.maxWidth || 1600, Math.min(up.quality || 0.86, 0.8));
+    /* a device can only hold a few megabytes of saved changes, so the copy
+       kept here is smaller than the online renditions (it is re-cut at full
+       size from the original when the changes are published) */
+    const blob = await canvasBlob(img, Math.min(up.maxWidth || 1600, 1100), 0.72);
     const url = await readAsDataUrl(blob);
     return { full: url, sm: '', xs: '' };
   }
@@ -1460,6 +1729,16 @@
     return row;
   }
 
+  /* the online account looking at this device's unpublished draft: those
+     changes must be published (or discarded) before editing continues, so an
+     edit made now can never be hidden behind the draft */
+  function draftBlocks() {
+    const sc = window.SiteContent || {};
+    if (writePath() !== 'cloud' || sc.source !== 'local') return false;
+    offerPublish('edit');
+    return true;
+  }
+
   function openEditor(kind, id) {
     const col = COLLECTIONS[kind];
     if (!col) return;
@@ -1468,6 +1747,7 @@
       openBar();
       return;
     }
+    if (draftBlocks()) return;
 
     const item = id ? findItem(kind, id) : null;
     if (id && !canEdit(item)) { toast('That block is not in the database yet.'); return; }
@@ -1739,6 +2019,133 @@
   }
 
   /* ======================================================================
+     9b. UPLOAD MANY PHOTOS — every picked photo becomes its own item
+     ====================================================================== */
+  const bulk = { kind: 'design', files: [], busy: false };
+
+  function openBulk(kind) {
+    const col = COLLECTIONS[kind];
+    if (!col || !col.bulk) return;
+    if (!writePath()) { toast('Uploading is unavailable — see the message in the bar.'); openBar(); return; }
+    if (draftBlocks()) return;
+    ensureShell();
+    bulk.kind = kind; bulk.files = []; bulk.busy = false;
+
+    $('[data-bulk-kind]', shell).textContent = col.plural;
+    $('[data-bulk-lead]', shell).textContent = 'Every photo you pick becomes a new ' + col.label.toLowerCase() +
+      ' on the website straight away — photo and “Request quotation” button only. Open any of them afterwards with ✎ to add a name and details.';
+
+    const sel = $('[data-bulk-cat]', shell);
+    const cats = categoryOptions(kind);
+    sel.innerHTML = '<option value="">No category yet (shows under “All”)</option>' +
+      cats.map((c) => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('');
+    /* the chip the admin is looking at is the most likely answer */
+    const activeChip = document.querySelector('[data-filter-kind="' + kind + '"] .filter.is-active');
+    if (activeChip && cats.indexOf(activeChip.dataset.filter) !== -1) sel.value = activeChip.dataset.filter;
+
+    renderBulkList();
+    $('[data-bulk-status]', shell).textContent = '';
+    openPanel('bulk');
+  }
+
+  function renderBulkList() {
+    const list = $('[data-bulk-list]', shell);
+    const start = $('[data-bulk-start]', shell);
+    list.innerHTML = bulk.files.map((f, i) =>
+      '<li class="admin-bulk__item' + (f.state ? ' is-' + f.state : '') + '" data-bulk-i="' + i + '">' +
+      '<img src="' + esc(f.preview) + '" alt="">' +
+      '<span class="admin-bulk__name">' + esc(f.file.name) + '<small>' + (f.file.size / 1048576).toFixed(1) + ' MB' +
+      (f.note ? ' · ' + esc(f.note) : '') + '</small></span>' +
+      (bulk.busy ? '' : '<button class="admin-icon-btn" type="button" data-bulk-remove="' + i + '" aria-label="Remove">' + icon('x') + '</button>') +
+      '</li>').join('');
+    start.disabled = bulk.busy || !bulk.files.some((f) => !f.state || f.state === 'error');
+    const n = bulk.files.filter((f) => !f.state || f.state === 'error').length;
+    $('span', start).textContent = n ? 'Upload ' + n + ' photo' + (n === 1 ? '' : 's') : 'Upload';
+  }
+
+  function addBulkFiles(fileList) {
+    const up = cfg.upload || {};
+    const maxBytes = up.maxBytes || 8 * 1024 * 1024;
+    Array.prototype.forEach.call(fileList || [], (file) => {
+      if (!/^image\//.test(file.type)) return;
+      const entry = { file: file, preview: URL.createObjectURL(file), state: '', note: '' };
+      if (file.size > maxBytes) { entry.state = 'error'; entry.note = 'bigger than ' + Math.round(maxBytes / 1048576) + ' MB — it will be skipped'; entry.skip = true; }
+      bulk.files.push(entry);
+    });
+    renderBulkList();
+  }
+
+  function wireBulk() {
+    const drop = $('[data-bulk-drop]', shell);
+    const input = $('[data-bulk-files]', shell);
+    drop.addEventListener('click', () => { if (!bulk.busy) input.click(); });
+    drop.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!bulk.busy) input.click(); } });
+    drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('is-over'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('is-over'));
+    drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('is-over'); if (!bulk.busy && e.dataTransfer) addBulkFiles(e.dataTransfer.files); });
+    input.addEventListener('change', () => { addBulkFiles(input.files); input.value = ''; });
+    $('[data-bulk-list]', shell).addEventListener('click', (e) => {
+      const rm = e.target.closest('[data-bulk-remove]');
+      if (!rm || bulk.busy) return;
+      const i = parseInt(rm.dataset.bulkRemove, 10);
+      if (bulk.files[i]) { URL.revokeObjectURL(bulk.files[i].preview); bulk.files.splice(i, 1); renderBulkList(); }
+    });
+    $('[data-bulk-start]', shell).addEventListener('click', runBulk);
+  }
+
+  async function runBulk() {
+    if (bulk.busy) return;
+    const kind = bulk.kind;
+    const col = COLLECTIONS[kind];
+    const category = $('[data-bulk-cat]', shell).value || '';
+    const status = $('[data-bulk-status]', shell);
+    const todo = bulk.files.filter((f) => (!f.state || f.state === 'error') && !f.skip);
+    if (!todo.length) return;
+
+    bulk.busy = true;
+    renderBulkList();
+    const nextCode = codeAllocator(kind);
+    let position = maxPosition(kind);
+    let ok = 0, failed = 0;
+
+    for (let i = 0; i < todo.length; i++) {
+      const f = todo[i];
+      f.state = 'busy'; f.note = 'uploading…'; renderBulkList();
+      status.textContent = 'Photo ' + (i + 1) + ' of ' + todo.length + '…';
+      try {
+        const stem = f.file.name.replace(/\.[^.]+$/, '');
+        const res = await uploadPhoto(col.folder, f.file, stem, (m) => { f.note = m; renderBulkList(); });
+        position += 10;
+        const payload = kind === 'design'
+          ? { code: nextCode(), title: '', category: category, image_url: res.full, image_url_760: res.sm, image_url_480: res.xs,
+              image_alt: '', badge: '', lead_time: '', unit: '', summary: '', features: [], materials: [],
+              is_featured: false, position: position, is_active: true }
+          : { code: nextCode(), name: '', category: category, image_url: res.full, image_url_760: res.sm, image_url_480: res.xs,
+              image_alt: '', swatch: 'mdf', icon: 'box', unit: '', badge: '', note: '', position: position, is_active: true };
+        if (writePath() !== 'local') {
+          payload.created_by = state.admin && state.admin.id ? state.admin.id : null;
+          payload.updated_by = payload.created_by;
+        }
+        const { error } = await writeInsert(col.table, payload);
+        if (error) throw error;
+        f.state = 'done'; f.note = 'on the website';
+        ok += 1;
+      } catch (err) {
+        f.state = 'error'; f.note = writeError(err) || uploadError(err);
+        failed += 1;
+      }
+      renderBulkList();
+    }
+
+    bulk.busy = false;
+    renderBulkList();
+    status.textContent = ok + ' added' + (failed ? ' · ' + failed + ' failed — tap Upload to retry those' : '');
+    await reloadContent(true);
+    toast(ok ? ok + ' photo' + (ok === 1 ? '' : 's') + ' added — open any with ✎ to add a name' : 'Nothing was added');
+    if (!failed) setTimeout(() => { if (!bulk.busy) closePanels(); }, 900);
+  }
+
+  /* ======================================================================
      10. HOMEPAGE SLIDESHOW PANEL — one tick per design photo
      ====================================================================== */
   function renderSlidesPanel() {
@@ -1761,7 +2168,7 @@
         '<span class="admin-slide__thumb">' +
           (d.image ? '<img src="' + esc(d.image) + '" alt="" loading="lazy">' : '<i>' + icon('starOutline') + '</i>') +
         '</span>' +
-        '<span class="admin-slide__text"><b>' + esc(d.title || 'Untitled design') + '</b>' +
+        '<span class="admin-slide__text"><b>' + esc(d.title || 'Design (no name yet)') + '</b>' +
           '<small>' + esc(d.category || 'No category') +
           (hidden ? ' · hidden from visitors' : '') +
           (!d.image ? ' · no photo yet' : '') + '</small></span>' +
@@ -1947,6 +2354,15 @@
   document.addEventListener('site:content', () => {
     updateBar();
     if (state.active) { undecorate(); decorate(); }
+  });
+  /* a remembered sign-in can be restored before the page itself has drawn
+     its grids — once the site is ready, draw the toolbars over them */
+  document.addEventListener('site:ready', () => {
+    if (!state.active) return;
+    if (window.Site) window.Site.setShowHidden(true);
+    undecorate();
+    decorate();
+    updateBar();
   });
 
   window.SiteAdmin = {

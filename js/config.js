@@ -34,12 +34,15 @@
        the site still tries Supabase first: if an auth user with this phone
        number (or the e-mail below) and this password exists, you get the full
        cloud session and every change is published live. If it does not exist
-       yet, the site signs you in "on this device only" and stores your edits
-       in the browser (see js/store.js) until the Supabase account is created.
+       yet, the site signs you in on this device only and stores your edits in
+       the browser (see js/store.js); they can be published later, the first
+       time a cloud account signs in on that device.
+
+       The sign-in form is NEVER pre-filled — the number and the password must
+       be typed every time. Only a salted SHA-256 hash of the password ships to
+       the browser; the password itself is not in this file in any form.
 
        passwordHash = sha256('redefine-interiors::2026::' + password)
-       passwordB64  = the same password in base64, used only on browsers
-                      without crypto.subtle (plain http / very old engines).
 
        To change the password:  node -e "console.log(require('crypto')
          .createHash('sha256').update('redefine-interiors::2026::NEWPW')
@@ -51,8 +54,7 @@
       fullName: 'Redefine administrator',
       role: 'owner',
       passwordHash: '1c342ffceb3d4d056981c1139a284b8ee6d9143b65ad7403fecc3e965b442579',
-      passwordB64: 'UmVkZWZpbmUyMDI2Iw==',
-      prefilled: true                              // show the credentials in the sign-in form
+      sessionHours: 12                             // how long a device-only sign-in is remembered
     },
 
     /* --- uploads --------------------------------------------------------- */

@@ -26,7 +26,7 @@ Cloudflare Pages, an Apache/Nginx box). Nothing needs compiling.
 | File | Purpose |
 | --- | --- |
 | `index.html` | Home — 50/50 hero (copy left, slideshow right), featured designs, featured materials, stats, process, 50-review slideshow (3 per batch, 5s), FAQ, quotation form |
-| `designs.html` | Full design portfolio with category filters and a "view details" modal |
+| `designs.html` | Full design portfolio with category filters and an enlarge-photo view (photo, name and a Request-quotation button only) |
 | `materials.html` | Material catalogue with product photos, delivery & coverage |
 | `about.html` | Compact single-view page — hero with stats plus the four guiding values |
 | `contact.html` | Compact single-view page — contact cards and the quotation form |
@@ -253,31 +253,40 @@ so the site looks pixel-identical afterwards. Full walkthrough:
 No link, no `/admin` page, no visible hint; the counter is silent and survives the one
 navigation the logo causes.
 
-**The built-in account always works** — it is coded into `js/config.js` and pre-filled in the
-sign-in panel:
+**The built-in account always works** — its phone number and a salted SHA-256 hash of its
+password are in `js/config.js`. The sign-in panel is **never pre-filled**: the number and the
+password are typed every time (and wiped when the panel closes). The password itself is
+not in the repository; the owner has it.
 
 | | |
 | --- | --- |
-| Phone | **0703142874** (also accepts `+254703142874` or `254703142874`) |
-| Password | **Redefine2026#** |
+| Phone | the business number (also accepts the `+254…` / `254…` forms) |
+| Password | held by the owner — change it with the recipe in `js/config.js` |
 
 The site first tries Supabase with those credentials. If an Auth user with that phone number
-and password exists, you get the full session and everything you change is published to the
-database. If it does not exist yet, the site signs you in **on that device only** — the bar
-says *"This device only"* and your edits are kept in the browser (`js/store.js`), so you can
-prepare content before touching Supabase. Create the account once
-(Authentication → Users → Add user → phone `+254703142874`, password `Redefine2026#`,
-✔ Auto Confirm) and run `select public.grant_admin('+254703142874', 'owner');` — the same
-login then publishes for everybody. §12 of `supabase/schema.sql` has the step-by-step.
+and password exists, you get the full session and everything you change is published for
+everybody straight away. If it does not exist yet, the site signs you in **on that device** —
+the bar simply says *"Saved on this device"* and your edits are kept there (`js/store.js`).
+The sign-in is remembered on the device for 12 hours (`defaultAdmin.sessionHours`), so moving
+between pages or reloading never drops admin mode.
+
+**Device edits persist and win.** Whatever was deleted, edited or uploaded on the device is
+what that device shows — on every page, after every reload, and for a signed-out visitor on
+that device too — until it is published or discarded. Nothing "populates back".
+
+**Publishing device edits.** The first time the *online* admin account signs in on a device
+that holds unpublished changes, the site asks *"Publish the changes saved on this device?"*
+(the bar also gets **Publish device changes** / **Discard** buttons). Publishing uploads any
+photos that were kept on the device to the `site-media` bucket, then makes the cloud tables
+match the device exactly — edits applied, additions inserted, deletions deleted — and clears
+the device copy. *Not now* sets the draft aside for that tab.
 
 Other administrators sign in with the **e-mail address *or* phone number** of their Supabase
 Auth account plus their password. The first account you create in the project becomes the
 owner automatically; promote anyone else with `select public.grant_admin('their@email');`.
 
-> The built-in password lives in the page source (hashed, but still public). Anyone who reads
-> the code can therefore sign in **to their own browser copy only** — it can never write to
-> Supabase without the matching Auth user. Change the password in Supabase and in
-> `js/config.js` (recipe at the end of `supabase/schema.sql`) once your own account is set up.
+> Anyone who reads the code can see the *hash*, not the password; and a device-only sign-in
+> can never write to Supabase without the matching Auth user (Row Level Security).
 
 ### There is no admin screen — the site *is* the admin screen
 
@@ -287,7 +296,12 @@ on every block they may change:
 * **✎ edit** the photo and all the text under it, in a drawer styled like the site
 * **★ feature** a design in the homepage slideshow (and **take it out** again)
 * **⧉ duplicate**, **◀ ▶ reorder**, **◉ hide/show**, **✕ delete**
-* a **`+` tile** at the end of each grid creates new items
+* a **`+` tile** at the end of each grid creates one new item
+* an **Upload many photos** tile (Designs and Materials) opens the gallery with multi-select:
+  every photo picked becomes its own item immediately — photo + "Request quotation" only,
+  optionally under a chosen category. Visitors see these straight away; the name and details
+  are added later with ✎. A card, the enlarged view and the slideshow all cope with a missing
+  name (`.card--nameless`); the WhatsApp message then references the item by its code.
 
 The **admin bar** is pinned to the very top of every page and the page is pushed down by
 exactly its height, so it never covers the content. It shows who is signed in and whether
@@ -297,15 +311,16 @@ Supabase is connected, and carries three buttons — nothing else:
 | --- | --- |
 | **Slideshow** | a tick next to every design: tick = its photo rotates on the home page. The slideshow *is* the Designs page — same pictures, same order, so a photo you replace there is replaced here too |
 | **Categories** | full CRUD for the filter chips of the Designs **and** Materials pages: add, rename, reorder (↑ ↓), hide from visitors (eye) and delete. Renaming updates every item using that chip |
-| **Sign out** | leaves admin mode (if you were working in browser-only mode it asks whether to keep or discard those edits) |
+| **Publish device changes** / **Discard** | shown only to the online account while this device holds unpublished edits (see above) |
+| **Sign out** | leaves admin mode; changes saved on the device stay there |
 
 | Editable | Fields |
 | --- | --- |
-| Designs | photo (also the slideshow photo), alt, **show in the homepage slideshow**, title, summary, "what is included", "materials used", category, badge, typical time, scope note, order, publish |
-| Materials | photo (optional — the designed swatch shows without one), alt, name, note, category, unit, badge, swatch, icon, order, publish |
+| Designs | photo (also the slideshow photo), alt, **show in the homepage slideshow**, name *(optional)*, summary, "what is included", "materials used", category, badge, typical time, scope note, order, publish |
+| Materials | photo (optional — the designed swatch shows without one), alt, name *(optional)*, note, category, unit, badge, swatch, icon, order, publish |
 | Services | photo, alt, title, card text, category, icon, slug, eyebrow, block heading, block paragraph, 3 highlight pairs, checklist, WhatsApp button label, second button label + link, order, publish |
 | Categories | name, which page it belongs to, order, show in the filters |
-| Photos | resized in the browser to **1600 / 760 / 480 px** and uploaded to the public `site-media` bucket (browser-only mode keeps a single compressed copy in the browser instead) |
+| Photos | resized in the browser to **1600 / 760 / 480 px** and uploaded to the public `site-media` bucket (a device-only session keeps one ≤1100 px copy on the device and re-cuts the full set when the changes are published) |
 
 ### Safety nets
 
@@ -313,10 +328,31 @@ Supabase is connected, and carries three buttons — nothing else:
   `public.admins` may write. The overlay is a convenience — a visitor who downloads
   `js/admin.js` can see the forms but every write is refused by the database.
 * **The site never goes blank.** `js/data.js` still holds all the content; the page paints
-  from it instantly and is topped up from Supabase when it answers. Offline, the bar says so,
-  and the built-in account keeps working against the browser-only draft.
+  from it instantly and is topped up from Supabase when it answers. Offline, the bar says so
+  in plain words (no SQL, no project names), and the built-in account keeps working on the
+  device copy.
+* **Quotation messages carry the photo.** Every *Request quotation* button (design card,
+  enlarged view, material card, quotation list) sends the item's name — when it has one — and
+  the full web address of its photo, which WhatsApp shows as a picture preview in the chat.
+  A photo that only exists on a device (not yet published) has no address and is left out; the
+  message then references the item by its code.
+* **Schema note.** `supabase/schema.sql` no longer requires a non-empty `title`/`name` on
+  designs and materials and drops that check on existing projects, so photo-only items publish.
 * **Visitors pay nothing extra.** `js/admin.js` is downloaded only after the gesture (or when
   a session already exists); `css/admin.css` rules are all scoped behind `body.is-admin`.
+* **Enlarged photo view.** The enlarge button on a design card opens the photo whole on a dark
+  panel with just the design name and a **Request quotation** button — the summary, lead time,
+  guarantee/delivery chips, "what is included" and "materials used" are admin-only records.
+* **Questions and answers.** The homepage and Designs page carry a **"Some questions and
+  answers"** block (`.faq-block[data-collapse]`) that is fully collapsed by default and opens from
+  its heading bar; a `#faq` link opens it automatically.
+* **Footer.** No logo, social icons or Request-quotation / Call buttons in the footer — the
+  floating WhatsApp + Call pair covers that on every page. On phones the footer is two columns
+  (Quick links | Get in touch).
+* **Edge-scroll navigation.** On every page except Home, a deliberate extra scroll/swipe past the
+  very top or very bottom of the page (once the page has rested at that edge for a moment) takes
+  the visitor to `index.html` (`initEdgeNav()` in `js/main.js`). It ignores wheel momentum, and is
+  inert while the menu, quote drawer, enlarged photo or admin overlay is open.
 * **Page structure note.** The old `services.html` ("What we do") page was removed in favour
   of the Designs page; its nav link, footer column, homepage section and sitemap entry are gone.
 * **Live across devices.** Realtime is enabled on designs, materials, services and categories:

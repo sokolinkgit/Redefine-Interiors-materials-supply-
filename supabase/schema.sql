@@ -408,9 +408,25 @@ create table if not exists public.designs (
   created_by     uuid references auth.users (id) on delete set null,
   updated_by     uuid references auth.users (id) on delete set null,
   check (jsonb_typeof(features)  = 'array'),
-  check (jsonb_typeof(materials) = 'array'),
-  check (title <> '')
+  check (jsonb_typeof(materials) = 'array')
 );
+
+-- A design may be published as a photo only (admin → "Upload many photos"); the name
+-- is added later. Projects created earlier carried a "title must not be empty" rule:
+-- drop it in place so those photo-only items can be published.
+do $$
+declare r record;
+begin
+  for r in
+    select c.conname
+      from pg_constraint c
+     where c.conrelid = 'public.designs'::regclass
+       and c.contype = 'c'
+       and pg_get_constraintdef(c.oid) ilike '%title%<>%'
+  loop
+    execute format('alter table public.designs drop constraint %I', r.conname);
+  end loop;
+end $$;
 
 comment on table  public.designs            is 'Design portfolio cards. features/materials are arrays of short strings.';
 comment on column public.designs.code       is 'Stable public reference (d01, d02 …) used by the quotation list.';
@@ -452,9 +468,23 @@ create table if not exists public.materials (
   updated_at     timestamptz not null default now(),
   created_by     uuid references auth.users (id) on delete set null,
   updated_by     uuid references auth.users (id) on delete set null,
-  check (name <> ''),
   check (swatch in ('mdf','laminate','hardware','steel','gypsum','aluminium','tile','fluted','quartz','led'))
 );
+
+-- Same for materials: a photo-only material is allowed, the name comes later.
+do $$
+declare r record;
+begin
+  for r in
+    select c.conname
+      from pg_constraint c
+     where c.conrelid = 'public.materials'::regclass
+       and c.contype = 'c'
+       and pg_get_constraintdef(c.oid) ilike '%name%<>%'
+  loop
+    execute format('alter table public.materials drop constraint %I', r.conname);
+  end loop;
+end $$;
 
 comment on table  public.materials        is 'Material catalogue cards.';
 comment on column public.materials.swatch is 'Fallback artwork used when no photo is set (see .swatch--* in css/style.css).';
@@ -1003,19 +1033,20 @@ update public.services
 -- THE BUILT-IN ACCOUNT (works before you do any of this)
 --   js/config.js ships a default administrator:
 --        phone     0703142874   (also accepts +254703142874 or 254703142874)
---        password  Redefine2026#
+--        password  known to the owner — only its salted SHA-256 hash is in the code,
+--                  and the sign-in panel never pre-fills it
 --   Tap/click the logo + name at the top-left of the website five times inside one
 --   minute and sign in with it. As long as Supabase has no matching user, the admin bar
---   says “This device only” and your edits are kept in that browser (js/store.js) so you
---   can prepare content straight away. The moment the account below exists, the same
---   phone number and password give you the full, published session instead — nothing
---   else to change anywhere.
+--   says “Saved on this device” and your edits are kept on that device (js/store.js) so
+--   you can prepare content straight away. The moment the account below exists, the
+--   same phone number and password give you the full, published session — and the site
+--   offers to publish whatever was saved on the device.
 --
 -- CREATE IT (once, two minutes)
 --   1. Supabase Studio → Authentication → Users → “Add user” → “Create new user”
 --   2. E-mail:  leave it empty if the form allows, otherwise use your own address
 --      Phone:    +254703142874
---      Password: Redefine2026#
+--      Password: the same built-in password
 --      ✔ Auto Confirm User
 --      → Create user
 --   3. Back in the SQL Editor, promote it:

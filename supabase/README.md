@@ -48,22 +48,24 @@ It creates:
 ### The built-in account — works before you do any of this
 
 The website ships with a default administrator coded into
-[`js/config.js`](../js/config.js), pre-filled in the sign-in panel:
+[`js/config.js`](../js/config.js) — the phone number and a salted SHA-256 hash of the
+password. The sign-in panel is **never pre-filled**; both values are typed every time.
 
 | | |
 | --- | --- |
-| Phone | **0703142874** (`+254703142874` and `2547032874`… i.e. `254703142874` also work) |
-| Password | **Redefine2026#** |
+| Phone | **0703142874** (`+254703142874` / `254703142874` also work) |
+| Password | held by the owner (recipe for changing it is in `js/config.js`) |
 
 Tap the logo five times and sign in with those two values **right now** — no Supabase step
-needed. Until the Auth user below exists, the admin bar says *“This device only”* and your
-edits are stored in that browser (`js/store.js`), so you can build the catalogue first.
+needed. Until the Auth user below exists, the admin bar says *“Saved on this device”* and your
+edits are kept on that device (`js/store.js`), so you can build the catalogue first. They stay
+there — deleted stays deleted, edited stays edited — until you publish or discard them.
 
 ### Then make it the real, published account
 
 1. **Authentication → Users → Add user** → *Create new user*:
    * **Phone**: `+254703142874`
-   * **Password**: `Redefine2026#`
+   * **Password**: the built-in password
    * ✔ **Auto Confirm User** → **Create user**
      *(If your project will not accept a user without an e-mail, create it with your own
      e-mail instead and put that address into `SITE_CONFIG.defaultAdmin.email` in
@@ -225,8 +227,9 @@ css/admin.css              the overlay's look (invisible unless you are signed i
 | Saving says *row-level security* | Your session expired or you were demoted. Sign out, sign in again; check `select * from public.admins;`. |
 | Photo upload fails | The `site-media` bucket is missing (re-run §8 of the SQL) or the file is over 8 MB / not an image. |
 | The site shows the old content | Reload the page (the live content is fetched at load), or check `select count(*) from public.designs;`. |
-| Edits do not appear for visitors | The item may be **hidden** (`is_active = false`) — toggle the eye in its toolbar — or the bar says *“This device only”*: those edits are in the browser and Supabase has no matching user yet (§2). Also check any CDN/host cache. |
-| The bar says *“This device only”* | Sign in with the built-in account and Supabase has no user with that phone number yet — create it (§2) and sign in again. Your draft stays in the browser until you discard it on sign-out. |
+| Edits do not appear for visitors on **other** devices | The item may be **hidden** (`is_active = false`) — toggle the eye in its toolbar — or the bar says *“Saved on this device”*: those edits are on this device only and Supabase has no matching user yet (§2). Also check any CDN/host cache. |
+| The bar says *“Saved on this device”* | You signed in with the built-in account and Supabase has no user with that phone number yet — create it (§2) and sign in again; the site then offers **Publish device changes**, which uploads the photos and makes the cloud match the device. |
+| Publishing a photo-only item fails with a `check` error | Re-run `schema.sql` (idempotent) — it drops the old non-empty `title`/`name` constraints on `designs`/`materials`. |
 | A category says *run §12 of supabase/schema.sql* | The project predates the `categories` table / `is_featured` column. Paste the whole `schema.sql` again — it is idempotent and adds them in place. |
 | The slideshow ignores my tick | Only designs that have a **photo** rotate, and hidden designs are skipped. Tick at least one from admin bar → Slideshow. |
 
