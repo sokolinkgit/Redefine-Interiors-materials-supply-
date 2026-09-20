@@ -22,7 +22,21 @@ user is listed in `public.admins`. Never put the `service_role` key in the websi
 3. Press **Run**.
 
 The script is **idempotent** — running it again changes nothing and never overwrites
-content you have edited (seeds use `on conflict do nothing`).
+content you have edited (seeds use `on conflict do nothing`). It also repairs an older
+project in place: it drops the legacy "a design must have a title / a material must have
+a name" rules and adds any column the site has gained since (`designs.is_featured`,
+`services.category`), so **photo-only items publish** straight after one run.
+
+> **PostgreSQL reads the whole file before it runs any of it.** One bad line therefore
+> stops *everything* — you get `syntax error at or near "…"` and no table is touched.
+> If you edit the file by hand, check it first (no installation needed, just Node):
+>
+> ```bash
+> node supabase/check-sql.mjs
+> ```
+>
+> It reports half-commented statements, unclosed `$$ … $$` bodies, unbalanced brackets
+> and a missing final `;` — the mistakes that produce that error. `OK` means paste away.
 
 It creates:
 
@@ -197,6 +211,7 @@ Sign out, or open the site in a private window — you will see exactly what the
 
 ```
 supabase/schema.sql        run once — tables, RLS, storage bucket, seed
+supabase/check-sql.mjs     optional pre-flight check of that file (node supabase/check-sql.mjs)
 js/config.js               project URL + anon key + the built-in admin account
 js/store.js                browser-only draft board (built-in admin before Auth exists)
 js/content.js              reads designs/materials/services/categories into the site's own
@@ -233,7 +248,9 @@ css/admin.css              the overlay's look (invisible unless you are signed i
 | Edits do not appear for visitors on **other** devices | Photos only land on every device when they are **published to Supabase**. If the bar says *“Only on this device”*, tap **Publish to the website** (the online account must exist — §2). Hidden items (`is_active = false`) also stay off other devices until you toggle the eye. |
 | The bar says *“Only on this device”* / *“Saved on this device”* | You signed in with the built-in account and Supabase has no user with that phone number yet — create it (§2) and sign in again (or tap **Publish to the website**). The site uploads the photos and makes the cloud match the device. |
 | Publishing a photo-only item fails with a `check` error | Re-run `schema.sql` (idempotent) — it drops the old non-empty `title`/`name` constraints on `designs`/`materials`. |
-| A category says *run §12 of supabase/schema.sql* | The project predates the `categories` table / `is_featured` column. Paste the whole `schema.sql` again — it is idempotent and adds them in place. |
+| Running `schema.sql` says *syntax error at or near "…"* | Nothing ran — PostgreSQL parses the whole file first. `node supabase/check-sql.mjs` points at the line; it is nearly always a statement that was commented out only on its first line. |
+| Running `schema.sql` says *column "is_featured" / "category" … does not exist* | You are pasting an older copy of the file. In the current one the `alter table … add column if not exists` lines come **before** the `comment on column` lines that mention them. |
+| The bar says the database is missing the slideshow column or the categories table | The project predates `designs.is_featured` / `public.categories`. Paste the whole `schema.sql` again — it is idempotent and adds them in place. |
 | The slideshow ignores my tick | Only designs that have a **photo** rotate, and hidden designs are skipped. Tick at least one from admin bar → Slideshow. |
 
 ---

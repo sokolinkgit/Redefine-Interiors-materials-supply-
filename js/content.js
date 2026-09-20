@@ -293,7 +293,7 @@
         } catch (catErr) {
           tables.categories = undefined;
           if (window.console) {
-            console.info('[redefine] the categories table is missing — run supabase/schema.sql (§12)', catErr && catErr.message);
+            console.info('[redefine] the categories table is missing — run supabase/schema.sql (§6b)', catErr && catErr.message);
           }
         }
 

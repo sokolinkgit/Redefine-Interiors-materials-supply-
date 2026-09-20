@@ -428,6 +428,12 @@ begin
   end loop;
 end $$;
 
+-- Projects created before the slideshow change do not have this column yet, so add it
+-- FIRST: the "comment on column public.designs.is_featured" line below fails with
+-- 'column "is_featured" of relation "public.designs" does not exist' if it comes later.
+alter table public.designs
+  add column if not exists is_featured boolean not null default false;
+
 comment on table  public.designs            is 'Design portfolio cards. features/materials are arrays of short strings.';
 comment on column public.designs.code       is 'Stable public reference (d01, d02 …) used by the quotation list.';
 comment on column public.designs.lead_time  is 'Shown on the card, e.g. "2 – 3 weeks".';
@@ -435,10 +441,6 @@ comment on column public.designs.unit       is 'Optional scope note, e.g. "per s
 comment on column public.designs.badge      is 'Optional corner badge, e.g. "Best seller". Empty = no badge.';
 comment on column public.designs.is_featured is 'true = this design''s photo rotates in the homepage slideshow (admin bar → Slideshow).';
 comment on column public.designs.category   is 'One of the public.categories rows with kind = ''design''; drives the chips above the Designs grid.';
-
--- projects created before the slideshow change: add the column in place
-alter table public.designs
-  add column if not exists is_featured boolean not null default false;
 
 drop trigger if exists designs_touch_updated_at on public.designs;
 create trigger designs_touch_updated_at
@@ -529,6 +531,12 @@ create table if not exists public.services (
   check (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$')
 );
 
+-- Projects created before the categories change do not have this column yet, so add it
+-- FIRST: the "comment on column public.services.category" line below fails with
+-- 'column "category" of relation "public.services" does not exist' if it comes later.
+alter table public.services
+  add column if not exists category text not null default '';
+
 comment on table  public.services             is 'The six core services: card copy (title/card_text/image) plus the long services.html block.';
 comment on column public.services.card_text   is 'Short line used on the card (home page, grids).';
 comment on column public.services.eyebrow     is 'Small label above the block heading, e.g. "01 · Kitchens".';
@@ -540,10 +548,6 @@ comment on column public.services.cta_label   is 'WhatsApp button label, e.g. "R
 comment on column public.services.link_label  is 'Secondary link label, e.g. "See kitchen designs".';
 comment on column public.services.link_href   is 'Secondary link target, e.g. "designs.html".';
 comment on column public.services.category    is 'One of the public.categories rows with kind = ''service''; drives the chips on services.html.';
-
--- projects created before the categories change: add the column in place
-alter table public.services
-  add column if not exists category text not null default '';
 
 drop trigger if exists services_touch_updated_at on public.services;
 create trigger services_touch_updated_at
@@ -816,15 +820,18 @@ grant select, insert, update, delete  on public.categories   to anon, authentica
 -- ---------- homepage slideshow ----------
 -- Legacy: the slideshow now rotates the designs marked  is_featured = true  (below).
 -- Kept commented so a fresh project does not fill a table nothing reads.
+-- (Every line of this statement is commented out. Only the first line used to be,
+--  which made the WHOLE script fail with  syntax error at or near "code"  — PostgreSQL
+--  parses the entire file before it runs any of it, so nothing else ran either.)
 -- insert into public.hero_slides
-  (code, label, image_url, image_url_760, image_url_480, image_alt, position, is_active)
-values
-  ('h01', 'Kitchen cabinets', 'assets/img/hero-1-kitchen.jpg', 'assets/img/sm/hero-1-kitchen-760.jpg', 'assets/img/sm/hero-1-kitchen-480.jpg', 'Kitchen cabinets — handleless walnut and matte white with a quartz island, installed in Kilimani, Nairobi', 10, true),
-  ('h02', 'Walk-in wardrobe', 'assets/img/hero-2-wardrobe.jpg', 'assets/img/sm/hero-2-wardrobe-760.jpg', 'assets/img/sm/hero-2-wardrobe-480.jpg', 'Walk-in wardrobe with lit shelving fitted in Lavington, Nairobi', 20, true),
-  ('h03', 'Gypsum ceiling', 'assets/img/hero-3-living-gypsum.jpg', 'assets/img/sm/hero-3-living-gypsum-760.jpg', 'assets/img/sm/hero-3-living-gypsum-480.jpg', 'Living room with gypsum ceiling and cove lighting completed in Milimani, Nakuru', 30, true),
-  ('h04', 'Shop renovation', 'assets/img/hero-4-shop.jpg', 'assets/img/sm/hero-4-shop-760.jpg', 'assets/img/sm/hero-4-shop-480.jpg', 'Boutique shop interior with fluted panels and display rails, renovated in Thika', 40, true),
-  ('h05', 'Aluminium works', 'assets/img/hero-5-aluminum.jpg', 'assets/img/sm/hero-5-aluminum-760.jpg', 'assets/img/sm/hero-5-aluminum-480.jpg', 'Aluminium sliding doors and glass balustrade installed in Naivasha', 50, true)
-on conflict (code) do nothing;
+--   (code, label, image_url, image_url_760, image_url_480, image_alt, position, is_active)
+-- values
+--   ('h01', 'Kitchen cabinets', 'assets/img/hero-1-kitchen.jpg', 'assets/img/sm/hero-1-kitchen-760.jpg', 'assets/img/sm/hero-1-kitchen-480.jpg', 'Kitchen cabinets — handleless walnut and matte white with a quartz island, installed in Kilimani, Nairobi', 10, true),
+--   ('h02', 'Walk-in wardrobe', 'assets/img/hero-2-wardrobe.jpg', 'assets/img/sm/hero-2-wardrobe-760.jpg', 'assets/img/sm/hero-2-wardrobe-480.jpg', 'Walk-in wardrobe with lit shelving fitted in Lavington, Nairobi', 20, true),
+--   ('h03', 'Gypsum ceiling', 'assets/img/hero-3-living-gypsum.jpg', 'assets/img/sm/hero-3-living-gypsum-760.jpg', 'assets/img/sm/hero-3-living-gypsum-480.jpg', 'Living room with gypsum ceiling and cove lighting completed in Milimani, Nakuru', 30, true),
+--   ('h04', 'Shop renovation', 'assets/img/hero-4-shop.jpg', 'assets/img/sm/hero-4-shop-760.jpg', 'assets/img/sm/hero-4-shop-480.jpg', 'Boutique shop interior with fluted panels and display rails, renovated in Thika', 40, true),
+--   ('h05', 'Aluminium works', 'assets/img/hero-5-aluminum.jpg', 'assets/img/sm/hero-5-aluminum-760.jpg', 'assets/img/sm/hero-5-aluminum-480.jpg', 'Aluminium sliding doors and glass balustrade installed in Naivasha', 50, true)
+-- on conflict (code) do nothing;
 --
 -- The five photos that used to sit here (hero-1-kitchen … hero-5-aluminum) are all in
 -- the designs seed below, where the first five rows are ticked as featured.
