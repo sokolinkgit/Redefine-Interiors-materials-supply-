@@ -44,6 +44,7 @@ Cloudflare Pages, an Apache/Nginx box). Nothing needs compiling.
 ├── js/ghost.js            ← five taps on the logo → loads the admin overlay
 ├── js/admin.js            ← the admin overlay itself (downloaded only when needed)
 ├── supabase/schema.sql    ← the whole database: tables, RLS, storage bucket, seed
+├── supabase/check-sql.mjs ← optional pre-flight check of that file (node supabase/check-sql.mjs)
 ├── assets/img/            ← photography + logo (REDLOGO.png master, redlogo-512.png web cut) + favicon
 │   └── sm/                ← auto-generated 480px & 760px copies used by srcset on phones
 ├── robots.txt, sitemap.xml
@@ -243,8 +244,11 @@ The homepage slideshow and every photo + line of text on the **Designs**, **Mate
 **Services** pages can be edited from the website itself — no deploy, no code.
 
 **One file builds the whole database:** [`supabase/schema.sql`](supabase/schema.sql) →
-Supabase Studio → SQL Editor → paste → Run. It is idempotent, and it seeds today's content
-so the site looks pixel-identical afterwards. Full walkthrough:
+Supabase Studio → SQL Editor → paste → Run. It is idempotent, it repairs an older project
+in place (drops the legacy "must have a name" rules, adds new columns), and it seeds
+today's content so the site looks pixel-identical afterwards. Edited the file by hand?
+`node supabase/check-sql.mjs` checks it first — PostgreSQL parses the whole file before
+running any of it, so one stray line stops everything. Full walkthrough:
 [`supabase/README.md`](supabase/README.md).
 
 ### Signing in — ghost mode

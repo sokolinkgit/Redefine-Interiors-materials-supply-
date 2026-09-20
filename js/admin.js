@@ -1622,10 +1622,10 @@
     }
     if (/Failed to fetch|NetworkError|fetch/i.test(msg)) return 'No connection right now — check the internet.';
     if (/column .*is_featured.* does not exist/i.test(msg)) {
-      return 'The database does not have the slideshow column yet — run §12 of supabase/schema.sql.';
+      return 'The database does not have the slideshow column yet — paste the whole of supabase/schema.sql into the SQL Editor again; it adds the column in place.';
     }
     if (/column .*category.* does not exist|relation .*categories.* does not exist/i.test(msg)) {
-      return 'The database does not have the categories table yet — run §12 of supabase/schema.sql.';
+      return 'The database does not have the categories table yet — paste the whole of supabase/schema.sql into the SQL Editor again; it creates the table in place.';
     }
     return msg;
   }
