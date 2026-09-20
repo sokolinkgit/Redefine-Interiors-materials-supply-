@@ -57,9 +57,11 @@ password. The sign-in panel is **never pre-filled**; both values are typed every
 | Password | held by the owner (recipe for changing it is in `js/config.js`) |
 
 Tap the logo five times and sign in with those two values **right now** — no Supabase step
-needed. Until the Auth user below exists, the admin bar says *“Saved on this device”* and your
-edits are kept on that device (`js/store.js`), so you can build the catalogue first. They stay
-there — deleted stays deleted, edited stays edited — until you publish or discard them.
+needed. Until the Auth user below exists, the admin bar says *“Only on this device”* and your
+edits are kept on that device (`js/store.js`, photos in IndexedDB), so you can build the
+catalogue first. They stay there — deleted stays deleted, edited stays edited — until you
+publish them to the website or discard them. Other phones and computers will not see those
+photos until you create the Auth user below and tap **Publish to the website**.
 
 ### Then make it the real, published account
 
@@ -226,9 +228,10 @@ css/admin.css              the overlay's look (invisible unless you are signed i
 | Phone sign-in fails but e-mail works | The number is not on the Auth user and not on their `admins` row. Edit the user in Authentication → Users and add the phone, or `update public.admins set phone='+2547…' where email='…';` |
 | Saving says *row-level security* | Your session expired or you were demoted. Sign out, sign in again; check `select * from public.admins;`. |
 | Photo upload fails | The `site-media` bucket is missing (re-run §8 of the SQL) or the file is over 8 MB / not an image. |
+| Bulk upload stops around ~30 photos / “out of storage” | Old versions stuffed photos into localStorage (~5–10 MB). Photos now live in IndexedDB and, when you are signed in with the online account, go straight to the `site-media` bucket — there is no 30-photo cap. Reload once so the new script runs; leftover data-URL photos are moved automatically. |
 | The site shows the old content | Reload the page (the live content is fetched at load), or check `select count(*) from public.designs;`. |
-| Edits do not appear for visitors on **other** devices | The item may be **hidden** (`is_active = false`) — toggle the eye in its toolbar — or the bar says *“Saved on this device”*: those edits are on this device only and Supabase has no matching user yet (§2). Also check any CDN/host cache. |
-| The bar says *“Saved on this device”* | You signed in with the built-in account and Supabase has no user with that phone number yet — create it (§2) and sign in again; the site then offers **Publish device changes**, which uploads the photos and makes the cloud match the device. |
+| Edits do not appear for visitors on **other** devices | Photos only land on every device when they are **published to Supabase**. If the bar says *“Only on this device”*, tap **Publish to the website** (the online account must exist — §2). Hidden items (`is_active = false`) also stay off other devices until you toggle the eye. |
+| The bar says *“Only on this device”* / *“Saved on this device”* | You signed in with the built-in account and Supabase has no user with that phone number yet — create it (§2) and sign in again (or tap **Publish to the website**). The site uploads the photos and makes the cloud match the device. |
 | Publishing a photo-only item fails with a `check` error | Re-run `schema.sql` (idempotent) — it drops the old non-empty `title`/`name` constraints on `designs`/`materials`. |
 | A category says *run §12 of supabase/schema.sql* | The project predates the `categories` table / `is_featured` column. Paste the whole `schema.sql` again — it is idempotent and adds them in place. |
 | The slideshow ignores my tick | Only designs that have a **photo** rotate, and hidden designs are skipped. Tick at least one from admin bar → Slideshow. |

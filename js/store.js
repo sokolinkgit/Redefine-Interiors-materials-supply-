@@ -13,9 +13,12 @@
        cloud mode   js/admin.js → supabase.from(table)…
        local mode   js/admin.js → SiteStore.insert/update/remove(table, …)
 
-   The site then renders from this store (js/content.js → loadLocal()) and the
-   admin bar says, in plain words, that the edits live on this device only.
-   Nothing here is ever sent anywhere: it is a draft board, not a publication.
+   Photos are NEVER kept in localStorage (a handful of JPEGs as data: URLs
+   fills the ~5–10 MB quota and the browser then reports "out of storage").
+   Image bytes live in IndexedDB under `idb:<id>` references; localStorage
+   only holds the catalogue metadata, which stays tiny even with hundreds of
+   photos. Those photos still exist only on this device until they are
+   published to the site-media bucket.
    ========================================================================== */
 (function () {
   'use strict';
@@ -23,6 +26,9 @@
   const KEY = 'redefine_local_content_v1';
   const TABLES = ['designs', 'materials', 'services', 'categories'];
   const CATEGORY_KINDS = ['design', 'material', 'service'];
+  const IMAGE_KEYS = ['image_url', 'image_url_760', 'image_url_480'];
+  const IDB_NAME = 'redefine_media_v1';
+  const IDB_STORE = 'photos';
 
   const alive = (() => {
     try {
@@ -82,6 +88,185 @@
   const quotaHit = (e) => !!e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.code === 22 || e.code === 1014);
 
   function ensure() { if (!data) data = read() || blank(); return data; }
+
+  /* --------------------------------------------------- IndexedDB photo vault
+     localStorage cannot hold a catalogue of photos. IndexedDB typically has
+     hundreds of megabytes, which is enough for bulk uploads on one device. */
+  let db = null;
+  let mediaPersistent = false;
+  const memPhotos = new Map();
+  const urlCache = Object.create(null);
+
+  const isMediaRef = (s) => /^idb:/i.test(String(s || ''));
+  const mediaId = (s) => String(s || '').replace(/^idb:/i, '');
+
+  function openDb() {
+    return new Promise((resolve, reject) => {
+      if (!window.indexedDB) { reject(new Error('no-idb')); return; }
+      const req = window.indexedDB.open(IDB_NAME, 1);
+      req.onupgradeneeded = () => {
+        const next = req.result;
+        if (!next.objectStoreNames.contains(IDB_STORE)) next.createObjectStore(IDB_STORE);
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error || new Error('idb-open-failed'));
+    });
+  }
+
+  function idbPut(id, blob) {
+    if (!db) { memPhotos.set(id, blob); return Promise.resolve(); }
+    return new Promise((resolve, reject) => {
+      try {
+        const tx = db.transaction(IDB_STORE, 'readwrite');
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+        tx.objectStore(IDB_STORE).put(blob, id);
+      } catch (e) { reject(e); }
+    });
+  }
+
+  function idbGet(id) {
+    if (memPhotos.has(id)) return Promise.resolve(memPhotos.get(id));
+    if (!db) return Promise.resolve(null);
+    return new Promise((resolve, reject) => {
+      try {
+        const tx = db.transaction(IDB_STORE, 'readonly');
+        const req = tx.objectStore(IDB_STORE).get(id);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+      } catch (e) { reject(e); }
+    });
+  }
+
+  function idbDel(id) {
+    memPhotos.delete(id);
+    if (urlCache[id]) { try { URL.revokeObjectURL(urlCache[id]); } catch (e) { /* ignore */ } delete urlCache[id]; }
+    if (!db) return Promise.resolve();
+    return new Promise((resolve) => {
+      try {
+        const tx = db.transaction(IDB_STORE, 'readwrite');
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => resolve();
+        tx.objectStore(IDB_STORE).delete(id);
+      } catch (e) { resolve(); }
+    });
+  }
+
+  function idbClear() {
+    memPhotos.clear();
+    Object.keys(urlCache).forEach((k) => { try { URL.revokeObjectURL(urlCache[k]); } catch (e) { /* ignore */ } delete urlCache[k]; });
+    if (!db) return Promise.resolve();
+    return new Promise((resolve) => {
+      try {
+        const tx = db.transaction(IDB_STORE, 'readwrite');
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => resolve();
+        tx.objectStore(IDB_STORE).clear();
+      } catch (e) { resolve(); }
+    });
+  }
+
+  async function putPhoto(blob) {
+    if (!blob) throw new Error('No photo to save.');
+    const id = uid('pic');
+    try {
+      await idbPut(id, blob);
+    } catch (e) {
+      memPhotos.set(id, blob);
+    }
+    return 'idb:' + id;
+  }
+
+  async function getPhotoBlob(ref) {
+    const s = String(ref || '');
+    if (!s) return null;
+    if (isMediaRef(s)) {
+      try { return await idbGet(mediaId(s)); } catch (e) { return memPhotos.get(mediaId(s)) || null; }
+    }
+    if (/^data:|^blob:/i.test(s)) {
+      try {
+        const res = await fetch(s);
+        return await res.blob();
+      } catch (e) { return null; }
+    }
+    return null;
+  }
+
+  async function resolveUrl(ref) {
+    const s = String(ref || '');
+    if (!s) return '';
+    if (!isMediaRef(s) && !/^data:/i.test(s)) return s;
+    if (isMediaRef(s)) {
+      const id = mediaId(s);
+      if (urlCache[id]) return urlCache[id];
+      const blob = await getPhotoBlob(s);
+      if (!blob) return '';
+      const url = URL.createObjectURL(blob);
+      urlCache[id] = url;
+      return url;
+    }
+    return s;
+  }
+
+  async function dataUrlToBlob(url) {
+    const res = await fetch(url);
+    return res.blob();
+  }
+
+  async function persistRowImages(row) {
+    if (!row) return row;
+    for (let i = 0; i < IMAGE_KEYS.length; i++) {
+      const key = IMAGE_KEYS[i];
+      const v = row[key];
+      if (typeof v !== 'string' || !/^data:/i.test(v)) continue;
+      try {
+        const blob = await dataUrlToBlob(v);
+        row[key] = await putPhoto(blob);
+      } catch (e) {
+        /* keep the data URL rather than dropping the photo; save() may still
+           refuse it, and the caller then rolls back */
+      }
+    }
+    return row;
+  }
+
+  function collectMediaRefs(tables) {
+    const ids = [];
+    TABLES.forEach((t) => {
+      (tables[t] || []).forEach((row) => {
+        IMAGE_KEYS.forEach((k) => {
+          if (isMediaRef(row[k])) ids.push(mediaId(row[k]));
+        });
+      });
+    });
+    return ids;
+  }
+
+  async function migrateInlinePhotos() {
+    const d = ensure();
+    let changed = false;
+    for (let t = 0; t < TABLES.length; t++) {
+      const list = d.tables[TABLES[t]] || [];
+      for (let i = 0; i < list.length; i++) {
+        const before = IMAGE_KEYS.map((k) => list[i][k]);
+        await persistRowImages(list[i]);
+        if (IMAGE_KEYS.some((k, n) => list[i][k] !== before[n])) changed = true;
+      }
+    }
+    if (changed) save();
+  }
+
+  const ready = (async () => {
+    try {
+      db = await openDb();
+      mediaPersistent = true;
+    } catch (e) {
+      db = null;
+      mediaPersistent = false;
+    }
+    try { await migrateInlinePhotos(); } catch (e) { /* still usable */ }
+    return true;
+  })();
 
   /* --------------------------------------------------- built-in → same shape
      js/data.js keeps the fallback content in camelCase; the store speaks the
@@ -199,6 +384,7 @@
   function clear() {
     data = blank();
     if (alive) { try { localStorage.removeItem(KEY); } catch (e) { /* ignore */ } }
+    idbClear();
   }
 
   /* ------------------------------------------------------------------- CRUD */
@@ -208,28 +394,52 @@
     return d.tables[name];
   }
 
-  function insert(name, row) {
+  async function insert(name, row) {
     const list = table(name);
     const copy = Object.assign({}, row);
     if (!copy.id) copy.id = uid(name.slice(0, 4));
     copy.created_at = copy.created_at || nowIso();
     copy.updated_at = nowIso();
+    await persistRowImages(copy);
     list.push(copy);
     if (!save()) { list.pop(); return null; }
     return copy;
   }
 
-  function update(name, id, patch) {
+  async function insertMany(name, rows) {
+    const list = table(name);
+    const copies = [];
+    for (let i = 0; i < (rows || []).length; i++) {
+      const copy = Object.assign({}, rows[i]);
+      if (!copy.id) copy.id = uid(name.slice(0, 4));
+      copy.created_at = copy.created_at || nowIso();
+      copy.updated_at = nowIso();
+      await persistRowImages(copy);
+      copies.push(copy);
+      list.push(copy);
+    }
+    if (!save()) {
+      for (let i = 0; i < copies.length; i++) list.pop();
+      return null;
+    }
+    return copies;
+  }
+
+  async function update(name, id, patch) {
     const list = table(name);
     const row = list.filter((r) => String(r.id) === String(id))[0];
     if (!row) return null;
     const before = Object.assign({}, row);
     Object.assign(row, patch, { updated_at: nowIso() });
+    await persistRowImages(row);
     if (!save()) {
       Object.keys(row).forEach((k) => { delete row[k]; });
       Object.assign(row, before);
       return null;
     }
+    IMAGE_KEYS.forEach((k) => {
+      if (isMediaRef(before[k]) && before[k] !== row[k]) idbDel(mediaId(before[k]));
+    });
     return row;
   }
 
@@ -250,6 +460,8 @@
     const list = table(name);
     const i = list.findIndex((r) => String(r.id) === String(id));
     if (i < 0) return false;
+    const row = list[i];
+    IMAGE_KEYS.forEach((k) => { if (isMediaRef(row[k])) idbDel(mediaId(row[k])); });
     list.splice(i, 1);
     save();
     return true;
@@ -268,6 +480,12 @@
   function count() {
     const d = ensure();
     return TABLES.reduce((n, t) => n + d.tables[t].length, 0);
+  }
+
+  function hasLocalPhotos() {
+    const d = ensure();
+    return collectMediaRefs(d.tables).length > 0 || TABLES.some((t) =>
+      (d.tables[t] || []).some((row) => IMAGE_KEYS.some((k) => /^data:/i.test(String(row[k] || '')))));
   }
 
   /* --------------------------------------------------- remembered sign-in
@@ -301,8 +519,11 @@
   window.SiteStore = {
     key: KEY,
     available: alive,
+    ready: ready,
+    mediaPersistent: () => mediaPersistent,
     active: () => !!(ensure().active),
     hasRows: () => count() > 0,
+    hasLocalPhotos: hasLocalPhotos,
     lastError: () => lastError,
     outOfSpace: () => quotaHit(lastError),
     rememberSession: rememberSession,
@@ -315,11 +536,16 @@
     begin: begin,
     clear: clear,
     insert: insert,
+    insertMany: insertMany,
     update: update,
     updateWhere: updateWhere,
     remove: remove,
     reorder: reorder,
     count: count,
-    newId: uid
+    newId: uid,
+    putPhoto: putPhoto,
+    getPhotoBlob: getPhotoBlob,
+    resolveUrl: resolveUrl,
+    isMediaRef: isMediaRef
   };
 })();

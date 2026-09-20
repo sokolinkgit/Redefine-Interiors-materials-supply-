@@ -883,6 +883,17 @@ body.is-admin .filter--manage:hover svg { color: #fff; }
 .admin-chip--go svg { color: #fff; }
 .admin-chip--go:hover { background: var(--gold-deep); border-color: var(--gold-deep); }
 
+.admin-bulk__warn {
+  margin: .75rem 1.3rem 0;
+  padding: .7rem .85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(242, 179, 104, .55);
+  background: #FFF6EA;
+  color: #7A4B12;
+  font-size: .78rem;
+  line-height: 1.55;
+}
+.admin-bulk__warn[hidden] { display: none; }
 .admin-bulk { display: grid; gap: .9rem; }
 .admin-bulk__cat { display: grid; gap: .35rem; font-size: .8rem; font-weight: 600; color: var(--ink); }
 .admin-bulk__cat em { font-style: normal; font-weight: 400; color: var(--muted); }
