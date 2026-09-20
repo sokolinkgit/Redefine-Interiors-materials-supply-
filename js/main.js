@@ -163,9 +163,10 @@
 
   const MSG = {
     general: 'Hello ' + BUSINESS.name + ' 👋\n\nI found you online and I would like to request a quotation.',
-    design: (item) => 'Hello ' + BUSINESS.name + ' 👋\n\nI would like to request a quotation for this design:\n\n*' +
+    design: (item, note) => 'Hello ' + BUSINESS.name + ' 👋\n\nI would like to request a quotation for this design:\n\n*' +
       item.title + '*\nCategory: ' + item.category +
       (item.unit ? '\nScope: ' + item.unit : '') +
+      (note ? '\nMy note: ' + note : '') +
       '\n\nMy location: ______\nPreferred start date: ______\n\nPlease send me a detailed quotation. Thank you!',
     material: (item) => 'Hello ' + BUSINESS.name + ' 👋\n\nI would like to request a quotation for this material:\n\n*' +
       item.name + '*\nUnit: ' + item.unit +
@@ -199,7 +200,7 @@
       '    <div class="drawer__total"><span>Your list</span><strong data-quote-total>0 items</strong></div>',
       '    <button class="btn btn--wa btn--block" type="button" data-quote-send>' + ICONS.whatsapp + ' Request quotation on WhatsApp</button>',
       '    <button class="btn btn--light btn--block" type="button" data-quote-clear>Clear list</button>',
-      '    <p class="drawer__hint">We confirm availability and quote every line in writing — site inspection is free within Nairobi.</p>',
+      '    <p class="drawer__hint">We confirm availability and quote every line in writing.</p>',
       '  </div>',
       '</aside>',
 
@@ -639,32 +640,24 @@
     ' data-cms="' + kind + '" data-cms-id="' + escapeHtml(String(item.uuid || item.id || item.slug || '')) + '"' +
     (item.active === false ? ' data-cms-hidden="1"' : '');
 
+  /* Design cards are deliberately bare: photo, NAME, one OPTIONAL note
+     input (folded into the WhatsApp message) and the WhatsApp quotation
+     button — no badges, no description, no cart. */
   function designCard(d) {
     const alt = d.imageAlt || (d.title + ' — ' + d.category + ' by Redefine Interiors');
     return [
       '<article class="card reveal' + (d.active === false ? ' is-draft' : '') + '" data-cat="' + escapeHtml(d.category) + '"' + cmsAttrs('design', d) + '>',
       '  <div class="card__media">',
       '    ' + responsiveImg(d.image, alt, CARD_SIZES, { xs: d.image480, sm: d.image760 }),
-      '    <div class="card__badges">',
-      (d.badge ? '      <span class="badge">' + escapeHtml(d.badge) + '</span>' : ''),
-      '    </div>',
       '    <span class="card__cat">' + ICONS.spark + escapeHtml(d.category) + '</span>',
       '    <button class="card__quick" type="button" data-view="' + d.id + '">' + ICONS.image + '<span>View details</span></button>',
       '  </div>',
       '  <div class="card__body">',
       '    <h3>' + escapeHtml(d.title) + '</h3>',
-      '    <p class="card__summary">' + escapeHtml(d.summary) + '</p>',
-      '    <div class="chip-row card__chips">' + d.features.slice(0, 3).map((f) => '<span class="chip">' + escapeHtml(f) + '</span>').join('') + '</div>',
-      '    <div class="card__meta">',
-      '      <span>' + ICONS.clock + escapeHtml(d.time) + '</span>',
-      '      <span>' + ICONS.ruler + 'Free site measurement</span>',
-      '    </div>',
-      '    <div class="card__price-row">',
-      '      <div class="card__price"><em>Quotation on request</em><strong>Made to measure</strong></div>',
-      '      <div class="card__actions">',
-      '        <button class="icon-btn" type="button" data-add="design" data-id="' + d.id + '" title="Add to quotation list" aria-label="Add ' + escapeHtml(d.title) + ' to quotation list">' + ICONS.cart + '</button>',
-      '        <button class="btn btn--wa btn--sm" type="button" data-wa-quote="' + d.id + '">' + ICONS.whatsapp + 'Quotation</button>',
-      '      </div>',
+      '    <input class="card__note-input" type="text" data-design-note="' + escapeHtml(d.id) + '"' +
+             ' placeholder="Add a note (optional)" aria-label="Optional note for the ' + escapeHtml(d.title) + ' quotation request">',
+      '    <div class="card__actions card__actions--solo">',
+      '      <button class="btn btn--wa btn--sm" type="button" data-wa-quote="' + d.id + '">' + ICONS.whatsapp + 'Quotation</button>',
       '    </div>',
       '  </div>',
       '</article>'
@@ -990,7 +983,10 @@
       const waDesign = e.target.closest('[data-wa-quote]');
       if (waDesign) {
         const d = DESIGNS.find((x) => x.id === waDesign.dataset.waQuote);
-        if (d) openWa(MSG.design(d));
+        if (d) {
+          const noteEl = document.querySelector('[data-design-note="' + d.id + '"]');
+          openWa(MSG.design(d, noteEl ? noteEl.value.trim() : ''));
+        }
         return;
       }
       const waMaterial = e.target.closest('[data-wa-material]');
@@ -1017,7 +1013,7 @@
 
       /* clicking a card (not a button) opens details */
       const cardEl = e.target.closest('.card');
-      if (cardEl && !e.target.closest('button') && !e.target.closest('a')) {
+      if (cardEl && !e.target.closest('button') && !e.target.closest('a') && !e.target.closest('input, textarea, select')) {
         const id = $('[data-view]', cardEl);
         if (id) openModal(id.dataset.view);
       }
@@ -1046,7 +1042,7 @@
       '<p class="muted" style="font-size:.92rem">' + escapeHtml(d.summary) + '</p>',
       '<div class="chip-row">',
       '  <span class="chip">' + ICONS.clock + escapeHtml(d.time) + '</span>',
-      '  <span class="chip">' + ICONS.shield + '1 year workmanship guarantee</span>',
+      '  <span class="chip">' + ICONS.shield + 'Workmanship guarantee</span>',
       '  <span class="chip">' + ICONS.truck + 'Site delivery in Kenya</span>',
       '</div>',
       '<h4 class="display-s" style="margin-top:1.4rem">What is included</h4>',
@@ -1055,9 +1051,8 @@
       '<div class="chip-row">' + d.materials.map((m) => '<span class="chip">' + ICONS.box + escapeHtml(m) + '</span>').join('') + '</div>',
       '<div class="modal__actions">',
       '  <button class="btn btn--wa" type="button" data-wa-quote="' + d.id + '">' + ICONS.whatsapp + 'Request quotation</button>',
-      '  <button class="btn btn--light" type="button" data-add="design" data-id="' + d.id + '">' + ICONS.cart + 'Add to list</button>',
       '</div>',
-      '<p class="modal__note">Quotation on request. Send your measurements or request a free site visit for an exact written quotation — we serve all parts of Kenya.</p>'
+      '<p class="modal__note">Quotation on request. Send your measurements or request a site visit for an exact written quotation — we serve all parts of Kenya.</p>'
     ].join('');
 
     modal.classList.add('is-open');
@@ -1130,7 +1125,7 @@
 
     if (!quote.length) {
       body.innerHTML = '<div class="drawer__empty">' + ICONS.cart +
-        '<strong>Your list is empty</strong><p>Tap the trolley icon on any design or material to build a quotation request, then send it to us on WhatsApp in one message.</p></div>';
+        '<strong>Your list is empty</strong><p>Tap the trolley icon on any material to build a quotation request, then send it to us on WhatsApp in one message.</p></div>';
     } else {
       body.innerHTML = quote.map((row) => {
         const item = findItem(row.type, row.id);
