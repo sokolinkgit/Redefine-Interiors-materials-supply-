@@ -25,12 +25,11 @@ Cloudflare Pages, an Apache/Nginx box). Nothing needs compiling.
 
 | File | Purpose |
 | --- | --- |
-| `index.html` | Home — 50/50 hero (copy left, slideshow right), services, featured designs, featured materials, stats, process, 50-review slideshow (3 per batch, 5s), FAQ, quotation form |
+| `index.html` | Home — 50/50 hero (copy left, slideshow right), featured designs, featured materials, stats, process, 50-review slideshow (3 per batch, 5s), FAQ, quotation form |
 | `designs.html` | Full design portfolio with category filters and a "view details" modal |
 | `materials.html` | Material catalogue with product photos, delivery & coverage |
-| `services.html` | The six services in detail (kitchens, wardrobes, aluminium, gypsum, shop renovation, fittings) |
-| `about.html` | Values, quality standards, coverage, reviews (logo shown on the right of the page hero) |
-| `contact.html` | Contact cards, quotation form, what-happens-next, coverage, FAQ |
+| `about.html` | Compact single-view page — hero with stats plus the four guiding values |
+| `contact.html` | Compact single-view page — contact cards and the quotation form |
 
 ```
 .

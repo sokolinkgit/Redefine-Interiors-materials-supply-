@@ -251,6 +251,25 @@
   /* ======================================================================
      C. HEADER, MOBILE NAV & SCROLL UI
      ====================================================================== */
+
+  /* Collapses the mobile menu ("dashboard") sheet. Shared by the header
+     toggle, the nav links, the overlay, the Escape key and the drawer. */
+  function closeNav() {
+    const nav = $('.nav');
+    const toggle = $('.menu-toggle');
+    if (!nav || !nav.classList.contains('is-open')) return;
+    nav.classList.remove('is-open');
+    if (toggle) {
+      toggle.classList.remove('is-open');
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.setAttribute('aria-label', 'Open menu');
+    }
+    document.body.classList.remove('nav-open');
+    if (!$('.drawer.is-open') && !$('.modal.is-open')) {
+      document.body.classList.remove('no-scroll');
+    }
+  }
+
   function initHeader() {
     const header = $('.site-header');
     const nav = $('.nav');
@@ -258,12 +277,24 @@
     const progress = $('[data-scroll-progress] span');
     const backTop = $('[data-back-top]');
 
+    /* The mobile menu ("dashboard") is a full-screen sheet of page buttons;
+       the header stays above it so the hamburger (which turns into an ✕)
+       always stays tappable to collapse it again. */
     if (toggle && nav) {
       toggle.addEventListener('click', () => {
         const open = nav.classList.toggle('is-open');
         toggle.classList.toggle('is-open', open);
         toggle.setAttribute('aria-expanded', String(open));
+        toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
         document.body.classList.toggle('no-scroll', open);
+        document.body.classList.toggle('nav-open', open);
+      });
+    }
+
+    /* picking a page collapses the dashboard automatically */
+    if (nav) {
+      nav.addEventListener('click', (e) => {
+        if (e.target.closest('.nav__link')) closeNav();
       });
     }
 
@@ -272,11 +303,7 @@
       overlay.addEventListener('click', () => {
         closeDrawer();
         closeModal();
-        if (nav && nav.classList.contains('is-open')) {
-          nav.classList.remove('is-open');
-          if (toggle) { toggle.classList.remove('is-open'); toggle.setAttribute('aria-expanded', 'false'); }
-          document.body.classList.remove('no-scroll');
-        }
+        closeNav();
       });
     }
 
@@ -997,7 +1024,7 @@
     });
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') { closeDrawer(); closeModal(); }
+      if (e.key === 'Escape') { closeDrawer(); closeModal(); closeNav(); }
     });
   }
 
@@ -1045,9 +1072,9 @@
     if (!modal) return;
     modal.classList.remove('is-open');
     modal.setAttribute('aria-hidden', 'true');
-    if (!$('.drawer.is-open')) document.body.classList.remove('no-scroll');
+    if (!$('.drawer.is-open') && !$('.nav.is-open')) document.body.classList.remove('no-scroll');
     const ov = $('[data-overlay]');
-    if (ov && !$('.drawer.is-open')) ov.classList.remove('is-open');
+    if (ov && !$('.drawer.is-open') && !$('.nav.is-open')) ov.classList.remove('is-open');
   }
 
   /* ======================================================================
@@ -1166,6 +1193,7 @@
     const drawer = $('.drawer');
     const ov = $('[data-overlay]');
     if (!drawer) return;
+    closeNav();
     drawer.classList.add('is-open');
     drawer.setAttribute('aria-hidden', 'false');
     if (ov) ov.classList.add('is-open');
@@ -1177,8 +1205,8 @@
     if (!drawer) return;
     drawer.classList.remove('is-open');
     drawer.setAttribute('aria-hidden', 'true');
-    if (!$('.modal.is-open')) document.body.classList.remove('no-scroll');
-    if (ov && !$('.modal.is-open')) ov.classList.remove('is-open');
+    if (!$('.modal.is-open') && !$('.nav.is-open')) document.body.classList.remove('no-scroll');
+    if (ov && !$('.modal.is-open') && !$('.nav.is-open')) ov.classList.remove('is-open');
   }
 
   function initQuote() {
