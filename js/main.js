@@ -842,9 +842,6 @@
       (d.category ? ' — ' + d.category : '') + ' by Redefine Interiors');
     img.outerHTML = responsiveImg(d.image, alt, '(max-width: 760px) 100vw, (max-width: 1024px) 46vw',
       { xs: d.image480, sm: d.image760, full: true });
-
-    const tag = $('.media-frame__tag', frame);
-    if (tag && d.title) tag.textContent = d.title;
   }
 
   /* ---- category filters: built from the CATEGORIES table, rebuilt after
