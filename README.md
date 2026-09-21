@@ -359,8 +359,12 @@ Supabase is connected, and carries three buttons — nothing else:
   (Quick links | Get in touch).
 * **Edge-scroll navigation.** On every page except Home, a deliberate extra scroll/swipe past the
   very top or very bottom of the page (once the page has rested at that edge for a moment) takes
-  the visitor to `index.html` (`initEdgeNav()` in `js/main.js`). It ignores wheel momentum, and is
+  the visitor to the home page, `/` (`initEdgeNav()` in `js/main.js`). It ignores wheel momentum, and is
   inert while the menu, quote drawer, enlarged photo or admin overlay is open.
+* **One homepage URL.** The logo, the Home link, breadcrumbs, the footer "Client reviews" link and
+  the edge-scroll navigation all point at `/` (never `index.html`), matching the canonical
+  `https://www.redefineinteriorsandmaterialssupply.co.ke/`. Serve the folder from the root of a
+  domain (Vercel, Netlify, cPanel `public_html`, …) — root-relative links do not work from `file://`.
 * **Page structure note.** The old `services.html` ("What we do") page was removed in favour
   of the Designs page; its nav link, footer column, homepage section and sitemap entry are gone.
 * **Live across devices.** Bulk-uploaded photos go to the `site-media` bucket and the

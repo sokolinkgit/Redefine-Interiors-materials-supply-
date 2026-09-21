@@ -44,7 +44,7 @@
 
   /* ------------------------------------------------------------ tap counter
      Kept in sessionStorage so the gesture survives the one navigation the
-     logo link causes (every page's logo points at index.html).              */
+     logo link causes (every page's logo points at the home page, `/`).              */
   function readTaps() {
     try {
       const raw = JSON.parse(sessionStorage.getItem(KEY) || '[]');
@@ -77,7 +77,7 @@
 
       const samePage = (() => {
         try {
-          const target = new URL(brand.getAttribute('href') || 'index.html', location.href);
+          const target = new URL(brand.getAttribute('href') || '/', location.href);
           return target.pathname === location.pathname;
         } catch (err) { return false; }
       })();

@@ -1358,7 +1358,7 @@
   function initEdgeNav() {
     const page = document.body.dataset.page;
     if (!page || page === 'home') return;
-    const HOME = 'index.html';
+    const HOME = '/';
     const THRESHOLD = 160;     /* px of extra pull needed once at the edge */
     const SETTLE = 400;        /* ms the page must rest at the edge first */
     const GAP = 260;           /* ms of quiet that separates two wheel gestures */
