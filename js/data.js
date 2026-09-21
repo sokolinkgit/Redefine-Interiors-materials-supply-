@@ -13,7 +13,8 @@ const BUSINESS = {
   waPrimary: '254703142874',
   phoneSecondary: '0703 142 874',
   waSecondary: '254703142874',
-  email: 'hello@redefineinteriors.co.ke',
+  email: 'hello@redefineinteriorsandmaterialssupply.co.ke',
+  website: 'https://www.redefineinteriorsandmaterialssupply.co.ke/',
   hours: 'Mon – Sat: 8:00am – 6:00pm',
   hoursSunday: 'Sunday: By appointment',
   areas: 'All parts of Kenya'

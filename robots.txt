@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://redefineinteriors.co.ke/sitemap.xml
+Sitemap: https://www.redefineinteriorsandmaterialssupply.co.ke/sitemap.xml
