@@ -7,6 +7,14 @@
       ],
       "destination": "https://www.redefineinteriorsandmaterialssupply.co.ke/$1",
       "permanent": true
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        { "type": "host", "value": "redefineinteriorsandmaterialssupply.co.ke" }
+      ],
+      "destination": "https://www.redefineinteriorsandmaterialssupply.co.ke/$1",
+      "permanent": true
     }
   ]
 }
