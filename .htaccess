@@ -1,0 +1,23 @@
+# ── SEO: one canonical URL for every page ─────────────────────────────────
+# Canonical site: https://www.redefineinteriorsandmaterialssupply.co.ke/
+#
+#   1) The homepage lives at ONE URL — any request for /index.html is
+#      301-redirected to / so Google never sees duplicate homepage URLs.
+#   2) Anything else pointing at this web space (redefineinteriors.co.ke,
+#      the non-www address, or plain http://) is 301-redirected to the
+#      canonical host, preserving the path and query string.
+#
+# These rules only take effect on Apache hosting (e.g. cPanel). Static hosts
+# (Netlify, Vercel, GitHub Pages, S3…) ignore this file — configure the same
+# redirects in that host's dashboard instead.
+
+RewriteEngine On
+
+# 1) /index.html → /  (query string dropped)
+RewriteCond %{THE_REQUEST} "\s/index\.html[\s?]" [NC]
+RewriteRule ^ https://www.redefineinteriorsandmaterialssupply.co.ke/? [R=301,L]
+
+# 2) non-canonical host OR insecure scheme → https://www.redefineinteriorsandmaterialssupply.co.ke
+RewriteCond %{HTTP_HOST} !^www\.redefineinteriorsandmaterialssupply\.co\.ke$ [NC,OR]
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://www.redefineinteriorsandmaterialssupply.co.ke%{REQUEST_URI} [R=301,L]

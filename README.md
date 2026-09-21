@@ -34,6 +34,7 @@ Cloudflare Pages, an Apache/Nginx box). Nothing needs compiling.
 ```
 .
 ├── index.html … contact.html
+├── .htaccess              ← Apache 301s for SEO: /index.html → / and all alias hosts → the canonical www domain
 ├── css/style.css          ← single stylesheet (design tokens at the top)
 ├── css/admin.css          ← the admin overlay only (invisible unless you are signed in)
 ├── js/data.js             ← built-in content: categories, services, designs, materials, 50 reviews, areas, FAQs
