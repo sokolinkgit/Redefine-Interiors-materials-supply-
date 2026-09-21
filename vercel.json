@@ -1,0 +1,12 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        { "type": "host", "value": "redefine-interiors-materials-supply.vercel.app" }
+      ],
+      "destination": "https://www.redefineinteriorsandmaterialssupply.co.ke/$1",
+      "permanent": true
+    }
+  ]
+}
