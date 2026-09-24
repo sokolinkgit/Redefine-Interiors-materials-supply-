@@ -290,6 +290,20 @@ h1, h2, h3, h4 {
 .btn--wa { --btn-bg: var(--wa); --btn-fg: #fff; --btn-bd: var(--wa); }
 .btn--wa:hover { --btn-bg: var(--wa-dark); --btn-bd: var(--wa-dark); }
 
+/* One bar, two halves — the hero's "Request a quotation": WhatsApp green on
+   the left (with the WhatsApp logo), e-mail gold on the right (with the mail
+   logo). Same pill, same size, same text — only the colour is split. */
+.btn--dual {
+  --btn-bg: linear-gradient(90deg, var(--wa) 0 50%, var(--gold) 50% 100%);
+  --btn-bd: transparent;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-inline: 1.5rem;
+}
+.btn--dual:hover { --btn-bg: linear-gradient(90deg, var(--wa-dark) 0 50%, var(--gold-deep) 50% 100%); }
+.btn--dual svg { color: #fff; }
+.btn--dual__label { flex: 1 1 auto; text-align: center; }
+
 .btn--call {
   --btn-bg: linear-gradient(140deg, #C69C46 0%, var(--gold-deep) 92%);
   --btn-fg: #fff;
@@ -714,6 +728,65 @@ h1, h2, h3, h4 {
 }
 .hero__slide.is-active .hero__media img { animation: kenburns 1.2s var(--ease) forwards; }
 
+/* --- animated splash over the slideshow ---------------------------------
+   Covers the frame for exactly 2 seconds while the first picture loads,
+   then fades away. Pure CSS — it disappears even if JavaScript never runs. */
+.hero__splash {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  text-align: center;
+  background:
+    radial-gradient(90% 70% at 50% 0%, rgba(176, 133, 64, .18) 0%, transparent 62%),
+    linear-gradient(172deg, #141110 0%, #1D1712 55%, #241C14 100%);
+  animation: splashOut .45s var(--ease) 2s forwards;   /* 2 seconds only */
+}
+.hero__splash-logo {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  animation: splashPulse 1.4s var(--ease) infinite;
+}
+.hero__splash-name {
+  font-family: var(--f-display);
+  font-size: 1.02rem;
+  letter-spacing: .05em;
+  color: rgba(251, 248, 243, .92);
+}
+.hero__splash-bar {
+  width: min(220px, 62%);
+  height: 3px;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, .16);
+  overflow: hidden;
+}
+.hero__splash-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--gold), var(--gold-soft));
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: splashFill 1.9s var(--ease) forwards;
+}
+@keyframes splashFill { to { transform: scaleX(1); } }
+@keyframes splashPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(228, 206, 158, .32); }
+  50% { transform: scale(1.07); box-shadow: 0 0 0 14px rgba(228, 206, 158, 0); }
+}
+@keyframes splashOut { to { opacity: 0; visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) {
+  .hero__splash { animation-duration: .15s; }
+  .hero__splash-logo, .hero__splash-bar i { animation: none; }
+  .hero__splash-bar i { transform: scaleX(1); }
+}
+
 .hero__controls {
   display: flex;
   align-items: center;
@@ -856,6 +929,7 @@ h1, h2, h3, h4 {
     margin-top: 1.15rem;
   }
   .hero__actions .btn { width: 100%; justify-content: center; min-height: 46px; }
+  .hero__actions .btn--dual { justify-content: space-between; }
   .hero__arrows .arrow-btn { width: 42px; height: 42px; }
   .hero__dot { width: 34px; height: 5px; }
   .hero__dot.is-active { width: 52px; }
@@ -1914,6 +1988,71 @@ h1, h2, h3, h4 {
 .form-card--compact .btn { padding: .72rem 1.15rem; font-size: .84rem; }
 .quote-panel__actions { display: flex; flex-wrap: wrap; gap: .6rem; flex-direction: row; }
 .quote-panel__actions .btn { flex: 1 1 200px; justify-content: center; }
+
+/* --- read-only destination fields on the quotation forms ----------------
+   First field: where the e-mail goes — a gold, read-only "e-mail button"
+   showing the address. Bottom (under the WhatsApp button): the WhatsApp line,
+   as minimized read-only text with a tappable number. */
+.field--dest { gap: .3rem; }
+.dest {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--cream);
+  min-width: 0;
+}
+.dest__icon {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 50%;
+}
+.dest__icon svg { width: 15px; height: 15px; }
+.dest--email {
+  background: linear-gradient(140deg, var(--gold) 0%, var(--gold-deep) 95%);
+  border-color: var(--gold-deep);
+  color: #fff;
+  box-shadow: 0 12px 24px -16px rgba(138, 100, 40, .85);
+}
+.dest--email .dest__icon { background: rgba(255, 255, 255, .18); color: #fff; }
+.dest--email input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #fff;
+  font-size: .9rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.dest--email input:focus { outline: none; box-shadow: none; border: 0; background: transparent; }
+.quote-panel__wa-dest { margin-top: .15rem; }
+.dest--wa {
+  border: 0;
+  background: var(--wa-light);
+  padding: .5rem .85rem;
+  font-size: .8rem;
+  color: var(--ink-3);
+}
+.dest--wa .dest__icon { background: rgba(31, 168, 85, .14); color: var(--wa-dark); width: 22px; height: 22px; }
+.dest--wa .dest__icon svg { width: 13px; height: 13px; }
+.dest--wa .dest__label {
+  font-size: .66rem;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--wa-dark);
+}
+.dest--wa .dest__value { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.dest--wa .dest__value:hover { color: var(--wa-dark); text-decoration: underline; text-underline-offset: 3px; }
+.form-card--compact .dest { padding: .6rem .8rem; }
+.form-card--compact .dest--email input { font-size: .86rem; }
 body[data-page="contact"] .contact-grid { grid-template-columns: 1fr 1fr; }
 
 /* --- "Request a quotation" panel on the home page -------------------------
