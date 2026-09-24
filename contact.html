@@ -144,18 +144,10 @@
       <div class="form-card form-card--compact reveal">
         <span class="eyebrow">Quotation request</span>
         <h3 class="display-m" style="margin-bottom:.3rem">Tell us what you need</h3>
-        <p class="muted" style="font-size:.86rem;margin-bottom:1.1rem">Complete the form and send it on WhatsApp or by e-mail with everything written out for you — so we can quote accurately the first time.</p>
+        <p class="muted" style="font-size:.78rem;margin-bottom:.7rem">Complete the form and send it on WhatsApp or by e-mail with everything written out for you — so we can quote accurately the first time.</p>
 
         <form data-quote-form novalidate>
           <div class="form-grid">
-            <!-- first field: where the e-mail goes — read-only (gold, like the e-mail button) -->
-            <div class="field field--full field--dest">
-              <label for="c-email-to">E-mail destination</label>
-              <div class="dest dest--email">
-                <span class="dest__icon" aria-hidden="true"><span class="i" data-icon="mail"></span></span>
-                <input id="c-email-to" type="text" value="info@redefineinteriorsandmaterialssupply.co.ke" readonly tabindex="-1" aria-readonly="true">
-              </div>
-            </div>
             <div class="field">
               <label for="c-name">Your name</label>
               <input id="c-name" name="name" type="text" placeholder="e.g. Brian Otieno" required>
@@ -176,16 +168,20 @@
               <textarea id="c-details" name="details" placeholder="Room sizes, what you want done, finishes you like, whether you already have materials…"></textarea>
             </div>
             <div class="field field--full quote-panel__actions">
-              <button class="btn btn--wa" type="submit" data-send="wa"><span class="i" data-icon="whatsapp"></span> Send my request on WhatsApp</button>
-              <button class="btn btn--gold" type="submit" data-send="email"><span class="i" data-icon="mail"></span> Request on email</button>
-            </div>
-            <!-- the WhatsApp line the request is sent to — minimized, read-only text -->
-            <div class="field field--full quote-panel__wa-dest">
-              <span class="dest dest--wa">
-                <span class="dest__icon" aria-hidden="true"><span class="i" data-icon="whatsapp"></span></span>
-                <span class="dest__label">WhatsApp</span>
-                <a class="dest__value" href="tel:+254703142874">0703 142 874</a>
-              </span>
+              <button class="btn btn--wa" type="submit" data-send="wa">
+                <span class="i" data-icon="whatsapp"></span>
+                <span class="btn__stack">
+                  <span class="btn__title">Request quotation on WhatsApp</span>
+                  <small class="btn__dest">0703 142 874</small>
+                </span>
+              </button>
+              <button class="btn btn--gold" type="submit" data-send="email">
+                <span class="i" data-icon="mail"></span>
+                <span class="btn__stack">
+                  <span class="btn__title">Request on email</span>
+                  <small class="btn__dest">info@redefineinteriorsandmaterialssupply.co.ke</small>
+                </span>
+              </button>
             </div>
             <div class="field field--full">
               <span class="field__error" data-form-note hidden></span>

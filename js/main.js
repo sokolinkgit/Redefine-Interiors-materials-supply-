@@ -1575,8 +1575,7 @@
       const y = panel.getBoundingClientRect().top + window.pageYOffset - 90;
       window.scrollTo({ top: y, behavior: 'smooth' });
       if (focus) {
-        /* the first field is now the read-only e-mail destination, so
-           focus the first field the visitor can actually type in */
+        /* focus the first field the visitor can actually type in */
         const inputs = $$('input, textarea', panel);
         const first = inputs.find((el) => !el.readOnly) || inputs[0];
         if (first) setTimeout(() => first.focus({ preventScroll: true }), 450);

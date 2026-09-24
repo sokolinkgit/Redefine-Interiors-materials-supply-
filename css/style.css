@@ -1970,89 +1970,51 @@ h1, h2, h3, h4 {
 .form-note svg { width: 16px; height: 16px; color: var(--gold); flex: none; margin-top: .15rem; }
 
 /* --- compact quotation form (home page panel + contact page) -------------
-   Same fields, less air: smaller paddings, tighter grid, shorter textarea,
+   Same fields, minimal air: small paddings, tight grid, short textarea,
    so the form reads as a quick request rather than a page-filling block. */
-.form-card--compact { padding: clamp(1.1rem, 2.2vw, 1.6rem); border-radius: var(--radius); }
-.form-card--compact .form-grid { gap: .65rem .8rem; }
-.form-card--compact .field { gap: .28rem; }
-.form-card--compact .field label { font-size: .66rem; letter-spacing: .1em; }
+.form-card--compact { padding: clamp(.75rem, 1.6vw, 1rem); border-radius: var(--radius); }
+.form-card--compact .form-grid { gap: .4rem .55rem; }
+.form-card--compact .field { gap: .18rem; }
+.form-card--compact .field label { font-size: .6rem; letter-spacing: .08em; }
 .form-card--compact .field input,
 .form-card--compact .field select,
-.form-card--compact .field textarea { padding: .6rem .8rem; font-size: .88rem; border-radius: 10px; }
-.form-card--compact .field textarea { min-height: 78px; }
+.form-card--compact .field textarea { padding: .45rem .65rem; font-size: .86rem; border-radius: 8px; }
+.form-card--compact .field textarea { min-height: 48px; }
 .form-card--compact .field__error { min-height: 0; }
 .form-card--compact .field__error:empty { display: none; }
-.form-card--compact .form-note { margin-top: .5rem; font-size: .74rem; }
+.form-card--compact .form-note { margin-top: .4rem; font-size: .72rem; }
 .form-card--compact .form-note a { color: var(--gold-deep); text-decoration: underline; text-underline-offset: 2px; }
-.form-card--compact .display-m { font-size: clamp(1.25rem, 2vw, 1.6rem); }
-.form-card--compact .btn { padding: .72rem 1.15rem; font-size: .84rem; }
-.quote-panel__actions { display: flex; flex-wrap: wrap; gap: .6rem; flex-direction: row; }
-.quote-panel__actions .btn { flex: 1 1 200px; justify-content: center; }
+.form-card--compact .display-m { font-size: clamp(1.08rem, 1.7vw, 1.3rem); }
+.form-card--compact .btn { padding: .5rem 1rem; font-size: .78rem; }
+.form-card--compact .btn svg { width: 15px; height: 15px; }
+.quote-panel__actions { display: grid; grid-template-columns: 1fr 1fr; gap: .45rem .55rem; }
+.quote-panel__actions .btn { min-width: 0; width: 100%; }
 
-/* --- read-only destination fields on the quotation forms ----------------
-   First field: where the e-mail goes — a gold, read-only "e-mail button"
-   showing the address. Bottom (under the WhatsApp button): the WhatsApp line,
-   as minimized read-only text with a tappable number. */
-.field--dest { gap: .3rem; }
-.dest {
+/* --- the destination lives INSIDE each send button ------------------------
+   Two tidy lines per button: the action title, then the address/number it
+   goes to, in tiny type — no separate read-only destination fields. */
+.btn__stack {
   display: flex;
-  align-items: center;
-  gap: .6rem;
-  padding: .85rem 1rem;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--cream);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: .1rem;
   min-width: 0;
 }
-.dest__icon {
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  flex: none;
-  border-radius: 50%;
-}
-.dest__icon svg { width: 15px; height: 15px; }
-.dest--email {
-  background: linear-gradient(140deg, var(--gold) 0%, var(--gold-deep) 95%);
-  border-color: var(--gold-deep);
-  color: #fff;
-  box-shadow: 0 12px 24px -16px rgba(138, 100, 40, .85);
-}
-.dest--email .dest__icon { background: rgba(255, 255, 255, .18); color: #fff; }
-.dest--email input {
-  flex: 1 1 auto;
+.btn__title { white-space: nowrap; }
+.btn__dest {
+  display: block;
+  max-width: 100%;
   min-width: 0;
-  border: 0;
-  padding: 0;
-  background: transparent;
-  color: #fff;
-  font-size: .9rem;
-  font-weight: 600;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: .6rem;
+  font-weight: 500;
+  letter-spacing: .02em;
+  text-transform: none;
+  white-space: nowrap;
+  line-height: 1.15;
+  opacity: .82;
 }
-.dest--email input:focus { outline: none; box-shadow: none; border: 0; background: transparent; }
-.quote-panel__wa-dest { margin-top: .15rem; }
-.dest--wa {
-  border: 0;
-  background: var(--wa-light);
-  padding: .5rem .85rem;
-  font-size: .8rem;
-  color: var(--ink-3);
-}
-.dest--wa .dest__icon { background: rgba(31, 168, 85, .14); color: var(--wa-dark); width: 22px; height: 22px; }
-.dest--wa .dest__icon svg { width: 13px; height: 13px; }
-.dest--wa .dest__label {
-  font-size: .66rem;
-  font-weight: 600;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--wa-dark);
-}
-.dest--wa .dest__value { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
-.dest--wa .dest__value:hover { color: var(--wa-dark); text-decoration: underline; text-underline-offset: 3px; }
-.form-card--compact .dest { padding: .6rem .8rem; }
-.form-card--compact .dest--email input { font-size: .86rem; }
 body[data-page="contact"] .contact-grid { grid-template-columns: 1fr 1fr; }
 
 /* --- "Request a quotation" panel on the home page -------------------------
@@ -2067,17 +2029,18 @@ body[data-page="contact"] .contact-grid { grid-template-columns: 1fr 1fr; }
 .quote-panel.is-open { grid-template-rows: 1fr; }
 .quote-panel > .container { overflow: hidden; min-height: 0; }
 .quote-panel__inner {
-  max-width: 720px;
+  max-width: 620px;
   margin-inline: auto;
-  padding-block: clamp(1.4rem, 3.5vw, 2.4rem);
+  padding-block: clamp(.8rem, 2vw, 1.3rem);
   opacity: 0;
   transform: translateY(-8px);
   transition: opacity .4s var(--ease) .1s, transform .45s var(--ease) .1s;
 }
 .quote-panel.is-open .quote-panel__inner { opacity: 1; transform: none; }
 .quote-panel[aria-hidden="true"] .quote-panel__inner { visibility: hidden; }
-.quote-panel__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: .9rem; }
-.quote-panel__head .muted { font-size: .86rem; margin-top: .3rem; }
+.quote-panel__head { display: flex; align-items: flex-start; justify-content: space-between; gap: .8rem; margin-bottom: .5rem; }
+.quote-panel__head .muted { font-size: .78rem; margin-top: .1rem; }
+.quote-panel__head .eyebrow { font-size: .6rem; }
 .quote-panel__close {
   flex: none;
   width: 36px;
@@ -3424,12 +3387,12 @@ body[data-page="about"] .value-grid { grid-template-columns: repeat(2, 1fr); }
   body[data-page="about"] .value-card p { font-size: .76rem; line-height: 1.45; }
 
   /* tighter quotation form */
-  body[data-page="contact"] .form-card { padding: clamp(1rem, 4vw, 1.3rem); }
-  body[data-page="contact"] .field input,
-  body[data-page="contact"] .field select,
-  body[data-page="contact"] .field textarea { padding: .6rem .8rem; }
-  body[data-page="contact"] .form-grid { gap: .6rem; }
-  .quote-panel__actions .btn { flex-basis: 100%; }
+  body[data-page="contact"] .form-card { padding: clamp(.75rem, 3.5vw, 1rem); }
+  body[data-page="contact"] .form-grid { gap: .45rem; }
+  .form-card--compact .field input,
+  .form-card--compact .field select,
+  .form-card--compact .field textarea { font-size: 16px; padding: .5rem .65rem; }
+  .quote-panel__actions { grid-template-columns: 1fr; }
 }
 
 @media print {
