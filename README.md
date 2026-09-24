@@ -177,7 +177,7 @@ convert "$base.jpg" -strip -resize '480x480>' -quality 70 "sm/$base-480.jpg"
 
 | Slideshow | Behaviour | Where |
 | --- | --- | --- |
-| Hero | the **designs ticked as featured** (admin bar → Slideshow, or the ★ on any design card) — **5 second** auto-refresh, progress bar per slide, arrows, dots, swipe, pauses on hover/tab-hidden/off-screen. The pictures are literally the ones on the Designs page, so replacing a design photo replaces it in the slideshow too; if nothing is ticked, the first five designs with a photo are used. Sits in the **right 50%** of the hero with no caption text over it; the left 50% holds the copy over a plain dark CSS gradient (no photo file) | `index.html` (`data-hero`) |
+| Hero | the **designs ticked as featured** (admin bar → Slideshow, or the ★ on any design card), played in the order set by **dragging** in the Slideshow panel (`designs.featured_position`) — **5 second** auto-refresh, progress bar per slide, arrows, dots, swipe, pauses on hover/tab-hidden/off-screen. The pictures are literally the ones on the Designs page, so replacing a design photo replaces it in the slideshow too; if nothing is ticked, the first five designs with a photo are used. Sits in the **right 50%** of the hero with no caption text over it; the left 50% holds the copy over a plain dark CSS gradient (no photo file) | `index.html` (`data-hero`) |
 | Reviews | **3 reviews per batch, 5 second** refresh, 17 batches covering all 50 reviews, dots, arrows, progress bar, counter, pause on hover | every page (`data-reviews`) |
 
 Both respect `prefers-reduced-motion`, both pause when scrolled out of view (phones: battery
@@ -228,6 +228,17 @@ pencil, pick any gallery design and Save. The choice is stored in `public.site_s
 (`key = 'why_design'`, `value = {"design": "<uuid>", "code": "<code>"}` — see
 `supabase/schema.sql` §6c; run the file once to create the table). Until a choice is made the
 design with code `d03` — or the first design with a photo — is used.
+
+## 7a. Ordering photos (admin)
+
+* **Slideshow** (admin bar → Slideshow, or *Edit* on a hero slide) — the photos already in the
+  slideshow come first, numbered in play order. Drag one onto another to **swap** their places,
+  ✕ removes it, and tapping a photo in the lower list adds it to the end. Save writes
+  `designs.is_featured` + `designs.featured_position` (schema.sql §4 — run it once).
+* **Set order** (admin bar → Set order) — every design (or material, second tab) in one numbered
+  grid; drag a photo onto another to swap their positions on the page. Save rewrites `position`.
+* On phones drag the ⠿ handle (the rest of the tile still scrolls), or tap one photo and then
+  the other.
 
 ## 7b. Quotation requests
 

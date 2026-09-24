@@ -427,5 +427,9 @@ const SERVICE_CATEGORIES = ['All'].concat(categoryNames('service'));
 const heroDesigns = (list) => {
   const items = (list || []).filter((d) => d && d.image);
   const featured = items.filter((d) => d.featured === true);
-  return featured.length ? featured : items.slice(0, 5);
+  if (!featured.length) return items.slice(0, 5);
+  /* the order the administrator set by dragging (featuredPosition, 1 = first);
+     photos never ordered (0) follow, in Designs Gallery order */
+  const rank = (d) => (Number(d.featuredPosition) > 0 ? Number(d.featuredPosition) : Number.MAX_SAFE_INTEGER);
+  return featured.slice().sort((a, b) => rank(a) - rank(b) || (Number(a.position) || 0) - (Number(b.position) || 0));
 };

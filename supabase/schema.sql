@@ -435,12 +435,18 @@ end $$;
 alter table public.designs
   add column if not exists is_featured boolean not null default false;
 
+-- The order of the homepage slideshow (admin bar → Slideshow → drag to swap). 0 = not
+-- ordered yet: such photos follow the ordered ones, in Designs Gallery order.
+alter table public.designs
+  add column if not exists featured_position integer not null default 0;
+
 comment on table  public.designs            is 'Design portfolio cards. features/materials are arrays of short strings.';
 comment on column public.designs.code       is 'Stable public reference (d01, d02 …) used by the quotation list.';
 comment on column public.designs.lead_time  is 'Shown on the card, e.g. "2 – 3 weeks".';
 comment on column public.designs.unit       is 'Optional scope note, e.g. "per sqm".';
 comment on column public.designs.badge      is 'Optional corner badge, e.g. "Best seller". Empty = no badge.';
 comment on column public.designs.is_featured is 'true = this design''s photo rotates in the homepage slideshow (admin bar → Slideshow).';
+comment on column public.designs.featured_position is 'Order in the homepage slideshow, 1 = first (admin bar → Slideshow, drag to swap). 0 = unordered, shown after the ordered ones.';
 comment on column public.designs.category   is 'One of the public.categories rows with kind = ''design''; drives the chips above the Designs grid.';
 
 drop trigger if exists designs_touch_updated_at on public.designs;

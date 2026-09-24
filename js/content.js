@@ -56,6 +56,7 @@
       category: str(r.category),
       featured: r.is_featured === true,
       isFeatured: r.is_featured === true,
+      featuredPosition: Number(r.featured_position) || 0,
       image: str(r.image_url),
       image760: str(r.image_url_760),
       image480: str(r.image_url_480),
