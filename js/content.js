@@ -56,6 +56,7 @@
       category: str(r.category),
       featured: r.is_featured === true,
       isFeatured: r.is_featured === true,
+      featuredPosition: Number(r.featured_position) || 0,
       image: str(r.image_url),
       image760: str(r.image_url_760),
       image480: str(r.image_url_480),
@@ -200,6 +201,50 @@
   }
   SiteContent.restore = restoreBuiltin;
 
+  /* ------------------------------------------------------------ site settings
+     Small one-off choices (public.site_settings, key → jsonb value). The one
+     used today is `why_design`: which Designs Gallery photo the home page
+     shows under the "Book a site visit" button. A choice made by the
+     built-in (device-only) administrator is kept in localStorage instead and
+     wins on this device until the cloud account saves it for everybody.    */
+  const SETTINGS_LOCAL_KEY = 'redefine_site_settings_local_v1';
+  const settings = {};                               // key → value (from Supabase)
+  const readLocalSettings = () => {
+    try { return JSON.parse(localStorage.getItem(SETTINGS_LOCAL_KEY) || '{}') || {}; } catch (e) { return {}; }
+  };
+  SiteContent.setting = (key) => {
+    const local = readLocalSettings();
+    if (Object.prototype.hasOwnProperty.call(local, key)) return local[key];
+    return Object.prototype.hasOwnProperty.call(settings, key) ? settings[key] : undefined;
+  };
+  SiteContent.settings = () => Object.assign({}, settings, readLocalSettings());
+  SiteContent.setSetting = (key, value) => {           // in-memory (cloud copy)
+    settings[key] = value;
+  };
+  SiteContent.setLocalSetting = (key, value) => {      // this device only
+    const local = readLocalSettings();
+    if (value === undefined || value === null) delete local[key]; else local[key] = value;
+    try { localStorage.setItem(SETTINGS_LOCAL_KEY, JSON.stringify(local)); } catch (e) { /* quota */ }
+  };
+  SiteContent.clearLocalSettings = () => { try { localStorage.removeItem(SETTINGS_LOCAL_KEY); } catch (e) { /* ignore */ } };
+
+  async function fetchSettings() {
+    if (!sb) return;
+    try {
+      const { data, error } = await sb.from('site_settings').select('key,value');
+      if (error) throw error;
+      Object.keys(settings).forEach((k) => { delete settings[k]; });
+      (data || []).forEach((r) => { if (r && r.key) settings[r.key] = r.value; });
+      SiteContent.settingsMissing = false;
+    } catch (err) {
+      /* an older project without the table: the page falls back to the
+         design named in the HTML (data-why-design) */
+      SiteContent.settingsMissing = true;
+      if (window.console) console.info('[redefine] site_settings unavailable — run supabase/schema.sql (§6c)', err && err.message);
+    }
+  }
+  SiteContent.fetchSettings = fetchSettings;
+
   function withTimeout(promise, ms) {
     return new Promise((resolve, reject) => {
       const t = setTimeout(() => reject(new Error('timeout')), ms);
@@ -297,6 +342,8 @@
           }
         }
 
+        await fetchSettings();
+
         const total = applyRows(tables);
         SiteContent.status = total ? 'live' : 'empty';
         SiteContent.source = 'cloud';
@@ -334,7 +381,7 @@
     if (!cfg.realtime || !sb || !sb.channel) return;
     try {
       const channel = sb.channel('redefine-content');
-      TABLES.concat(['categories']).forEach((table) => {
+      TABLES.concat(['categories', 'site_settings']).forEach((table) => {
         channel.on('postgres_changes', { event: '*', schema: 'public', table }, () => {
           if (SiteContent.paused || SiteContent.source === 'local') return;
           clearTimeout(rtTimer);

@@ -29,6 +29,7 @@
 --    §5  public.materials       — Materials page (+ homepage featured materials)
 --    §6  public.services        — Services cards AND the six services.html blocks
 --    §6b public.categories      — the filter chips of Designs / Materials / Services
+--    §6c public.site_settings   — small admin choices, e.g. the home page "Why us" photo
 --    §7  Row Level Security     — everyone reads, only admins write
 --    §8  Storage bucket         — "site-media" for every uploaded photo
 --    §9  Realtime, grants, indexes
@@ -434,12 +435,18 @@ end $$;
 alter table public.designs
   add column if not exists is_featured boolean not null default false;
 
+-- The order of the homepage slideshow (admin bar → Slideshow → drag to swap). 0 = not
+-- ordered yet: such photos follow the ordered ones, in Designs Gallery order.
+alter table public.designs
+  add column if not exists featured_position integer not null default 0;
+
 comment on table  public.designs            is 'Design portfolio cards. features/materials are arrays of short strings.';
 comment on column public.designs.code       is 'Stable public reference (d01, d02 …) used by the quotation list.';
 comment on column public.designs.lead_time  is 'Shown on the card, e.g. "2 – 3 weeks".';
 comment on column public.designs.unit       is 'Optional scope note, e.g. "per sqm".';
 comment on column public.designs.badge      is 'Optional corner badge, e.g. "Best seller". Empty = no badge.';
 comment on column public.designs.is_featured is 'true = this design''s photo rotates in the homepage slideshow (admin bar → Slideshow).';
+comment on column public.designs.featured_position is 'Order in the homepage slideshow, 1 = first (admin bar → Slideshow, drag to swap). 0 = unordered, shown after the ordered ones.';
 comment on column public.designs.category   is 'One of the public.categories rows with kind = ''design''; drives the chips above the Designs grid.';
 
 drop trigger if exists designs_touch_updated_at on public.designs;
@@ -588,6 +595,31 @@ create trigger categories_touch_updated_at
   before update on public.categories
   for each row execute function public.touch_updated_at();
 
+
+-- =====================================================================================
+-- §6c SITE SETTINGS — small one-off choices made from the admin overlay
+-- =====================================================================================
+-- One row = one setting. Today there is a single key:
+--   'why_design'  →  {"design": "<designs.id uuid or designs.code>"}
+--                    the Designs Gallery photo shown in the "Why Redefine Interiors"
+--                    section on the home page (under the "Book a site visit" button).
+--                    The administrator picks it with the pencil on that photo.
+create table if not exists public.site_settings (
+  key            text primary key,
+  value          jsonb not null default '{}'::jsonb,
+  updated_at     timestamptz not null default now(),
+  updated_by     uuid references auth.users (id) on delete set null,
+  check (key <> '')
+);
+
+comment on table  public.site_settings       is 'Key/value settings edited from the admin overlay (e.g. which gallery photo the home page "Why us" section shows).';
+comment on column public.site_settings.value is 'JSON object. why_design → {"design": "<uuid or code of a designs row>"}.';
+
+drop trigger if exists site_settings_touch_updated_at on public.site_settings;
+create trigger site_settings_touch_updated_at
+  before update on public.site_settings
+  for each row execute function public.touch_updated_at();
+
 -- =====================================================================================
 -- §7  ROW LEVEL SECURITY — everybody reads, only admins write
 -- =====================================================================================
@@ -596,6 +628,7 @@ alter table public.designs     enable row level security;
 alter table public.materials   enable row level security;
 alter table public.services    enable row level security;
 alter table public.categories  enable row level security;
+alter table public.site_settings enable row level security;
 
 -- ---------- hero_slides ----------
 drop policy if exists "hero_slides: public read" on public.hero_slides;
@@ -620,6 +653,32 @@ create policy "hero_slides: admin update"
 drop policy if exists "hero_slides: admin delete" on public.hero_slides;
 create policy "hero_slides: admin delete"
   on public.hero_slides for delete
+  to authenticated
+  using (public.is_admin());
+
+-- ---------- site_settings ----------
+drop policy if exists "site_settings: public read" on public.site_settings;
+create policy "site_settings: public read"
+  on public.site_settings for select
+  to anon, authenticated
+  using (true);
+
+drop policy if exists "site_settings: admin insert" on public.site_settings;
+create policy "site_settings: admin insert"
+  on public.site_settings for insert
+  to authenticated
+  with check (public.is_admin());
+
+drop policy if exists "site_settings: admin update" on public.site_settings;
+create policy "site_settings: admin update"
+  on public.site_settings for update
+  to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+drop policy if exists "site_settings: admin delete" on public.site_settings;
+create policy "site_settings: admin delete"
+  on public.site_settings for delete
   to authenticated
   using (public.is_admin());
 
@@ -786,7 +845,7 @@ create index if not exists services_position_idx    on public.services    (posit
 do $$
 declare t text;
 begin
-  foreach t in array array['designs','materials','services','categories']
+  foreach t in array array['designs','materials','services','categories','site_settings']
   loop
     begin
       execute format('alter publication supabase_realtime add table public.%I', t);
@@ -806,6 +865,7 @@ grant select, insert, update, delete  on public.designs      to anon, authentica
 grant select, insert, update, delete  on public.materials    to anon, authenticated, service_role;
 grant select, insert, update, delete  on public.services     to anon, authenticated, service_role;
 grant select, insert, update, delete  on public.categories   to anon, authenticated, service_role;
+grant select, insert, update, delete  on public.site_settings to anon, authenticated, service_role;
 -- (RLS above is what actually decides who may do what; these grants only expose the tables.)
 
 -- =====================================================================================

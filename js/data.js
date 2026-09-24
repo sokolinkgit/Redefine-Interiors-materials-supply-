@@ -13,133 +13,20 @@ const BUSINESS = {
   waPrimary: '254703142874',
   phoneSecondary: '0703 142 874',
   waSecondary: '254703142874',
-  email: 'hello@redefineinteriorsandmaterialssupply.co.ke',
+  email: 'info@redefineinteriorsandmaterialssupply.co.ke',
   website: 'https://www.redefineinteriorsandmaterialssupply.co.ke/',
   hours: 'Mon – Sat: 8:00am – 6:00pm',
   hoursSunday: 'Sunday: By appointment',
   areas: 'All parts of Kenya'
 };
 
-/* ---------------------------------------------------------------- DESIGN WORK */
-const DESIGNS = [
-  {
-    id: 'd01',
-    featured: true,
-    title: 'Modern L-Shaped Kitchen Cabinets',
-    category: 'Kitchen Cabinets',
-    image: 'assets/img/d-kitchen-lshape.jpg',
-    badge: 'Best seller',
-    time: '2 – 3 weeks',
-    summary: 'Matte graphite cabinets with a warm walnut worktop, soft-close everything and a fully fitted corner unit that uses every centimetre of your kitchen.',
-    features: ['18mm moisture-resistant MDF carcass', 'Soft-close hinges & drawer runners', 'Solid wood / quartz worktop', 'Designated appliance & bin housings'],
-    materials: ['18mm MDF', 'Melamine laminate', 'Soft-close hardware']
-  },
-  {
-    id: 'd02',
-    featured: true,
-    title: 'White Gloss Kitchen & Breakfast Bar',
-    category: 'Kitchen Cabinets',
-    image: 'assets/img/d-kitchen-white-gloss.jpg',
-    badge: 'Showroom finish',
-    time: '3 weeks',
-    summary: 'Handleless high-gloss doors, charcoal quartz tops and a slim breakfast bar — a bright, easy-clean kitchen that suits modern Nairobi apartments.',
-    features: ['Handleless push-to-open doors', 'Quartz or granite worktop', 'Glass splashback option', 'Breakfast bar with seating'],
-    materials: ['High-gloss acrylic', 'Quartz tops', 'Brass tap set']
-  },
-  {
-    id: 'd03',
-    featured: true,
-    title: 'U-Shaped Family Kitchen + Pantry',
-    category: 'Kitchen Cabinets',
-    image: 'assets/img/d-kitchen-ushape.jpg',
-    badge: '',
-    time: '3 – 4 weeks',
-    summary: 'A full family kitchen with a tall pantry, double oven housing and a generous island — designed for large households and serious cooking.',
-    features: ['Tall pantry & larder units', 'Island with rails & pendant lighting', 'Built-in oven & microwave housing', 'Pull-out baskets and corner carousel'],
-    materials: ['Shaker doors', 'Oak worktops', 'Pull-out baskets']
-  },
-  {
-    id: 'd04',
-    featured: true,
-    title: '4-Door Sliding Mirror Wardrobe',
-    category: 'Wardrobes',
-    image: 'assets/img/d-wardrobe-sliding.jpg',
-    badge: 'Popular',
-    time: '7 – 10 days',
-    summary: 'Two mirror doors, two veneer doors and internal fittings that actually make sense — hanging rails, shelves, shoe rack and a lockable drawer.',
-    features: ['Soft-close sliding system', 'Full-length mirror doors', 'Interior LED downlighting', 'Drawers, shelves & shoe rack'],
-    materials: ['18mm MDF', 'Veneer / laminate', 'Sliding rails & rollers']
-  },
-  {
-    id: 'd05',
-    featured: true,
-    title: 'Luxury Walk-In Closet',
-    category: 'Wardrobes',
-    image: 'assets/img/d-walkin-closet.jpg',
-    badge: 'Premium',
-    time: '3 weeks',
-    summary: 'A boutique-style walk-in with lit hanging rails, glass display doors, a jewellery drawer unit and an island ottoman for the master suite.',
-    features: ['Lit rails & shelf LED strips', 'Glass display doors', 'Jewellery drawer with glass top', 'Island / ottoman option'],
-    materials: ['Walnut panels', 'Glass doors', 'LED strip lighting']
-  },
-  {
-    id: 'd06',
-    title: 'Boutique Fitted Wardrobe Wall',
-    category: 'Wardrobes',
-    image: 'assets/img/hero-2-wardrobe.jpg',
-    badge: 'Space saver',
-    time: '10 – 14 days',
-    summary: 'A full wall of fitted storage with open display shelving, drawers and a dressing corner — perfect for bedrooms that have to work harder.',
-    features: ['Floor-to-ceiling fitted run', 'Drawers, shelves & display niches', 'Interior LED strip lighting', 'Matching mirror and stool'],
-    materials: ['White-oak laminate', 'LED strip lighting', 'Soft-close hinges']
-  },
-  {
-    id: 'd07',
-    title: 'Aluminium Sliding Doors & Windows',
-    category: 'Aluminium Works',
-    image: 'assets/img/hero-5-aluminum.jpg',
-    unit: 'per sqm',
-    badge: 'Security',
-    time: '5 – 10 days',
-    summary: 'Slim aluminium frames, smooth gliding rollers, mosquito mesh and security grilles — measured, fabricated and installed by our own team.',
-    features: ['Powder-coated / anodised frames', 'Mosquito mesh & security grilles', 'High-quality rollers and locks', 'Site measurement included'],
-    materials: ['Aluminium profiles', '4 – 8mm glass', 'Mesh & grilles']
-  },
-  {
-    id: 'd08',
-    title: 'Gypsum Ceiling with Cove Lighting',
-    category: 'Gypsum Works',
-    image: 'assets/img/hero-3-living-gypsum.jpg',
-    unit: 'per sqm',
-    badge: 'Most requested',
-    time: '3 – 7 days',
-    summary: 'Hidden cove lighting, recessed spotlights and clean straight lines — the single fastest way to make a sitting room feel expensive.',
-    features: ['Concealed LED cove', 'Recessed spotlight layout', 'Cornice and shadow gaps', 'Crack-free jointing & skim'],
-    materials: ['9mm gypsum boards', 'Metal studs & channels', 'LED cove lighting']
-  },
-  {
-    id: 'd09',
-    title: 'Boutique Shop Renovation',
-    category: 'Shop Renovation',
-    image: 'assets/img/hero-4-shop.jpg',
-    badge: 'Turnkey',
-    time: '3 – 5 weeks',
-    summary: 'Fluted panels, display rails, cash counter, lighting and branding surfaces — a retail space customers want to walk into.',
-    features: ['Display shelving & rails', 'Fluted wall panels', 'Track & accent lighting', 'Counter, signage & fitting rooms'],
-    materials: ['Fluted WPC panels', 'Track spotlights', 'Terrazzo / tile flooring']
-  },
-  {
-    id: 'd10',
-    title: 'Complete 3-Bedroom Home Fit-Out',
-    category: 'Fittings',
-    image: 'assets/img/hero-1-kitchen.jpg',
-    badge: 'One contract',
-    time: '5 – 8 weeks',
-    summary: 'One team, one contract: kitchen, wardrobes, gypsum ceilings, aluminium, doors, locks, sanitary and all plumbing fittings for the whole house.',
-    features: ['Kitchen + 3 wardrobes', 'Full gypsum ceiling package', 'All doors, locks & handles', 'Sanitary & plumbing fittings'],
-    materials: ['Full material supply', 'Labour & installation', 'Site supervision']
-  }
-];
+/* ---------------------------------------------------------------- DESIGN WORK
+   Every design photo lives in Supabase (the `designs` table + the site-media
+   bucket) and is uploaded from the admin overlay. Nothing is shipped here on
+   purpose: the site never shows a gallery picture that is not in the database,
+   so the built-in list is empty and the Designs Gallery, the homepage
+   slideshow and the "Why us" photo all come from Supabase only.               */
+const DESIGNS = [];
 
 /* ------------------------------------------------------------- MATERIAL SUPPLY */
 const MATERIALS = [
@@ -258,7 +145,7 @@ const SERVICES = [
     category: 'Kitchen Cabinets',
     title: 'Kitchen Cabinets',
     icon: 'cabinet',
-    image: 'assets/img/d-kitchen-ushape.jpg',
+    image: '',
     imageAlt: 'U-shaped kitchen with island, cream shaker cabinets and pendant lights built in Kenya',
     text: 'Bespoke kitchens — carcasses, doors, worktops, sinks and appliance housing, built to your exact measurements.',
     eyebrow: '01 · Kitchens',
@@ -284,7 +171,7 @@ const SERVICES = [
     category: 'Wardrobes',
     title: 'Wardrobes & Closets',
     icon: 'wardrobe',
-    image: 'assets/img/d-wardrobe-sliding.jpg',
+    image: '',
     imageAlt: 'Four door sliding wardrobe with mirror doors fitted in a Kenyan bedroom',
     text: 'Sliding, hinged, walk-in and combined wardrobe-plus-desk units with fittings that last.',
     eyebrow: '02 · Bedrooms',
@@ -310,7 +197,7 @@ const SERVICES = [
     category: 'Aluminium Works',
     title: 'Aluminium Works',
     icon: 'window',
-    image: 'assets/img/hero-5-aluminum.jpg',
+    image: '',
     imageAlt: 'Aluminium sliding windows with security grilles installed in a Kenyan home',
     text: 'Windows, sliding doors, shop fronts, gypsum partitions, balustrades and burglar proofing.',
     eyebrow: '03 · Windows & partitions',
@@ -336,7 +223,7 @@ const SERVICES = [
     category: 'Gypsum Works',
     title: 'Gypsum Works',
     icon: 'layers',
-    image: 'assets/img/hero-3-living-gypsum.jpg',
+    image: '',
     imageAlt: 'Gypsum ceiling with concealed cove lighting installed in a Kenyan sitting room',
     text: 'Ceilings, cove lighting, cornices, partitions, TV feature walls and decorative curves.',
     eyebrow: '04 · Ceilings & walls',
@@ -362,7 +249,7 @@ const SERVICES = [
     category: 'Shop Renovation',
     title: 'Shop Renovation',
     icon: 'shop',
-    image: 'assets/img/hero-4-shop.jpg',
+    image: '',
     imageAlt: 'Boutique shop interior with fluted panels and display rails after renovation in Kenya',
     text: 'Retail, salon, barbershop, clinic and office fit-outs — shelving, counters, lighting and branding surfaces.',
     eyebrow: '05 · Commercial',
@@ -388,7 +275,7 @@ const SERVICES = [
     category: 'Fittings',
     title: 'All Fittings Work',
     icon: 'wrench',
-    image: 'assets/img/hero-1-kitchen.jpg',
+    image: '',
     imageAlt: 'Cabinet hardware, hinges and handles supplied by Redefine Interiors in Kenya',
     text: 'Doors, locks, handles, hinges, sinks, taps, sanitary ware, lighting and finishing — supplied and installed.',
     eyebrow: '06 · Finishing',
@@ -540,5 +427,9 @@ const SERVICE_CATEGORIES = ['All'].concat(categoryNames('service'));
 const heroDesigns = (list) => {
   const items = (list || []).filter((d) => d && d.image);
   const featured = items.filter((d) => d.featured === true);
-  return featured.length ? featured : items.slice(0, 5);
+  if (!featured.length) return items.slice(0, 5);
+  /* the order the administrator set by dragging (featuredPosition, 1 = first);
+     photos never ordered (0) follow, in Designs Gallery order */
+  const rank = (d) => (Number(d.featuredPosition) > 0 ? Number(d.featuredPosition) : Number.MAX_SAFE_INTEGER);
+  return featured.slice().sort((a, b) => rank(a) - rank(b) || (Number(a.position) || 0) - (Number(b.position) || 0));
 };

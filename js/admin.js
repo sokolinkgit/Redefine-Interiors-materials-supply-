@@ -56,7 +56,7 @@
     editing: null,      // { kind, id }
     dirty: false,
     catsKind: 'design', // which tab the Categories panel shows
-    panel: null         // 'categories' | 'slideshow' | null
+    panel: null         // 'categories' | 'slideshow' | 'why' | 'order' | null
   };
 
   /* typed at sign-in, kept only in memory so a device-only session can still
@@ -81,6 +81,7 @@
     down: svg('<path d="M12 5v14M5.5 12.5 12 19l6.5-6.5"/>'),
     upload: svg('<path d="M12 16V4.5"/><path d="m7.5 9 4.5-4.5L16.5 9"/><path d="M4 16v2.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V16"/>'),
     logout: svg('<path d="M15 4.5h3.5A1.5 1.5 0 0 1 20 6v12a1.5 1.5 0 0 1-1.5 1.5H15"/><path d="M11 8l-4 4 4 4"/><path d="M7 12h9"/>'),
+    grip: svg('<circle cx="9" cy="6" r="1.4"/><circle cx="15" cy="6" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="18" r="1.4"/><circle cx="15" cy="18" r="1.4"/>'),
     lock: svg('<rect x="4.5" y="10" width="15" height="10.5" rx="2.4"/><path d="M8 10V7.4a4 4 0 0 1 8 0V10"/>'),
     refresh: svg('<path d="M20 11a8 8 0 1 0-1.6 6"/><path d="M20 20v-5h-5"/>'),
     shield: svg('<path d="M12 21.5s7.5-3.4 7.5-9.6V5.4L12 2.2 4.5 5.4v6.5c0 6.2 7.5 9.6 7.5 9.6z"/><path d="m9.2 12 2 2 3.6-3.8"/>'),
@@ -273,6 +274,7 @@
       '      <button class="admin-chip admin-chip--go" type="button" data-bar="publish" style="display:none">' + icon('upload') + ' Publish device changes</button>',
       '      <button class="admin-chip" type="button" data-bar="discard" style="display:none">' + icon('trash') + ' Discard</button>',
       '      <button class="admin-chip" type="button" data-bar="slideshow">' + icon('star') + ' Slideshow</button>',
+      '      <button class="admin-chip" type="button" data-bar="order">' + icon('grip') + ' Set order</button>',
       '      <button class="admin-chip" type="button" data-bar="categories">' + icon('tag') + ' Categories</button>',
       '      <button class="admin-chip admin-chip--danger" type="button" data-bar="signout">' + icon('logout') + ' Sign out</button>',
       '    </span>',
@@ -336,15 +338,65 @@
       '      </div>',
       '      <button class="admin-x" type="button" data-slides-close aria-label="Close">' + icon('x') + '</button>',
       '    </div>',
-      '    <p class="admin-modal__lead">Every photo in the Designs Gallery is listed below — the ones that rotate on the ',
-      '      home page right now are ticked, all the others are not. Tap a photo to select or deselect it, then press ',
-      '<b>Save</b> — the home page slideshow then shows exactly the ticked photos, in this order.</p>',
+      '    <p class="admin-modal__lead">The photos rotating on the home page right now come first, numbered in the order ',
+      '      they play. <b>Drag</b> a photo onto another to swap their places, press <b>✕</b> to take one out, and tap any ',
+      '      photo in the lower list to add it. Then press <b>Save</b>.</p>',
       '    <div class="admin-modal__body" data-slides-body></div>',
       '    <p class="admin-modal__status" data-slides-status></p>',
       '    <div class="admin-modal__foot admin-slides__foot">',
       '      <span class="admin-slides__count" data-slides-count></span>',
       '      <button class="btn btn--light" type="button" data-slides-cancel>Cancel</button>',
       '      <button class="btn btn--gold" type="button" data-slides-save disabled>' + icon('check') + ' <span>Save slideshow</span></button>',
+      '    </div>',
+      '  </div>',
+      '</div>',
+
+      /* ---- set order ---------------------------------------------------
+         Every design (or material) in one numbered grid: drag a photo
+         onto another to swap their positions on the page. */
+      '<div class="admin-modal" data-admin-order role="dialog" aria-modal="true" aria-label="Set order" aria-hidden="true">',
+      '  <div class="admin-modal__panel admin-modal__panel--wide">',
+      '    <div class="admin-modal__head">',
+      '      <div>',
+      '        <span class="admin-eyebrow">' + icon('grip') + ' Page order</span>',
+      '        <h3>Set order</h3>',
+      '      </div>',
+      '      <button class="admin-x" type="button" data-order-close aria-label="Close">' + icon('x') + '</button>',
+      '    </div>',
+      '    <div class="admin-tabs" data-order-tabs role="tablist">',
+      '      <button class="admin-tab is-active" type="button" role="tab" data-order-tab="design">Designs Gallery</button>',
+      '      <button class="admin-tab" type="button" role="tab" data-order-tab="material">Materials</button>',
+      '    </div>',
+      '    <div class="admin-modal__body" data-order-body></div>',
+      '    <div class="admin-modal__foot admin-slides__foot">',
+      '      <span class="admin-slides__count" data-order-count></span>',
+      '      <button class="btn btn--light" type="button" data-order-cancel>Reset</button>',
+      '      <button class="btn btn--gold" type="button" data-order-save disabled>' + icon('check') + ' <span>Save order</span></button>',
+      '    </div>',
+      '  </div>',
+      '</div>',
+
+      /* ---- "Why us" photo ---------------------------------------------
+         The picture under "Book a site visit" on the home page. Every
+         Designs Gallery photo is listed; the one showing now is marked.
+         Tapping stages the choice — "Save" writes it (site_settings). */
+      '<div class="admin-modal" data-admin-why role="dialog" aria-modal="true" aria-label="Home page photo" aria-hidden="true">',
+      '  <div class="admin-modal__panel">',
+      '    <div class="admin-modal__head">',
+      '      <div>',
+      '        <span class="admin-eyebrow">' + icon('image') + ' Home page</span>',
+      '        <h3>Photo under “Book a site visit”</h3>',
+      '      </div>',
+      '      <button class="admin-x" type="button" data-why-close aria-label="Close">' + icon('x') + '</button>',
+      '    </div>',
+      '    <p class="admin-modal__lead">Choose which <b>Designs Gallery</b> photo the home page shows in the “Why Redefine Interiors” ',
+      '      section. Tap a photo, then press <b>Save</b>. To use a brand-new picture, add it to the Designs Gallery first.</p>',
+      '    <div class="admin-modal__body" data-why-body></div>',
+      '    <p class="admin-modal__status" data-why-status></p>',
+      '    <div class="admin-modal__foot admin-slides__foot">',
+      '      <span class="admin-slides__count" data-why-count></span>',
+      '      <button class="btn btn--light" type="button" data-why-cancel>Cancel</button>',
+      '      <button class="btn btn--gold" type="button" data-why-save disabled>' + icon('check') + ' <span>Save photo</span></button>',
       '    </div>',
       '  </div>',
       '</div>',
@@ -502,6 +554,12 @@
 
     /* ---- bar buttons ---- */
     $('[data-bar="slideshow"]', shell).addEventListener('click', () => openPanel('slideshow'));
+    $('[data-bar="order"]', shell).addEventListener('click', () =>
+      openPanel('order', document.body.dataset.page === 'materials' ? 'material' : 'design'));
+    $('[data-order-close]', shell).addEventListener('click', closePanels);
+    $$('[data-order-tab]', shell).forEach((tab) => tab.addEventListener('click', () => renderOrderPanel(tab.dataset.orderTab)));
+    $('[data-order-save]', shell).addEventListener('click', saveOrder);
+    $('[data-order-cancel]', shell).addEventListener('click', () => renderOrderPanel());
     $('[data-bar="categories"]', shell).addEventListener('click', () => openPanel('categories'));
     $('[data-bar="signout"]', shell).addEventListener('click', () => signOut());
     $('[data-bar="publish"]', shell).addEventListener('click', () => {
@@ -511,7 +569,16 @@
     $('[data-bar="discard"]', shell).addEventListener('click', () => discardDraft());
 
     $('[data-slides-close]', shell).addEventListener('click', closePanels);
+    $('[data-why-close]', shell).addEventListener('click', closePanels);
     $('[data-cats-close]', shell).addEventListener('click', closePanels);
+
+    /* "Why us" photo: tapping only stages the choice — Save writes it */
+    $('[data-why-body]', shell).addEventListener('change', (e) => {
+      const box = e.target.closest('[data-why-id]');
+      if (box) whyStage(box.dataset.whyId);
+    });
+    $('[data-why-save]', shell).addEventListener('click', saveWhyPhoto);
+    $('[data-why-cancel]', shell).addEventListener('click', () => renderWhyPanel());
     $('[data-bulk-close]', shell).addEventListener('click', () => { if (!bulk.busy) closePanels(); });
     wireBulk();
 
@@ -546,13 +613,13 @@
       if (e.key === 'Enter' && e.target.closest('[data-cat-name]')) { e.preventDefault(); e.target.blur(); }
     });
 
-    /* slideshow: tapping a photo only stages the selection — "Save" writes
-       it (the admin sees the whole choice first, nothing changes behind
-       their back while they are still picking) */
-    $('[data-slides-body]', shell).addEventListener('change', (e) => {
-      const box = e.target.closest('[data-slide-id]');
-      if (!box) return;
-      slidesToggle(box.dataset.slideId, box.checked);
+    /* slideshow: adding, removing and swapping only stage the change —
+       "Save" writes it (the admin sees the whole choice first) */
+    $('[data-slides-body]', shell).addEventListener('click', (e) => {
+      const rm = e.target.closest('[data-tile-remove]');
+      if (rm) { e.preventDefault(); slidesRemove(rm.dataset.tileRemove); return; }
+      const add = e.target.closest('[data-off-id]');
+      if (add) { e.preventDefault(); slidesAdd(add.dataset.offId); }
     });
     $('[data-slides-save]', shell).addEventListener('click', saveSlides);
     $('[data-slides-cancel]', shell).addEventListener('click', () => {
@@ -641,8 +708,12 @@
       showCatTab(kind || state.catsKind || 'design', true);
     } else if (which === 'slideshow') {
       renderSlidesPanel();
+    } else if (which === 'why') {
+      renderWhyPanel();
+    } else if (which === 'order') {
+      renderOrderPanel(kind || orderKind);
     }
-    const box = $('[data-admin-' + (which === 'categories' ? 'cats' : which === 'bulk' ? 'bulk' : 'slides') + ']', shell);
+    const box = $('[data-admin-' + ({ categories: 'cats', bulk: 'bulk', why: 'why', order: 'order' }[which] || 'slides') + ']', shell);
     box.classList.add('is-open');
     box.setAttribute('aria-hidden', 'false');
     $('[data-admin-scrim]', shell).classList.add('is-open');
@@ -652,7 +723,7 @@
   function closePanels() {
     if (!shell) return;
     state.panel = null;
-    $$('[data-admin-slides], [data-admin-cats], [data-admin-bulk]', shell).forEach((el) => {
+    $$('[data-admin-slides], [data-admin-cats], [data-admin-bulk], [data-admin-why], [data-admin-order]', shell).forEach((el) => {
       el.classList.remove('is-open');
       el.setAttribute('aria-hidden', 'true');
     });
@@ -1033,6 +1104,7 @@
     });
     if (!ok) return;
     store.clear();
+    if (window.SiteContent && SiteContent.clearLocalSettings) SiteContent.clearLocalSettings();
     if (store.pauseDraft) store.pauseDraft(false);
     if (window.SiteContent && SiteContent.restore) SiteContent.restore();
     if (window.SiteContent && SiteContent.load) await SiteContent.load();
@@ -1173,6 +1245,24 @@
         }
       }
 
+      /* the "Why us" photo chosen on this device: published by the design's
+         code, because a device-only design gets a new id in the cloud */
+      const sc = window.SiteContent;
+      const localWhy = sc && sc.settings ? sc.settings()[whyKey()] : null;
+      if (localWhy) {
+        say('home page photo…');
+        const code = String(localWhy.code || '');
+        let cloudId = String(localWhy.design || '');
+        if (code) {
+          const { data: hit } = await sb.from('designs').select('id').eq('code', code).maybeSingle();
+          if (hit && hit.id) cloudId = String(hit.id);
+        }
+        const { error: whyErr } = await sb.from('site_settings')
+          .upsert({ key: whyKey(), value: { design: cloudId, code: code } }, { onConflict: 'key' });
+        if (whyErr && !/site_settings|schema cache|does not exist/i.test(whyErr.message || '')) throw whyErr;
+        if (sc.clearLocalSettings) sc.clearLocalSettings();
+      }
+
       store.clear();
       if (store.pauseDraft) store.pauseDraft(false);
       if (window.SiteContent && SiteContent.load) await SiteContent.load();
@@ -1269,6 +1359,8 @@
     }
     updateBar();
     if (state.panel === 'slideshow') renderSlidesPanel();
+    if (state.panel === 'why') renderWhyPanel();
+    if (state.panel === 'order' && !orderDirty) renderOrderPanel();
     if (state.panel === 'categories') renderCatPanel();
     decorate();
   }
@@ -1345,6 +1437,20 @@
       if (hidden) el.classList.add('admin-hidden-item');
     });
 
+    /* the photo under "Book a site visit": one pencil → pick any gallery design */
+    const whyFrame = $('[data-why-design]');
+    if (whyFrame && !whyFrame.__adminTools) {
+      const bar = document.createElement('div');
+      bar.className = 'admin-tools';
+      bar.innerHTML =
+        '<span class="admin-tools__tag">Home page photo</span>' +
+        '<button class="admin-tool" type="button" data-admin-act="why-photo" title="Edit — choose a different Designs Gallery photo for this spot" aria-label="Edit — choose a different Designs Gallery photo for this spot">' +
+        icon('pencil') + '</button>';
+      whyFrame.appendChild(bar);
+      whyFrame.__adminTools = bar;
+      whyFrame.classList.add('admin-editable');
+    }
+
     addTiles();
   }
 
@@ -1405,6 +1511,7 @@
       return openPanel('categories', k);
     }
     if (act === 'slideshow') return openPanel('slideshow');
+    if (act === 'why-photo') return openPanel('why');
     if (act === 'new') return openEditor(kind, null);
     if (act === 'bulk') return openBulk(kind);
     if (act === 'edit') return openEditor(kind, id);
@@ -1618,9 +1725,18 @@
     if (!canEdit(design)) return;
     if (design.featured === on) return;
 
-    const { error } = await writeUpdate('designs', design.uuid, { is_featured: !!on });
+    /* a newly starred photo joins the END of the slideshow; the order the
+       administrator set for the others is kept */
+    const last = (window.Site ? window.Site.lists.designs() : [])
+      .reduce((m, d) => Math.max(m, d.featured ? (Number(d.featuredPosition) || 0) : 0), 0);
+    const pos = on ? last + 1 : 0;
+    let { error } = await writeUpdate('designs', design.uuid, { is_featured: !!on, featured_position: pos });
+    if (error && /featured_position/i.test(error.message || '')) {
+      ({ error } = await writeUpdate('designs', design.uuid, { is_featured: !!on }));   // older database
+    }
     if (error) return toast(writeError(error));
     design.featured = !!on;
+    design.featuredPosition = pos;
     if (window.Site) window.Site.refresh();
     await reloadContent(true);
     toast(on ? 'Added to the homepage slideshow' : 'Removed from the homepage slideshow');
@@ -2331,57 +2447,207 @@
   }
 
   /* ======================================================================
-     10. HOMEPAGE SLIDESHOW PANEL — every Designs Gallery photo, one tick each
-     --------------------------------------------------------------------------
-     The panel lists ALL the designs in the gallery, in gallery order. The
-     photos that currently rotate on the home page are ticked, every other
-     photo is unticked. Tapping a photo only stages the choice — nothing is
-     written until "Save". After saving, the home page slideshow shows
-     exactly the ticked photos, so the five (or however many) the
-     administrator selected are the five that visitors see.
+     9b. DRAG TO SWAP — shared by the slideshow picker and "Set order"
+        A tile picked up and dropped on another tile SWAPS places with it.
+        Mouse: drag any tile. Touch: drag the ⠿ handle (the rest of the tile
+        still scrolls the list), or tap one tile and then tap another.
      ====================================================================== */
-  let slidesSel = null;      // staged selection — a Set of design uuids
-  let slidesDirty = false;   // does the staged selection differ from what is saved?
+  function enableSwap(container, onSwap) {
+    if (!container || container.__swapWired) return;
+    container.__swapWired = true;
+    let src = null, ghost = null, startX = 0, startY = 0, dragging = false, over = null, tapped = null;
+
+    const tiles = () => $$('[data-drag-id]', container);
+    const clearOver = () => { if (over) over.classList.remove('is-over'); over = null; };
+    const tileAt = (x, y) => {
+      const el = document.elementFromPoint(x, y);
+      const t = el && el.closest('[data-drag-id]');
+      return t && container.contains(t) ? t : null;
+    };
+    const finish = () => {
+      if (ghost) ghost.remove();
+      ghost = null;
+      if (src) src.classList.remove('is-dragging');
+      clearOver();
+      container.classList.remove('is-swapping');
+      src = null; dragging = false;
+    };
+    const setTapped = (t) => {
+      tiles().forEach((x) => x.classList.remove('is-tapped'));
+      tapped = t;
+      if (t) t.classList.add('is-tapped');
+      const hint = $('[data-swap-hint]', container.parentElement || container);
+      if (hint) hint.textContent = t ? 'Now tap the photo it should swap places with.' : '';
+    };
+
+    container.addEventListener('pointerdown', (e) => {
+      const t = e.target.closest('[data-drag-id]');
+      if (!t || !container.contains(t)) return;
+      if (e.target.closest('button, a, input')) return;
+      const touch = !!e.pointerType && e.pointerType !== 'mouse';
+      if (touch && !e.target.closest('[data-drag-handle]')) return;   // touch: handle only
+      if (!touch && e.button) return;
+      src = t; startX = e.clientX; startY = e.clientY; dragging = false;
+      if (touch) e.preventDefault();
+      try { t.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    });
+
+    container.addEventListener('pointermove', (e) => {
+      if (!src) return;
+      const dx = e.clientX - startX, dy = e.clientY - startY;
+      if (!dragging) {
+        if (Math.hypot(dx, dy) < 6) return;
+        dragging = true;
+        setTapped(null);
+        src.classList.add('is-dragging');
+        container.classList.add('is-swapping');
+        ghost = src.cloneNode(true);
+        ghost.className = 'admin-tile admin-tile--ghost';
+        const r = src.getBoundingClientRect();
+        ghost.style.width = r.width + 'px'; ghost.style.height = r.height + 'px';
+        document.body.appendChild(ghost);
+      }
+      e.preventDefault();
+      const r = src.getBoundingClientRect();
+      ghost.style.transform = 'translate(' + (r.left + dx) + 'px,' + (r.top + dy) + 'px)';
+      const t = tileAt(e.clientX, e.clientY);
+      if (t !== over) { clearOver(); if (t && t !== src) { over = t; over.classList.add('is-over'); } }
+      /* keep the list moving when the pointer nears the top/bottom edge */
+      const box = container.closest('.admin-modal__body') || container;
+      const br = box.getBoundingClientRect();
+      if (e.clientY < br.top + 40) box.scrollTop -= 12;
+      else if (e.clientY > br.bottom - 40) box.scrollTop += 12;
+    });
+
+    const up = (e) => {
+      if (!src) return;
+      const from = src;
+      if (dragging) {
+        const to = tileAt(e.clientX, e.clientY);
+        finish();
+        if (to && to !== from) onSwap(from.dataset.dragId, to.dataset.dragId);
+        return;
+      }
+      /* a plain tap: first tap picks, second tap swaps */
+      finish();
+      if (e.target.closest('button, a, input')) return;
+      if (tapped && tapped !== from && container.contains(tapped)) {
+        const a = tapped.dataset.dragId;
+        setTapped(null);
+        onSwap(a, from.dataset.dragId);
+      } else if (tapped === from) {
+        setTapped(null);
+      } else {
+        setTapped(from);
+      }
+    };
+    container.addEventListener('pointerup', up);
+    container.addEventListener('pointercancel', finish);
+    container.__swapReset = () => { finish(); setTapped(null); };
+  }
+
+  /* one photo tile — used in both the slideshow picker and the order panel */
+  function tileHtml(d, n, opts) {
+    const o = opts || {};
+    const name = d.title || d.name || d.category || (o.kind === 'material' ? 'Material' : 'Design');
+    const hidden = d.active === false;
+    return '<div class="admin-tile' + (hidden ? ' is-draft' : '') + (o.off ? ' admin-tile--off' : '') + '"' +
+      (o.off ? ' data-off-id="' + esc(d.uuid || d.id) + '"' : ' data-drag-id="' + esc(d.uuid || d.id) + '"') +
+      ' title="' + esc(name) + '">' +
+      (o.off ? '' : '<span class="admin-tile__num">' + n + '</span>') +
+      '<span class="admin-tile__img">' + (d.image
+        ? '<img src="' + esc(d.image) + '" alt="" loading="lazy" draggable="false">'
+        : '<i>' + icon('image') + '</i>') + '</span>' +
+      '<span class="admin-tile__name">' + esc(name) + (hidden ? ' · hidden' : '') + '</span>' +
+      (o.off
+        ? '<span class="admin-tile__add">' + icon('plus') + ' Add</span>'
+        : '<span class="admin-tile__handle" data-drag-handle aria-hidden="true">' + icon('grip') + '</span>' +
+          (o.removable ? '<button class="admin-tile__x" type="button" data-tile-remove="' + esc(d.uuid || d.id) + '" aria-label="Remove from the slideshow">' + icon('x') + '</button>' : '')) +
+      '</div>';
+  }
+
+  /* ======================================================================
+     10. HOMEPAGE SLIDESHOW PANEL — pick the photos, drag to set the order
+        The photos already in the slideshow come FIRST, numbered in the
+        order they play; drag one onto another to swap their places, or ✕
+        to take it out. Every other Designs Gallery photo sits below — tap
+        to add it to the end. Nothing is written until Save.
+     ====================================================================== */
+  let slidesOrder = null;    // staged — array of design uuids, in play order
+  let slidesDirty = false;
 
   /* the Designs Gallery order — position, same order the page shows them */
   function slideOrder() {
     return (window.Site ? window.Site.lists.designs() : []).slice()
       .sort((a, b) => (Number(a.position) || 0) - (Number(b.position) || 0));
   }
+  /* the slideshow as it plays right now */
+  function currentSlideIds() {
+    const list = window.Site && window.Site.heroList ? window.Site.heroList() : [];
+    return list.filter((d) => d.featured === true).map((d) => String(d.uuid || d.id));
+  }
 
   function slidesSyncControls() {
     const save = $('[data-slides-save]', shell);
     const count = $('[data-slides-count]', shell);
-    if (save) save.disabled = !slidesSel || !slidesDirty;
-    if (count) {
-      const n = slidesSel ? slidesSel.size : 0;
-      count.textContent = n + ' selected for the home page';
-    }
+    if (save) save.disabled = !slidesOrder || !slidesDirty;
+    if (count) count.textContent = (slidesOrder ? slidesOrder.length : 0) + ' selected for the home page';
   }
 
   function updateSlidesStatus(saved) {
     const status = $('[data-slides-status]', shell);
     if (!status) return;
-    const n = slidesSel ? slidesSel.size : 0;
+    const n = slidesOrder ? slidesOrder.length : 0;
     if (saved) {
       status.innerHTML = (n ? icon('check') : icon('alert')) + ' <b>' + n + '</b> photo' +
-        (n === 1 ? '' : 's') + ' now rotate on the home page, in the order above.';
+        (n === 1 ? '' : 's') + ' now rotate on the home page, in the order shown.';
       return;
     }
     status.innerHTML = n
-      ? '<b>' + n + '</b> photo' + (n === 1 ? '' : 's') + ' will rotate on the home page, in the order above. ' +
+      ? '<b>' + n + '</b> photo' + (n === 1 ? '' : 's') + ' will rotate on the home page, in the numbered order. ' +
         'Press <b>Save slideshow</b> to update the home page.'
       : '<span class="admin-slide-warn">' + icon('alert') +
-        ' Nothing is ticked — the home page would have no slideshow photos.</span>';
+        ' Nothing is selected — the home page would have no slideshow photos.</span>';
+  }
+
+  function drawSlides() {
+    const body = $('[data-slides-body]', shell);
+    const all = slideOrder();
+    const byId = {};
+    all.forEach((d) => { byId[String(d.uuid || d.id)] = d; });
+    const on = slidesOrder.map((id) => byId[id]).filter(Boolean);
+    const off = all.filter((d) => slidesOrder.indexOf(String(d.uuid || d.id)) === -1);
+
+    body.innerHTML =
+      '<p class="admin-order__label">' + icon('star') + ' <b>In the slideshow</b> — ' + on.length + ' photo' + (on.length === 1 ? '' : 's') +
+        ' · drag a photo onto another to swap their places · ✕ removes it' +
+        '<small data-swap-hint></small></p>' +
+      '<div class="admin-tiles" data-slides-on>' +
+        (on.length ? on.map((d, i) => tileHtml(d, i + 1, { removable: true })).join('')
+                   : '<p class="admin-empty">No photos selected yet — tap a photo below to add it.</p>') +
+      '</div>' +
+      '<p class="admin-order__label"><b>Not in the slideshow</b> — tap a photo to add it to the end</p>' +
+      '<div class="admin-tiles admin-tiles--off" data-slides-off>' +
+        (off.length ? off.map((d) => tileHtml(d, 0, { off: true })).join('')
+                    : '<p class="admin-empty">Every gallery photo is in the slideshow.</p>') +
+      '</div>';
+
+    enableSwap($('[data-slides-on]', body), (aId, bId) => {
+      const i = slidesOrder.indexOf(aId), j = slidesOrder.indexOf(bId);
+      if (i < 0 || j < 0) return;
+      slidesOrder[i] = bId; slidesOrder[j] = aId;
+      slidesDirty = true;
+      drawSlides();
+    });
+    updateSlidesStatus(false);
+    slidesSyncControls();
   }
 
   function renderSlidesPanel() {
     ensureShell();
     const body = $('[data-slides-body]', shell);
-    const designs = slideOrder();
-
-    if (!designs.length) {
-      slidesSel = null;
+    if (!slideOrder().length) {
+      slidesOrder = null;
       slidesDirty = false;
       body.innerHTML = '<p class="admin-empty">No designs yet. Add one on the Designs page and it will appear here.</p>';
       const status = $('[data-slides-status]', shell);
@@ -2389,77 +2655,239 @@
       slidesSyncControls();
       return;
     }
-
-    /* the staged selection starts from what the home page shows right now:
-       the ticked photos stay ticked, every other gallery photo starts off */
-    slidesSel = new Set();
-    designs.forEach((d) => { if (d.featured === true) slidesSel.add(String(d.uuid || d.id)); });
+    /* start from what plays right now, in its current order */
+    slidesOrder = currentSlideIds();
     slidesDirty = false;
-
-    body.innerHTML = designs.map((d) => {
-      const on = slidesSel.has(String(d.uuid || d.id));
-      const hidden = d.active === false;
-      return '<label class="admin-slide' + (on ? ' is-on' : '') + (hidden ? ' is-draft' : '') + '">' +
-        '<input type="checkbox" data-slide-id="' + esc(String(d.uuid || d.id)) + '"' + (on ? ' checked' : '') + '>' +
-        '<span class="admin-slide__thumb">' +
-          (d.image ? '<img src="' + esc(d.image) + '" alt="" loading="lazy">' : '<i>' + icon('starOutline') + '</i>') +
-        '</span>' +
-        '<span class="admin-slide__text"><b>' + esc(d.title || 'Design (no name yet)') + '</b>' +
-          '<small>' + esc(d.category || 'No category') +
-          (hidden ? ' · hidden from visitors' : '') +
-          (!d.image ? ' · no photo yet' : '') +
-          (on ? ' · in the slideshow' : '') + '</small></span>' +
-        '</label>';
-    }).join('');
-
-    updateSlidesStatus(false);
-    slidesSyncControls();
+    drawSlides();
   }
 
-  /* a tap on a photo: stage it, redraw the tick states, keep the Save button
-     honest — no database write yet */
-  function slidesToggle(id, on) {
-    if (!slidesSel) return;
-    if (on) slidesSel.add(String(id)); else slidesSel.delete(String(id));
-    const body = $('[data-slides-body]', shell);
-    $$('[data-slide-id]', body).forEach((box) => {
-      const row = box.closest('.admin-slide');
-      if (row) row.classList.toggle('is-on', box.checked);
-    });
+  function slidesAdd(id) {
+    if (!slidesOrder || slidesOrder.indexOf(String(id)) !== -1) return;
+    slidesOrder.push(String(id));
     slidesDirty = true;
-    updateSlidesStatus(false);
-    slidesSyncControls();
+    drawSlides();
+  }
+  function slidesRemove(id) {
+    if (!slidesOrder) return;
+    slidesOrder = slidesOrder.filter((x) => x !== String(id));
+    slidesDirty = true;
+    drawSlides();
   }
 
-  /* Save — write every design whose tick changed, then refresh the page so
-     the hero instantly plays exactly the ticked photos */
+  /* Save — write every design whose tick or place changed, then refresh the
+     page so the hero instantly plays exactly these photos in this order */
   async function saveSlides() {
-    if (!slidesSel || !slidesDirty) return;
+    if (!slidesOrder || !slidesDirty) return;
     if (draftBlocks()) return;
     const saveBtn = $('[data-slides-save]', shell);
     if (saveBtn) saveBtn.disabled = true;
 
-    const changed = slideOrder().filter((d) =>
-      !!(d.uuid) && slidesSel.has(String(d.uuid)) !== (d.featured === true));
+    const changed = slideOrder().filter((d) => {
+      if (!d.uuid) return false;
+      const idx = slidesOrder.indexOf(String(d.uuid));
+      const on = idx !== -1;
+      const pos = on ? idx + 1 : 0;
+      return on !== (d.featured === true) || pos !== (Number(d.featuredPosition) || 0);
+    });
     try {
       for (let i = 0; i < changed.length; i++) {
         const d = changed[i];
-        const on = slidesSel.has(String(d.uuid));
-        const { error } = await writeUpdate('designs', d.uuid, { is_featured: !!on });
+        const idx = slidesOrder.indexOf(String(d.uuid));
+        const on = idx !== -1;
+        const { error } = await writeUpdate('designs', d.uuid, { is_featured: on, featured_position: on ? idx + 1 : 0 });
         if (error) throw error;
-        d.featured = !!on;                  // keep the in-memory list in step
+        d.featured = on;                       // keep the in-memory list in step
+        d.featuredPosition = on ? idx + 1 : 0;
       }
       slidesDirty = false;
       if (window.Site) window.Site.refresh();
       updateSlidesStatus(true);
       slidesSyncControls();
-      const n = slidesSel.size;
+      const n = slidesOrder.length;
       toast('Slideshow updated — ' + n + ' photo' + (n === 1 ? '' : 's') + ' now on the home page');
     } catch (err) {
-      toast(writeError(err));
+      toast(/featured_position/i.test((err && err.message) || '')
+        ? 'The database is missing the slideshow order column — run supabase/schema.sql once, then save again.'
+        : writeError(err));
       updateSlidesStatus(false);
     } finally {
       slidesSyncControls();
+    }
+  }
+
+  /* ======================================================================
+     10a. SET ORDER — the Designs Gallery (and Materials) in one grid,
+          numbered; drag a photo onto another to swap their positions.
+     ====================================================================== */
+  let orderKind = 'design';
+  let orderIds = null;       // staged — uuids in page order
+  let orderDirty = false;
+
+  function orderList(kind) {
+    const col = COLLECTIONS[kind];
+    return (col ? col.list() || [] : []).slice()
+      .sort((a, b) => (Number(a.position) || 0) - (Number(b.position) || 0));
+  }
+
+  function orderSyncControls() {
+    const save = $('[data-order-save]', shell);
+    const count = $('[data-order-count]', shell);
+    if (save) save.disabled = !orderIds || !orderDirty;
+    if (count) count.textContent = orderIds ? orderIds.length + ' ' + (KIND_LABEL[orderKind] || '').toLowerCase() + (orderDirty ? ' · order changed' : '') : '';
+  }
+
+  function drawOrder() {
+    const body = $('[data-order-body]', shell);
+    const byId = {};
+    orderList(orderKind).forEach((d) => { byId[String(d.uuid || d.id)] = d; });
+    const items = orderIds.map((id) => byId[id]).filter(Boolean);
+    body.innerHTML = items.length
+      ? '<p class="admin-order__label">The numbers are the order visitors see. Drag a photo onto another to swap their places — on a phone drag the ⠿ handle, or tap one photo and then the other.<small data-swap-hint></small></p>' +
+        '<div class="admin-tiles" data-order-grid>' + items.map((d, i) => tileHtml(d, i + 1, { kind: orderKind })).join('') + '</div>'
+      : '<p class="admin-empty">Nothing here yet.</p>';
+    enableSwap($('[data-order-grid]', body), (aId, bId) => {
+      const i = orderIds.indexOf(aId), j = orderIds.indexOf(bId);
+      if (i < 0 || j < 0) return;
+      orderIds[i] = bId; orderIds[j] = aId;
+      orderDirty = true;
+      drawOrder();
+    });
+    orderSyncControls();
+  }
+
+  function renderOrderPanel(kind) {
+    ensureShell();
+    if (kind) orderKind = kind;
+    $$('[data-order-tab]', shell).forEach((t) => t.classList.toggle('is-active', t.dataset.orderTab === orderKind));
+    orderIds = orderList(orderKind).map((d) => String(d.uuid || d.id));
+    orderDirty = false;
+    drawOrder();
+  }
+
+  async function saveOrder() {
+    if (!orderIds || !orderDirty) return;
+    if (draftBlocks()) return;
+    const col = COLLECTIONS[orderKind];
+    const saveBtn = $('[data-order-save]', shell);
+    if (saveBtn) saveBtn.disabled = true;
+    const byId = {};
+    orderList(orderKind).forEach((d) => { byId[String(d.uuid || d.id)] = d; });
+    const rows = orderIds.map((id) => byId[id]).filter((d) => d && d.uuid);
+    try {
+      if (writePath() === 'local') {
+        store.reorder(col.table, rows.map((x) => x.uuid));
+      } else {
+        const results = await Promise.all(rows.map((x, i) =>
+          sb.from(col.table).update({ position: (i + 1) * 10 }).eq('id', x.uuid)));
+        const bad = results.find((r) => r && r.error);
+        if (bad) throw bad.error;
+      }
+      rows.forEach((x, i) => { x.position = (i + 1) * 10; });
+      orderDirty = false;
+      await reloadContent(true);
+      renderOrderPanel();
+      toast((KIND_LABEL[orderKind] || 'Items') + ' order saved');
+    } catch (err) {
+      toast(writeError(err));
+      orderSyncControls();
+    }
+  }
+
+  /* ======================================================================
+     10b. "WHY US" PHOTO — the picture under "Book a site visit" (home page)
+     The frame shows ONE Designs Gallery photo. The administrator picks it
+     here; the choice is saved as site_settings.why_design = {design: uuid}
+     (cloud account) or on this device only (built-in account).
+     ====================================================================== */
+  let whySel = null;        // staged choice — a design uuid/code
+  let whyCurrent = null;    // the one showing right now
+
+  const whyKey = () => (window.Site && window.Site.whySetting) || 'why_design';
+
+  function whySyncControls() {
+    const save = $('[data-why-save]', shell);
+    const count = $('[data-why-count]', shell);
+    const status = $('[data-why-status]', shell);
+    const dirty = !!whySel && whySel !== whyCurrent;
+    if (save) save.disabled = !dirty;
+    const d = whySel ? findDesign(whySel) : null;
+    if (count) count.textContent = d ? 'Selected: ' + (d.title || d.category || 'photo') : '';
+    if (status) {
+      status.innerHTML = dirty
+        ? 'Press <b>Save photo</b> to show this picture on the home page.'
+        : (d ? icon('check') + ' This is the photo showing on the home page now.' : '');
+    }
+  }
+
+  function renderWhyPanel() {
+    ensureShell();
+    const body = $('[data-why-body]', shell);
+    const designs = slideOrder().filter((d) => d && d.image);
+    const now = window.Site && window.Site.whyDesign ? window.Site.whyDesign() : null;
+    whyCurrent = now ? String(now.uuid || now.id) : null;
+    whySel = whyCurrent;
+
+    if (!designs.length) {
+      body.innerHTML = '<p class="admin-empty">No design photos yet. Add photos to the Designs Gallery first and they will appear here.</p>';
+      whySyncControls();
+      return;
+    }
+
+    body.innerHTML = designs.map((d) => {
+      const id = String(d.uuid || d.id);
+      const on = id === whySel;
+      const hidden = d.active === false;
+      return '<label class="admin-slide' + (on ? ' is-on' : '') + (hidden ? ' is-draft' : '') + '">' +
+        '<input type="radio" name="admin-why-pick" data-why-id="' + esc(id) + '"' + (on ? ' checked' : '') + '>' +
+        '<span class="admin-slide__thumb"><img src="' + esc(d.image) + '" alt="" loading="lazy"></span>' +
+        '<span class="admin-slide__text"><b>' + esc(d.title || 'Design (no name yet)') + '</b>' +
+          '<small>' + esc(d.category || 'No category') +
+          (hidden ? ' · hidden from visitors' : '') +
+          (on ? ' · showing now' : '') + '</small></span>' +
+        '</label>';
+    }).join('');
+    whySyncControls();
+  }
+
+  function whyStage(id) {
+    whySel = String(id);
+    $$('[data-why-id]', $('[data-why-body]', shell)).forEach((box) => {
+      const row = box.closest('.admin-slide');
+      if (row) row.classList.toggle('is-on', box.checked);
+    });
+    whySyncControls();
+  }
+
+  async function saveWhyPhoto() {
+    if (!whySel || whySel === whyCurrent) return;
+    const d = findDesign(whySel);
+    if (!d) return;
+    const saveBtn = $('[data-why-save]', shell);
+    if (saveBtn) saveBtn.disabled = true;
+    const value = { design: String(d.uuid || d.id), code: String(d.code || d.id || '') };
+    const sc = window.SiteContent;
+    try {
+      if (writePath() === 'cloud') {
+        const { error } = await sb.from('site_settings').upsert({ key: whyKey(), value: value }, { onConflict: 'key' });
+        if (error) throw error;
+        if (sc && sc.setSetting) sc.setSetting(whyKey(), value);
+        if (sc && sc.setLocalSetting) sc.setLocalSetting(whyKey(), undefined);   // the cloud copy now rules
+      } else if (sc && sc.setLocalSetting) {
+        sc.setLocalSetting(whyKey(), value);
+      } else {
+        throw new Error('Nowhere to save the choice on this device.');
+      }
+      whyCurrent = whySel;
+      if (window.Site) window.Site.refresh();
+      whySyncControls();
+      toast('Home page photo updated — “' + (d.title || d.category || 'the selected design') + '” now shows under “Book a site visit”');
+      closePanels();
+    } catch (err) {
+      const msg = err && /site_settings|schema cache|does not exist/i.test(err.message || '')
+        ? 'The site_settings table is missing — run supabase/schema.sql (§6c) once, then try again.'
+        : writeError(err);
+      toast(msg, 'warn');
+      whySyncControls();
     }
   }
 

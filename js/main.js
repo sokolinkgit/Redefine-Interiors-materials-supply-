@@ -802,6 +802,7 @@
        section used to show a frozen picture that was no longer the
        original gallery photo) */
     hydrateWhyImage();
+    hydratePageHero();
 
     /* materials */
     $$('[data-material-grid]').forEach((grid) => {
@@ -819,29 +820,74 @@
   }
 
   /* ---- "Why Redefine Interiors & Materials Supply" photo ---------------
-     The split section on the home page keeps a static <img> in the HTML (the
-     no-JavaScript fallback), but on every render its source is replaced with
-     the CURRENT photo of the design bound in data-why-design — the same
-     picture that card shows in the Designs Gallery. A photo the
-     administrator uploaded or replaced in the gallery therefore appears here
-     as well, instead of an old, unrelated image. When the bound design is
-     missing (renamed id, deleted), the first visible design with a photo is
-     used, so the section never shows a picture that is not in the gallery. */
+     The split section on the home page (under the "Book a site visit"
+     button) shows ONE photo from the Designs Gallery. Which one is a choice
+     the administrator makes with the pencil on that photo (admin overlay →
+     picks any gallery design); the choice is stored in Supabase
+     (site_settings.why_design) so every visitor sees it. Until a choice is
+     made, the design named in data-why-design is used, and when neither
+     exists the first visible design with a photo is shown — so the section
+     never shows a picture that is not in the gallery.                     */
+  const WHY_SETTING = 'why_design';
+
+  function whyChoice() {
+    const sc = window.SiteContent;
+    const v = sc && sc.setting ? sc.setting(WHY_SETTING) : undefined;
+    if (!v) return '';
+    if (typeof v === 'string') return v;
+    return String(v.design || v.id || v.code || '');
+  }
+
+  function whyDesign() {
+    const frame = $('[data-why-design]');
+    if (!frame) return null;
+    const list = publishable(DESIGNS);
+    const byCode = (code) => (code
+      ? list.find((x) => x && (String(x.uuid) === code || String(x.id) === code || String(x.code) === code))
+      : null);
+    let d = byCode(whyChoice());
+    if (!d || !d.image) d = byCode(String(frame.dataset.whyDesign || ''));
+    if (!d || !d.image) d = list.find((x) => x && x.image);
+    return d && d.image ? d : null;
+  }
+
   function hydrateWhyImage() {
     const frame = $('[data-why-design]');
     if (!frame) return;
-    const code = String(frame.dataset.whyDesign || '');
-    const list = publishable(DESIGNS);
-    let d = code ? list.find((x) => x && (String(x.id) === code || String(x.uuid) === code)) : null;
-    if (!d || !d.image) d = list.find((x) => x && x.image);
-    if (!d || !d.image) return;
-
-    const img = $('img', frame);
-    if (!img) return;
-    const alt = d.imageAlt || ((d.title || 'U-shaped family kitchen') +
+    const d = whyDesign();
+    let img = $('img', frame);
+    if (!d) {
+      /* nothing published yet: keep the frame empty rather than show a
+         picture that is not in the gallery */
+      if (img) img.remove();
+      frame.dataset.whyCurrent = '';
+      frame.classList.add('media-frame--empty');
+      return;
+    }
+    frame.classList.remove('media-frame--empty');
+    frame.dataset.whyCurrent = String(d.uuid || d.id || '');
+    const alt = d.imageAlt || ((d.title || 'Interior design') +
       (d.category ? ' — ' + d.category : '') + ' by Redefine Interiors');
-    img.outerHTML = responsiveImg(d.image, alt, '(max-width: 760px) 100vw, (max-width: 1024px) 46vw',
+    const html = responsiveImg(d.image, alt, '(max-width: 760px) 100vw, (max-width: 1024px) 46vw',
       { xs: d.image480, sm: d.image760, full: true });
+    if (img) img.outerHTML = html; else frame.insertAdjacentHTML('afterbegin', html);
+  }
+
+  /* ---- page banners (Designs, Contact) ----------------------------------
+     The dark banner at the top of the inner pages carries a faint photo. It
+     is not a file of its own: it is the first photo of the homepage
+     slideshow (a Designs Gallery photo from Supabase), so the banner always
+     shows real, current work. With no published design the banner stays a
+     plain dark panel.                                                     */
+  function hydratePageHero() {
+    $$('[data-page-hero-design]').forEach((bg) => {
+      const list = heroList();
+      const d = list.find((x) => x && x.image) || publishable(DESIGNS).find((x) => x && x.image);
+      const img = $('img', bg);
+      if (!d) { if (img) img.remove(); return; }
+      const html = responsiveImg(d.image, '', '100vw', { xs: d.image480, sm: d.image760, eager: true, priority: true, full: true });
+      if (img) img.outerHTML = html; else bg.insertAdjacentHTML('afterbegin', html);
+    });
   }
 
   /* ---- category filters: built from the CATEGORIES table, rebuilt after
@@ -1462,10 +1508,78 @@
     arm();
   }
 
+  /* ---- the quotation request text (WhatsApp message / e-mail body) ---- */
+  const QUOTE_EMAIL = BUSINESS.email;
+
+  function quoteText(get) {
+    return [
+      'Hello ' + BUSINESS.name + ' 👋',
+      '',
+      '*New quotation request from the website*',
+      '',
+      'Name: ' + get('name'),
+      'Phone: ' + get('phone'),
+      'Location: ' + get('location'),
+      get('budget') ? 'Budget range: ' + get('budget') : '',
+      get('timeline') ? 'Timeline: ' + get('timeline') : '',
+      '',
+      'Details:',
+      get('details') || '(no extra details provided)',
+      '',
+      'Please send me a quotation. Thank you!'
+    ].filter((line) => line !== '').join('\n');
+  }
+
+  /* opens the visitor's e-mail app with everything filled in: To = our
+     address, a clear subject and the same text the WhatsApp route sends */
+  const mailtoLink = (subject, body) =>
+    'mailto:' + QUOTE_EMAIL + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body.replace(/\*/g, ''));
+  const openMail = (subject, body) => { window.location.href = mailtoLink(subject, body); };
+
+  /* ---- the home page quotation panel --------------------------------------
+     "Request a quotation" in the hero does not leave the page: it expands a
+     compact form (data-quote-panel) just below the hero, and the panel folds
+     away again once the request has been sent.                             */
+  function setQuotePanel(open, focus) {
+    const panel = $('[data-quote-panel]');
+    if (!panel) return;
+    panel.classList.toggle('is-open', open);
+    panel.setAttribute('aria-hidden', String(!open));
+    $$('[data-quote-toggle]').forEach((b) => b.setAttribute('aria-expanded', String(open)));
+    if (open) {
+      const y = panel.getBoundingClientRect().top + window.pageYOffset - 90;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+      if (focus) {
+        const first = $('input, textarea', panel);
+        if (first) setTimeout(() => first.focus({ preventScroll: true }), 450);
+      }
+    }
+  }
+
+  function initQuotePanel() {
+    const panel = $('[data-quote-panel]');
+    if (!panel) return;
+    $$('[data-quote-toggle]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        setQuotePanel(!panel.classList.contains('is-open'), true);
+      });
+    });
+    $$('[data-quote-close]', panel).forEach((btn) => btn.addEventListener('click', () => setQuotePanel(false)));
+    if (window.location.hash === '#quote') setQuotePanel(true, true);
+    window.addEventListener('hashchange', () => { if (window.location.hash === '#quote') setQuotePanel(true, true); });
+  }
+
   function initForms() {
     $$('[data-quote-form]').forEach((form) => {
+      /* which button sent the form: WhatsApp (default) or e-mail */
+      let via = 'wa';
+      $$('[data-send]', form).forEach((b) => b.addEventListener('click', () => { via = b.dataset.send || 'wa'; }));
+
       form.addEventListener('submit', (e) => {
         e.preventDefault();
+        const channel = (e.submitter && e.submitter.dataset && e.submitter.dataset.send) || via || 'wa';
+        via = 'wa';
         let valid = true;
         const required = $$('[required]', form);
 
@@ -1493,32 +1607,28 @@
 
         const data = new FormData(form);
         const get = (k) => (data.get(k) || '').toString().trim();
-        const message = [
-          'Hello ' + BUSINESS.name + ' 👋',
-          '',
-          '*New quotation request from the website*',
-          '',
-          'Name: ' + get('name'),
-          'Phone: ' + get('phone'),
-          'Location: ' + get('location'),
-          'Service needed: ' + get('service'),
-          get('budget') ? 'Budget range: ' + get('budget') : '',
-          get('timeline') ? 'Timeline: ' + get('timeline') : '',
-          '',
-          'Details:',
-          get('details') || '(no extra details provided)',
-          '',
-          'Please send me a quotation. Thank you!'
-        ].filter((line) => line !== '').join('\n');
+        const message = quoteText(get);
+        const first = get('name').split(' ')[0];
 
-        openWa(message);
+        if (channel === 'email') {
+          openMail('Quotation request — ' + get('name') + (get('location') ? ' (' + get('location') + ')' : ''), message);
+          toast('Opening your e-mail app with the request addressed to ' + QUOTE_EMAIL, 'ok');
+        } else {
+          openWa(message);
+          toast('Opening WhatsApp with your request…', 'wa');
+        }
+
         const note = $('[data-form-note]', form);
         if (note) {
           note.hidden = false;
-          note.textContent = 'Thank you, ' + get('name').split(' ')[0] + '! WhatsApp should now be open with your request ready to send.';
+          note.textContent = 'Thank you, ' + first + '! ' + (channel === 'email'
+            ? 'Your e-mail app should now be open with the request ready to send.'
+            : 'WhatsApp should now be open with your request ready to send.');
         }
-        toast('Opening WhatsApp with your request…', 'wa');
         form.reset();
+
+        /* the home page panel folds away once the request is on its way */
+        if (form.closest('[data-quote-panel]')) setTimeout(() => setQuotePanel(false), 600);
       });
     });
 
@@ -1642,6 +1752,7 @@
     initReviews();
     initFaq();
     initEdgeNav();
+    initQuotePanel();
     initForms();
     initCounters();
     initReveal();
@@ -1661,6 +1772,9 @@
       setShowHidden: (v) => { showHidden = !!v; refresh(); },
       renderFilters: renderFilters,
       heroList: heroList,
+      whyDesign: whyDesign,
+      whySetting: WHY_SETTING,
+      hydrateWhyImage: hydrateWhyImage,
       lists: {
         hero: () => heroList(),
         designs: () => (typeof DESIGNS !== 'undefined' ? DESIGNS : []),
