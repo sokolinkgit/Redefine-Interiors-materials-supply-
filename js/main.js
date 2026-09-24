@@ -207,6 +207,26 @@
     if (!win) window.location.href = waLink(message, number);
   };
 
+  /* --- E-mail -------------------------------------------------------------
+     EVERY e-mail button or link on the site — footer, contact cards, links
+     inside sentences, wherever it may be — opens with a subject and a body
+     already written out. The plain mailto: href in the HTML stays as the
+     no-JavaScript fallback; on load, main.js rewrites each a[data-email]
+     with the prefilled version. A link may override the subject/body with
+     data-email-subject / data-email-body.                          */
+  const mailTo = (subject, body) =>
+    'mailto:' + BUSINESS.email + '?subject=' + encodeURIComponent(subject || '') +
+    '&body=' + encodeURIComponent(body || '');
+  const mailSubjectFor = (a) => a.dataset.emailSubject || 'Quotation request — from the website';
+  const mailBodyFor = (a) => a.dataset.emailBody ||
+    'Hello ' + BUSINESS.name + ' \uD83D\uDC4B\n\n' +
+    'I found you on your website and I would like to request a quotation.\n\n' +
+    'Name: ______\n' +
+    'Phone: ______\n' +
+    'Project location: ______\n\n' +
+    'Details: ______\n\n' +
+    'Please send me a written quotation. Thank you!';
+
   /* ======================================================================
      B. SITE CHROME — floating actions, drawer shell, toasts
      ====================================================================== */
@@ -382,6 +402,11 @@
       el.rel = 'noopener';
     });
     $$('[data-tel]').forEach((el) => { el.href = 'tel:' + el.dataset.tel; });
+
+    /* every e-mail link always opens with a prefilled subject + body */
+    $$('a[data-email]').forEach((el) => {
+      el.href = mailTo(mailSubjectFor(el), mailBodyFor(el));
+    });
 
     const year = $('#year');
     if (year) year.textContent = new Date().getFullYear();
@@ -1550,7 +1575,10 @@
       const y = panel.getBoundingClientRect().top + window.pageYOffset - 90;
       window.scrollTo({ top: y, behavior: 'smooth' });
       if (focus) {
-        const first = $('input, textarea', panel);
+        /* the first field is now the read-only e-mail destination, so
+           focus the first field the visitor can actually type in */
+        const inputs = $$('input, textarea', panel);
+        const first = inputs.find((el) => !el.readOnly) || inputs[0];
         if (first) setTimeout(() => first.focus({ preventScroll: true }), 450);
       }
     }
