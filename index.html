@@ -28,9 +28,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=20260924d">
+<link rel="stylesheet" href="css/style.css?v=20260924e">
 <!-- admin overlay (ghost mode) — invisible unless you are signed in -->
-<link rel="stylesheet" href="css/admin.css?v=20260924d">
+<link rel="stylesheet" href="css/admin.css?v=20260924e">
 <link rel="preconnect" href="https://rzdfmnvkhfuhqybfexuy.supabase.co" crossorigin>
 
 <script type="application/ld+json">
@@ -122,7 +122,7 @@
 
 <main id="main">
 
-  <!-- ===================== HERO — 50/50 SPLIT ON DESKTOP · TEXT ABOVE, SLIDESHOW BELOW ON PHONES =====================
+  <!-- ===================== HERO — 50/50 SPLIT ON DESKTOP · PHONES: TEXT FIRST, SLIDESHOW, THEN THE CTA BUTTONS =====================
        The slideshow rotates the DESIGNS ticked as featured (admin bar → Slideshow).
        js/main.js builds .hero__slides and .hero__dots from the live Supabase data, so
        the pictures here are literally the ones on designs.html. No photo file is
@@ -136,12 +136,19 @@
 
     <div class="container hero__grid">
       <div class="hero__copy">
-        <span class="hero__eyebrow"><span class="dot" aria-hidden="true"></span> Interiors · Fittings · <b>Materials supply</b></span>
-        <h1 class="display-xl">Spaces that feel<br>expensive. Craft that<br>stands <em>apart.</em></h1>
-        <p class="hero__sub">
-          Bespoke kitchen cabinets, wardrobes, aluminium works, gypsum ceilings, shop renovations and all fittings work —
-          plus affordable materials supply. One accountable team, serving all parts of Kenya.
-        </p>
+        <!-- .hero__intro groups the headline text only. On phones the copy box
+             dissolves (display:contents) so these words, the slideshow and the
+             CTA buttons become siblings — the buttons are then ordered BELOW
+             the slideshow, right before the designs gallery. Desktop keeps the
+             single copy column exactly as it has always been. -->
+        <div class="hero__intro">
+          <span class="hero__eyebrow"><span class="dot" aria-hidden="true"></span> Interiors · Fittings · <b>Materials supply</b></span>
+          <h1 class="display-xl">Spaces that feel<br>expensive. Craft that<br>stands <em>apart.</em></h1>
+          <p class="hero__sub">
+            Bespoke kitchen cabinets, wardrobes, aluminium works, gypsum ceilings, shop renovations and all fittings work —
+            plus affordable materials supply. One accountable team, serving all parts of Kenya.
+          </p>
+        </div>
         <div class="hero__actions">
           <a class="btn btn--gold btn--lg" href="designs.html">Browse designs <span class="i" data-icon="arrowRight"></span></a>
           <!-- expands the quotation panel just below the hero — no page change.
@@ -504,11 +511,11 @@
 <!-- built-in content: what the site shows if Supabase is unreachable -->
 <script src="js/data.js"></script>
 <!-- the browser-only draft board used by the built-in admin account -->
-<script src="js/store.js?v=20260924d"></script>
+<script src="js/store.js?v=20260924e"></script>
 <!-- pulls the live content out of Supabase (or from the draft board) -->
-<script src="js/content.js?v=20260924d"></script>
+<script src="js/content.js?v=20260924e"></script>
 <!-- the website itself -->
-<script src="js/main.js?v=20260924d"></script>
+<script src="js/main.js?v=20260924e"></script>
 <!-- ghost mode: five taps on the logo opens the admin sign-in -->
 <script src="js/ghost.js"></script>
 </body>

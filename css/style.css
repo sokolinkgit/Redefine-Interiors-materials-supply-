@@ -843,9 +843,11 @@ h1, h2, h3, h4 {
   .hero__meta-item strong { font-size: 1.02rem; }
 }
 
-/* STACKED ON PHONES: the headline, paragraph and buttons come FIRST on the
-   dark backdrop, and the image slideshow sits BELOW them as its own block —
-   no text is ever written over the photos. */
+/* STACKED ON PHONES: the headline and paragraph come first on the dark
+   backdrop, the image slideshow sits below them as its own block, and the
+   two CTA buttons (Browse designs / Request a quotation) sit immediately
+   BELOW the slideshow — between it and the designs gallery. No text is ever
+   written over the photos. */
 @media (max-width: 900px) {
   .hero {
     display: block;
@@ -869,21 +871,36 @@ h1, h2, h3, h4 {
       linear-gradient(172deg, #141110 0%, #1D1712 55%, #241C14 100%);
   }
   .hero__scrim { background: none; }
-  .hero__copy {
+  /* the copy box dissolves: the headline intro, the slideshow and the CTA
+     buttons become direct flex children of .hero__grid, so the buttons can
+     be pushed BELOW the slideshow instead of sitting above it */
+  .hero__copy { display: contents; }
+  .hero__intro {
     position: relative;
     z-index: 5;
+    order: 1;
     max-width: 34rem;
   }
   /* the stats strip is intentionally dropped from the hero on phones —
-     the layout is: text above, slideshow below, nothing else */
+     the layout is: text first, slideshow, then the CTA buttons */
   .hero__meta { display: none; }
   .hero__stage {
     position: relative;
     z-index: 4;
+    order: 2;
     display: flex;
     flex-direction: column;
     gap: .8rem;
     min-width: 0;
+  }
+  /* the CTA buttons land immediately below the slideshow — between it and
+     the designs gallery that follows the hero */
+  .hero .hero__actions {
+    position: relative;
+    z-index: 5;
+    order: 3;
+    max-width: 34rem;
+    margin-top: 0;
   }
   .hero__frame {
     position: relative;
@@ -2031,7 +2048,20 @@ h1, h2, h3, h4 {
   line-height: 1.15;
   opacity: .82;
 }
-body[data-page="contact"] .contact-grid { grid-template-columns: 1fr 1fr; }
+/* Contact page: an even 50/50 on WIDE screens only. This used to sit at the
+   top level, and its body[data-page] specificity beat every phone breakpoint —
+   so on mobile the quotation form stayed trapped in a half-width grid track:
+   vertically long and narrow. On phones the grid must stack to ONE full-width
+   column, exactly like the home page layout. */
+@media (min-width: 901px) {
+  body[data-page="contact"] .contact-grid { grid-template-columns: 1fr 1fr; }
+}
+/* Phones/tablets: the contact-page quotation box gets the exact same sizing
+   as the home page quotation panel — max 620px, centred, full compact design
+   — never a squeezed half column. */
+@media (max-width: 900px) {
+  body[data-page="contact"] .form-card { max-width: 620px; margin-inline: auto; }
+}
 
 /* --- "Request a quotation" panel on the home page -------------------------
    Folded (0fr) until the hero button is pressed; folds away again once the
