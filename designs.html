@@ -106,7 +106,9 @@
       </div>
 
       <div class="filters" data-filters="[data-design-grid]" data-filter-kind="design" data-all-label="All designs" role="tablist" aria-label="Filter designs by category"></div>
-      <div class="grid grid-3" data-design-grid></div>
+      <!-- data-paginate: show 20 designs at a time; a "View more" button under
+           the grid reveals the next 20, and so on until all are shown -->
+      <div class="grid grid-3" data-design-grid data-paginate="20"></div>
 
       <div class="table-foot" style="margin-top:2.4rem;border-radius:var(--radius);border:1px solid var(--line)">
         <span><strong>Note:</strong> Every design is measured on site and quoted in writing before fabrication begins. Final figures are confirmed after a site measurement.</span>

@@ -1990,6 +1990,22 @@ h1, h2, h3, h4 {
 .quote-panel__actions { display: grid; grid-template-columns: 1fr 1fr; gap: .45rem .55rem; }
 .quote-panel__actions .btn { min-width: 0; width: 100%; }
 
+/* --- Designs Gallery: "View more" pagination ------------------------------
+   Sits right under the designs grid: a "Showing X of Y" line and a gold
+   "View more" button that reveals the next 20 designs. Hidden completely
+   once every design is on the page (and in admin ghost mode). */
+.view-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .55rem;
+  margin-top: 1.8rem;
+  text-align: center;
+}
+.view-more[hidden] { display: none; }
+.view-more__note { margin: 0; font-size: .78rem; color: var(--muted); }
+.view-more .btn svg { width: 15px; height: 15px; }
+
 /* --- the destination lives INSIDE each send button ------------------------
    Two tidy lines per button: the action title, then the address/number it
    goes to, in tiny type — no separate read-only destination fields. */

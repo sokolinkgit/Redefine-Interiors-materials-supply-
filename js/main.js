@@ -805,6 +805,67 @@
   let showHidden = false;
   const publishable = (list) => (showHidden ? (list || []).slice() : (list || []).filter((x) => x && x.active !== false));
 
+  /* ---- Designs Gallery: shown 20 at a time --------------------------------
+     The grid carries data-paginate="20": every published design is rendered
+     (so the category chips and their counts stay correct) but only the first
+     20 matching cards stay visible. A "View more" button under the grid
+     reveals the next 20, then the next, and so on — and disappears once
+     everything is shown. Picking a category chip starts a fresh page of 20.
+     Admins in ghost mode always see the whole gallery at once, with no
+     button, so nothing is hidden while they edit.                           */
+  const GALLERY_PAGE = 20;
+  const galleryState = new WeakMap();   // grid -> { cat, all, shown }
+
+  function galleryWrap(grid) {
+    let wrap = grid.nextElementSibling;
+    if (!wrap || !wrap.classList.contains('view-more')) {
+      wrap = document.createElement('div');
+      wrap.className = 'view-more';
+      wrap.hidden = true;
+      wrap.innerHTML =
+        '<p class="view-more__note" role="status" aria-live="polite"></p>' +
+        '<button class="btn btn--gold" type="button" data-view-more>' + ICONS.plus + '<span>View more</span></button>';
+      grid.insertAdjacentElement('afterend', wrap);
+      $('[data-view-more]', wrap).addEventListener('click', () => {
+        const size = parseInt(grid.dataset.paginate, 10) || GALLERY_PAGE;
+        const st = galleryState.get(grid) || {};
+        st.shown = (st.shown || size) + size;
+        galleryState.set(grid, st);
+        updateGalleryPage(grid, st.cat, st.all);
+        revealScan(grid);           // the freshly revealed cards animate in
+      });
+    }
+    return wrap;
+  }
+
+  function updateGalleryPage(grid, cat, all) {
+    const size = parseInt(grid.dataset.paginate, 10) || GALLERY_PAGE;
+    const wrap = galleryWrap(grid);
+    if (showHidden) { wrap.hidden = true; return; }   // ghost mode: show everything
+
+    const st = galleryState.get(grid) || {};
+    if (st.cat !== cat || st.all !== all || !st.shown) {
+      st.cat = cat;
+      st.all = all;
+      st.shown = size;                // a new category starts a fresh page
+    }
+    galleryState.set(grid, st);
+
+    const cards = Array.prototype.slice.call(grid.children)
+      .filter((c) => c.matches && c.matches('article'));
+    const passing = cards.filter((c) =>
+      c.dataset.cmsGone !== '1' && c.dataset.cmsHidden !== '1' &&
+      (cat === all || c.dataset.cat === cat));
+    passing.forEach((c, i) => { c.style.display = i < st.shown ? '' : 'none'; });
+
+    const total = passing.length;
+    const seen = Math.min(st.shown, total);
+    wrap.hidden = seen >= total;
+    const note = $('.view-more__note', wrap);
+    if (note) note.textContent = total ? 'Showing ' + seen + ' of ' + total + ' designs' : '';
+  }
+
+
   function renderCatalog() {
     /* services */
     $$('[data-services]').forEach((wrap) => {
@@ -952,6 +1013,12 @@
       empty.remove();
     }
     filterMemory.set(bar, cat);
+
+    /* Designs Gallery pagination (a grid with data-paginate): after the
+       category filter settles, only the current page of matching cards
+       stays visible — "View more" under the grid reveals the rest */
+    const paged = $(targetSel);
+    if (paged && paged.dataset.paginate) updateGalleryPage(paged, cat, all);
   }
 
   /* every category that should get a chip on this bar, in the order the
