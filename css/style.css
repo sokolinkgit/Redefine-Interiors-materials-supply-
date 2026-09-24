@@ -566,11 +566,16 @@ h1, h2, h3, h4 {
   isolation: isolate;
 }
 
-/* --- single background image (never competes with the text) ------------- */
+/* --- plain dark backdrop (a gradient, not a photo file — every photo on the
+       site comes from Supabase; the text never competes with a picture) ---- */
 .hero__bg {
   position: absolute;
   inset: 0;
   z-index: 0;
+  background:
+    radial-gradient(120% 70% at 88% 0%, rgba(176, 133, 64, .22) 0%, transparent 60%),
+    radial-gradient(60% 50% at 10% 100%, rgba(176, 133, 64, .10) 0%, transparent 70%),
+    linear-gradient(172deg, #141110 0%, #1D1712 55%, #241C14 100%);
 }
 .hero__bg img {
   width: 100%;
@@ -1889,6 +1894,67 @@ h1, h2, h3, h4 {
 .field.has-error input, .field.has-error select, .field.has-error textarea { border-color: #C0392B; background: #FDF3F1; }
 .form-note { margin-top: 1rem; font-size: .78rem; color: var(--muted); display: flex; gap: .5rem; align-items: flex-start; }
 .form-note svg { width: 16px; height: 16px; color: var(--gold); flex: none; margin-top: .15rem; }
+
+/* --- compact quotation form (home page panel + contact page) -------------
+   Same fields, less air: smaller paddings, tighter grid, shorter textarea,
+   so the form reads as a quick request rather than a page-filling block. */
+.form-card--compact { padding: clamp(1.1rem, 2.2vw, 1.6rem); border-radius: var(--radius); }
+.form-card--compact .form-grid { gap: .65rem .8rem; }
+.form-card--compact .field { gap: .28rem; }
+.form-card--compact .field label { font-size: .66rem; letter-spacing: .1em; }
+.form-card--compact .field input,
+.form-card--compact .field select,
+.form-card--compact .field textarea { padding: .6rem .8rem; font-size: .88rem; border-radius: 10px; }
+.form-card--compact .field textarea { min-height: 78px; }
+.form-card--compact .field__error { min-height: 0; }
+.form-card--compact .field__error:empty { display: none; }
+.form-card--compact .form-note { margin-top: .5rem; font-size: .74rem; }
+.form-card--compact .form-note a { color: var(--gold-deep); text-decoration: underline; text-underline-offset: 2px; }
+.form-card--compact .display-m { font-size: clamp(1.25rem, 2vw, 1.6rem); }
+.form-card--compact .btn { padding: .72rem 1.15rem; font-size: .84rem; }
+.quote-panel__actions { display: flex; flex-wrap: wrap; gap: .6rem; flex-direction: row; }
+.quote-panel__actions .btn { flex: 1 1 200px; justify-content: center; }
+body[data-page="contact"] .contact-grid { grid-template-columns: 1fr 1fr; }
+
+/* --- "Request a quotation" panel on the home page -------------------------
+   Folded (0fr) until the hero button is pressed; folds away again once the
+   request has gone out on WhatsApp or by e-mail (js/main.js → setQuotePanel). */
+.quote-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  background: var(--cream-2);
+  transition: grid-template-rows .55s var(--ease);
+}
+.quote-panel.is-open { grid-template-rows: 1fr; }
+.quote-panel > .container { overflow: hidden; min-height: 0; }
+.quote-panel__inner {
+  max-width: 720px;
+  margin-inline: auto;
+  padding-block: clamp(1.4rem, 3.5vw, 2.4rem);
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity .4s var(--ease) .1s, transform .45s var(--ease) .1s;
+}
+.quote-panel.is-open .quote-panel__inner { opacity: 1; transform: none; }
+.quote-panel[aria-hidden="true"] .quote-panel__inner { visibility: hidden; }
+.quote-panel__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: .9rem; }
+.quote-panel__head .muted { font-size: .86rem; margin-top: .3rem; }
+.quote-panel__close {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  transition: background .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease);
+}
+.quote-panel__close:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
+.quote-panel__close svg { width: 16px; height: 16px; }
+
+/* the "Why us" frame with nothing published yet stays a quiet panel */
+.media-frame--empty { min-height: 320px; background: linear-gradient(160deg, var(--cream-2), var(--line)); }
 
 .area-cloud { display: flex; flex-wrap: wrap; gap: .45rem; }
 .area-cloud span {
@@ -3219,11 +3285,12 @@ body[data-page="about"] .value-grid { grid-template-columns: repeat(2, 1fr); }
   body[data-page="about"] .value-card p { font-size: .76rem; line-height: 1.45; }
 
   /* tighter quotation form */
-  body[data-page="contact"] .form-card { padding: clamp(1.2rem, 4vw, 1.6rem); }
+  body[data-page="contact"] .form-card { padding: clamp(1rem, 4vw, 1.3rem); }
   body[data-page="contact"] .field input,
   body[data-page="contact"] .field select,
-  body[data-page="contact"] .field textarea { padding: .7rem .9rem; }
-  body[data-page="contact"] .form-grid { gap: .75rem; }
+  body[data-page="contact"] .field textarea { padding: .6rem .8rem; }
+  body[data-page="contact"] .form-grid { gap: .6rem; }
+  .quote-panel__actions .btn { flex-basis: 100%; }
 }
 
 @media print {

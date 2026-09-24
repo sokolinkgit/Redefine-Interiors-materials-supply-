@@ -33,7 +33,7 @@
     if (loading) return loading;
     loading = new Promise((resolve, reject) => {
       const s = document.createElement('script');
-      s.src = 'js/admin.js?v=20260920b';
+      s.src = 'js/admin.js?v=20260924a';
       s.async = true;
       s.onload = () => (window.SiteAdmin ? resolve(window.SiteAdmin) : reject(new Error('admin.js did not register')));
       s.onerror = () => { loading = null; reject(new Error('admin.js could not be downloaded')); };

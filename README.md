@@ -177,7 +177,7 @@ convert "$base.jpg" -strip -resize '480x480>' -quality 70 "sm/$base-480.jpg"
 
 | Slideshow | Behaviour | Where |
 | --- | --- | --- |
-| Hero | the **designs ticked as featured** (admin bar → Slideshow, or the ★ on any design card) — **5 second** auto-refresh, progress bar per slide, arrows, dots, swipe, pauses on hover/tab-hidden/off-screen. The pictures are literally the ones on the Designs page, so replacing a design photo replaces it in the slideshow too; if nothing is ticked, the first five designs with a photo are used. Sits in the **right 50%** of the hero with no caption text over it; the left 50% holds the copy over one plain dark background photo (`assets/img/hero-bg-dark.jpg`) | `index.html` (`data-hero`) |
+| Hero | the **designs ticked as featured** (admin bar → Slideshow, or the ★ on any design card) — **5 second** auto-refresh, progress bar per slide, arrows, dots, swipe, pauses on hover/tab-hidden/off-screen. The pictures are literally the ones on the Designs page, so replacing a design photo replaces it in the slideshow too; if nothing is ticked, the first five designs with a photo are used. Sits in the **right 50%** of the hero with no caption text over it; the left 50% holds the copy over a plain dark CSS gradient (no photo file) | `index.html` (`data-hero`) |
 | Reviews | **3 reviews per batch, 5 second** refresh, 17 batches covering all 50 reviews, dots, arrows, progress bar, counter, pause on hover | every page (`data-reviews`) |
 
 Both respect `prefers-reduced-motion`, both pause when scrolled out of view (phones: battery
@@ -211,18 +211,34 @@ legibility scrim, large dots/arrows and a visible slide counter.
 
 ## 7. Photography
 
-All photography is of **interiors and materials only — no people appear in any image**
-(no workers, no homeowners, no shoppers), in line with the brief.
+**Every design photo comes from Supabase** (the `designs` table + the `site-media` bucket),
+uploaded from the admin overlay. No design/hero photo file is referenced from the HTML or
+JavaScript any more:
 
-Current files (`assets/img/`): 5 hero interiors (kitchen, walk-in closet, gypsum living room,
-boutique shop, aluminium sliding doors) + 5 design interiors (3 kitchens, 2 wardrobes)
-+ 1 hero background (`hero-bg-dark.jpg`, deliberately dark so headline text stays legible)
-+ 9 material product shots (`mat-*.jpg`: MDF, laminate, hardware, sink & tap, gypsum,
-aluminium profiles, porcelain tile, fluted panel, quartz).
+* the homepage slideshow, the Designs Gallery grid, the “Why us” photo on the home page and
+  the faint banner photo on the Designs and Contact pages are all rendered from the live
+  `designs` rows (`js/data.js` ships an **empty** `DESIGNS` list on purpose);
+* the hero backdrop is a CSS gradient;
+* only the **Materials** page keeps shipped photo files (`assets/img/mat-*.jpg`, the built-in
+  material product shots) — plus the logo/favicon.
 
-**To swap in Redefine's own project photos**, simply drop a JPG into `assets/img/` and point
-the `image` field in `data.js` at it. Recommended: 1600×900 for hero slides, 1200×900 (4:3)
-for cards, under ~250 KB each.
+**The photo under “Book a site visit”** (home page, “Why Redefine Interiors” section) is one
+Designs Gallery photo chosen by the administrator: in admin mode hover/tap it, press the
+pencil, pick any gallery design and Save. The choice is stored in `public.site_settings`
+(`key = 'why_design'`, `value = {"design": "<uuid>", "code": "<code>"}` — see
+`supabase/schema.sql` §6c; run the file once to create the table). Until a choice is made the
+design with code `d03` — or the first design with a photo — is used.
+
+## 7b. Quotation requests
+
+* **Home page** — “Request a quotation” in the hero does not leave the page: it expands a
+  compact form under the hero (`data-quote-panel`) with **Send my request on WhatsApp** and
+  **Request on email** buttons, and folds away once the request has been sent.
+* **Contact page** — the same compact form (`form-card--compact`).
+* Fields: name, phone, project location, project details (no “service needed” dropdown).
+* WhatsApp opens `wa.me/254703142874` with the request written out; e-mail opens the visitor's
+  mail app with **To = info@redefineinteriorsandmaterialssupply.co.ke**, a subject and the same
+  text in the body (`js/main.js` → `quoteText`, `mailtoLink`).
 
 Suggested next shots (site already supports them — just add entries in `data.js`):
 LED lighting pack (wire up `image: 'assets/img/mat-led-lighting.jpg'` on `m10`),

@@ -13,12 +13,12 @@
 <meta property="og:url" content="https://www.redefineinteriorsandmaterialssupply.co.ke/contact.html">
 <meta property="og:title" content="Contact Redefine Interiors &amp; Materials Supply">
 <meta property="og:description" content="Send your measurements or drawings on WhatsApp and get a written quotation — usually the same working day.">
-<meta property="og:image" content="https://www.redefineinteriorsandmaterialssupply.co.ke/assets/img/hero-1-kitchen.jpg">
+<meta property="og:image" content="https://www.redefineinteriorsandmaterialssupply.co.ke/assets/img/redlogo-512.png">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Contact Redefine Interiors &amp; Materials Supply">
 <meta name="twitter:description" content="Send your measurements or drawings on WhatsApp and get a written quotation — usually the same working day.">
-<meta name="twitter:image" content="https://www.redefineinteriorsandmaterialssupply.co.ke/assets/img/hero-1-kitchen.jpg">
+<meta name="twitter:image" content="https://www.redefineinteriorsandmaterialssupply.co.ke/assets/img/redlogo-512.png">
 
 <script type="application/ld+json">
 {
@@ -45,9 +45,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=20260924a">
 <!-- admin overlay (ghost mode) — invisible unless you are signed in -->
-<link rel="stylesheet" href="css/admin.css?v=20260920b">
+<link rel="stylesheet" href="css/admin.css?v=20260924a">
 <link rel="preconnect" href="https://rzdfmnvkhfuhqybfexuy.supabase.co" crossorigin>
 </head>
 <body data-page="contact" data-page-title="Contact">
@@ -92,14 +92,14 @@
 
   <!-- ===================== PAGE HERO ===================== -->
   <section class="page-hero">
-    <div class="page-hero__bg" aria-hidden="true">
-      <img src="assets/img/hero-1-kitchen.jpg" srcset="assets/img/sm/hero-1-kitchen-480.jpg 480w, assets/img/sm/hero-1-kitchen-760.jpg 760w, assets/img/hero-1-kitchen.jpg 1376w" sizes="100vw" alt="" fetchpriority="high" decoding="async">
+    <div class="page-hero__bg" aria-hidden="true" data-page-hero-design>
+      <!-- filled by js/main.js with the first homepage-slideshow photo (Supabase) -->
     </div>
     <div class="container">
       <div class="page-hero__inner">
         <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a> / <span>Contact</span></nav>
         <h1 class="display-l">Let us quote your project</h1>
-        <p class="lead">Send photos or dimensions on WhatsApp and get a written quotation the same working day — or call 0703 142 874 (one line for WhatsApp &amp; calls).</p>
+        <p class="lead">Send photos or dimensions on WhatsApp or by e-mail and get a written quotation the same working day — or call 0703 142 874 (one line for WhatsApp &amp; calls).</p>
       </div>
       <div class="breadcrumb-cards">
         <div class="breadcrumb-card"><strong>0703 142 874</strong><span>Our only line — WhatsApp &amp; calls</span></div>
@@ -126,6 +126,10 @@
             <span class="contact-card__icon"><span class="i" data-icon="phone"></span></span>
             <div><strong>Call us directly</strong><span>0703 142 874 · Mon – Sat, 8am – 6pm</span></div>
           </a>
+          <a class="contact-card" href="mailto:info@redefineinteriorsandmaterialssupply.co.ke?subject=Quotation%20request">
+            <span class="contact-card__icon"><span class="i" data-icon="mail"></span></span>
+            <div><strong>E-mail us</strong><span>info@redefineinteriorsandmaterialssupply.co.ke</span></div>
+          </a>
           <div class="contact-card">
             <span class="contact-card__icon"><span class="i" data-icon="pin"></span></span>
             <div><strong>Where we work</strong><span>Based in Nairobi · projects completed in Nakuru, Naivasha, Ngong, Juja, Ruiru, Thika, Machakos, Kajiado, Mombasa, Kisumu, Eldoret and all other parts of Kenya</span></div>
@@ -137,10 +141,10 @@
         </div>
       </div>
 
-      <div class="form-card reveal">
+      <div class="form-card form-card--compact reveal">
         <span class="eyebrow">Quotation request</span>
-        <h3 class="display-m" style="margin-bottom:.4rem">Tell us what you need</h3>
-        <p class="muted" style="font-size:.9rem;margin-bottom:1.6rem">Complete the form and it opens WhatsApp with everything written out for you — so we can quote accurately the first time.</p>
+        <h3 class="display-m" style="margin-bottom:.3rem">Tell us what you need</h3>
+        <p class="muted" style="font-size:.86rem;margin-bottom:1.1rem">Complete the form and send it on WhatsApp or by e-mail with everything written out for you — so we can quote accurately the first time.</p>
 
         <form data-quote-form novalidate>
           <div class="form-grid">
@@ -154,34 +158,22 @@
               <input id="c-phone" name="phone" type="tel" placeholder="07xx xxx xxx" required>
               <span class="field__error"></span>
             </div>
-            <div class="field">
+            <div class="field field--full">
               <label for="c-location">Project location</label>
               <input id="c-location" name="location" type="text" placeholder="e.g. Kiambu Road, Kiambu" required>
-              <span class="field__error"></span>
-            </div>
-            <div class="field">
-              <label for="c-service">Service needed</label>
-              <select id="c-service" name="service" required>
-                <option value="">Choose a service…</option>
-                <option>Kitchen cabinets</option>
-                <option>Wardrobes &amp; closets</option>
-                <option>Aluminium works</option>
-                <option>Gypsum works</option>
-                <option>Shop renovation</option>
-                <option>All fittings work</option>
-                <option>Materials supply only</option>
-                <option>Full house fit-out</option>
-              </select>
               <span class="field__error"></span>
             </div>
             <div class="field field--full">
               <label for="c-details">Project details</label>
               <textarea id="c-details" name="details" placeholder="Room sizes, what you want done, finishes you like, whether you already have materials…"></textarea>
             </div>
+            <div class="field field--full quote-panel__actions">
+              <button class="btn btn--wa" type="submit" data-send="wa"><span class="i" data-icon="whatsapp"></span> Send my request on WhatsApp</button>
+              <button class="btn btn--gold" type="submit" data-send="email"><span class="i" data-icon="mail"></span> Request on email</button>
+            </div>
             <div class="field field--full">
-              <button class="btn btn--wa btn--lg btn--block" type="submit"><span class="i" data-icon="send"></span> Send my request on WhatsApp</button>
               <span class="field__error" data-form-note hidden></span>
-              <p class="form-note"><span class="i" data-icon="shield"></span> Your details go straight to our WhatsApp inbox. We never share them or add you to marketing lists.</p>
+              <p class="form-note"><span class="i" data-icon="shield"></span> WhatsApp opens with your request written out; e-mail opens your mail app addressed to <a href="mailto:info@redefineinteriorsandmaterialssupply.co.ke">info@redefineinteriorsandmaterialssupply.co.ke</a>. We never share your details or add you to marketing lists.</p>
             </div>
           </div>
         </form>
@@ -212,6 +204,7 @@
         <h4>Get in touch</h4>
         <ul class="footer__contact">
           <li><span class="i" data-icon="whatsapp"></span><span>WhatsApp / Call<br><a href="tel:+254703142874">0703 142 874</a></span></li>
+          <li><span class="i" data-icon="mail"></span><span>E-mail<br><a href="mailto:info@redefineinteriorsandmaterialssupply.co.ke">info@redefineinteriorsandmaterialssupply.co.ke</a></span></li>
           <li><span class="i" data-icon="pin"></span><span>Nairobi, Kenya — serving all 47 counties</span></li>
           <li><span class="i" data-icon="clock"></span><span>Mon – Sat: 8:00am – 6:00pm</span></li>
         </ul>
@@ -233,11 +226,11 @@
 <!-- built-in content: what the site shows if Supabase is unreachable -->
 <script src="js/data.js"></script>
 <!-- the browser-only draft board used by the built-in admin account -->
-<script src="js/store.js?v=20260920b"></script>
+<script src="js/store.js?v=20260924a"></script>
 <!-- pulls the live content out of Supabase (or from the draft board) -->
-<script src="js/content.js?v=20260920b"></script>
+<script src="js/content.js?v=20260924a"></script>
 <!-- the website itself -->
-<script src="js/main.js?v=20260920b"></script>
+<script src="js/main.js?v=20260924a"></script>
 <!-- ghost mode: five taps on the logo opens the admin sign-in -->
 <script src="js/ghost.js"></script>
 </body>

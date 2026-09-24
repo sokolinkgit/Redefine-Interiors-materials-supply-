@@ -15,26 +15,22 @@
 <meta property="og:url" content="https://www.redefineinteriorsandmaterialssupply.co.ke/">
 <meta property="og:title" content="Redefine Interiors &amp; Materials Supply — Interiors, Fittings &amp; Materials in Kenya">
 <meta property="og:description" content="Kitchen cabinets, wardrobes, aluminium works, gypsum works, shop renovation and all fittings work. Materials supply delivered to your site. Serving all parts of Kenya.">
-<meta property="og:image" content="https://www.redefineinteriorsandmaterialssupply.co.ke/assets/img/hero-1-kitchen.jpg">
+<meta property="og:image" content="https://www.redefineinteriorsandmaterialssupply.co.ke/assets/img/redlogo-512.png">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Redefine Interiors &amp; Materials Supply — Interiors, Fittings &amp; Materials in Kenya">
 <meta name="twitter:description" content="Kitchen cabinets, wardrobes, aluminium works, gypsum works, shop renovation and all fittings work. Materials supply delivered to your site. Serving all parts of Kenya.">
-<meta name="twitter:image" content="https://www.redefineinteriorsandmaterialssupply.co.ke/assets/img/hero-1-kitchen.jpg">
+<meta name="twitter:image" content="https://www.redefineinteriorsandmaterialssupply.co.ke/assets/img/redlogo-512.png">
 
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/img/favicon.svg">
 
-<!-- hero: phones preload the first slideshow image (shown under the intro text); desktops preload the dark backdrop -->
-<link rel="preload" as="image" href="assets/img/sm/d-kitchen-lshape-480.jpg" media="(max-width: 900px)" fetchpriority="high">
-<link rel="preload" as="image" href="assets/img/hero-bg-dark.jpg" media="(min-width: 901px)" fetchpriority="high">
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=20260924a">
 <!-- admin overlay (ghost mode) — invisible unless you are signed in -->
-<link rel="stylesheet" href="css/admin.css?v=20260920b">
+<link rel="stylesheet" href="css/admin.css?v=20260924a">
 <link rel="preconnect" href="https://rzdfmnvkhfuhqybfexuy.supabase.co" crossorigin>
 
 <script type="application/ld+json">
@@ -47,9 +43,10 @@
       "name": "Redefine Interiors & Materials Supply",
       "url": "https://www.redefineinteriorsandmaterialssupply.co.ke/",
       "logo": "https://www.redefineinteriorsandmaterialssupply.co.ke/assets/img/redlogo-512.png",
-      "image": "https://www.redefineinteriorsandmaterialssupply.co.ke/assets/img/hero-1-kitchen.jpg",
+      "image": "https://www.redefineinteriorsandmaterialssupply.co.ke/assets/img/redlogo-512.png",
       "description": "Interior design and material supply: kitchen cabinets, wardrobes, aluminium works, gypsum works, shop renovation and all fittings work in Kenya.",
       "telephone": "+254703142874",
+      "email": "info@redefineinteriorsandmaterialssupply.co.ke",
       "priceRange": "$$",
       "areaServed": {
         "@type": "Country",
@@ -126,19 +123,13 @@
 <main id="main">
 
   <!-- ===================== HERO — 50/50 SPLIT ON DESKTOP · TEXT ABOVE, SLIDESHOW BELOW ON PHONES =====================
-       The slideshow below rotates the DESIGNS ticked as featured (admin bar → Slideshow).
-       js/main.js rebuilds .hero__slides and .hero__dots from that list, so the pictures on
-       this page are literally the ones on designs.html. What follows is the no-JavaScript
-       fallback: the five featured Designs Gallery photos — the very same pictures that
-       fill the Designs section further down — so the hero never shows a picture that is
-       not in the gallery, on the first load or any load. -->
+       The slideshow rotates the DESIGNS ticked as featured (admin bar → Slideshow).
+       js/main.js builds .hero__slides and .hero__dots from the live Supabase data, so
+       the pictures here are literally the ones on designs.html. No photo file is
+       written into this page: every picture on the site comes from Supabase. -->
   <section class="hero hero--split" data-hero aria-label="Featured interior projects">
-    <!-- single, deliberately plain background image: dark enough that the text never has to fight it -->
+    <!-- plain dark backdrop (CSS gradient) — the text never has to fight a picture -->
     <div class="hero__bg" aria-hidden="true">
-      <picture>
-        <source media="(max-width: 760px)" srcset="assets/img/sm/hero-bg-dark-480.jpg">
-        <img src="assets/img/hero-bg-dark.jpg" alt="" fetchpriority="high" decoding="async" width="1240" height="826">
-      </picture>
       <span class="hero__scrim"></span>
       <span class="hero__grain"></span>
     </div>
@@ -153,8 +144,9 @@
         </p>
         <div class="hero__actions">
           <a class="btn btn--gold btn--lg" href="designs.html">Browse designs <span class="i" data-icon="arrowRight"></span></a>
-          <a class="btn btn--wa btn--lg" data-wa="Hello Redefine Interiors 👋 I would like to request a quotation for my project. My location is ______">
-            <span class="i" data-icon="whatsapp"></span> Request a quotation
+          <!-- expands the quotation panel just below the hero — no page change -->
+          <a class="btn btn--wa btn--lg" href="#quote" data-quote-toggle aria-expanded="false" aria-controls="quote-panel">
+            <span class="i" data-icon="send"></span> Request a quotation
           </a>
         </div>
         <div class="hero__meta">
@@ -167,68 +159,72 @@
 
       <div class="hero__stage">
         <div class="hero__frame">
-          <!-- the five featured Designs Gallery photos (js/data.js d01–d05) —
-               identical to what the slideshow renders from the live data -->
-          <div class="hero__slides">
-            <div class="hero__slide is-active">
-              <div class="hero__media">
-                <img src="assets/img/d-kitchen-lshape.jpg"
-                     srcset="assets/img/sm/d-kitchen-lshape-480.jpg 480w, assets/img/sm/d-kitchen-lshape-760.jpg 760w, assets/img/d-kitchen-lshape.jpg 1200w"
-                     sizes="(max-width: 900px) 100vw, 46vw"
-                     alt="Modern L-Shaped Kitchen Cabinets — Kitchen Cabinets by Redefine Interiors"
-                     fetchpriority="high" decoding="async">
-              </div>
-            </div>
-            <div class="hero__slide">
-              <div class="hero__media">
-                <img src="assets/img/d-kitchen-white-gloss.jpg"
-                     srcset="assets/img/sm/d-kitchen-white-gloss-480.jpg 480w, assets/img/sm/d-kitchen-white-gloss-760.jpg 760w, assets/img/d-kitchen-white-gloss.jpg 1200w"
-                     sizes="(max-width: 900px) 100vw, 46vw"
-                     alt="White Gloss Kitchen &amp; Breakfast Bar — Kitchen Cabinets by Redefine Interiors" loading="eager" decoding="async">
-              </div>
-            </div>
-            <div class="hero__slide">
-              <div class="hero__media">
-                <img src="assets/img/d-kitchen-ushape.jpg"
-                     srcset="assets/img/sm/d-kitchen-ushape-480.jpg 480w, assets/img/sm/d-kitchen-ushape-760.jpg 760w, assets/img/d-kitchen-ushape.jpg 1200w"
-                     sizes="(max-width: 900px) 100vw, 46vw"
-                     alt="U-Shaped Family Kitchen + Pantry — Kitchen Cabinets by Redefine Interiors" loading="eager" decoding="async">
-              </div>
-            </div>
-            <div class="hero__slide">
-              <div class="hero__media">
-                <img src="assets/img/d-wardrobe-sliding.jpg"
-                     srcset="assets/img/sm/d-wardrobe-sliding-480.jpg 480w, assets/img/sm/d-wardrobe-sliding-760.jpg 760w, assets/img/d-wardrobe-sliding.jpg 1200w"
-                     sizes="(max-width: 900px) 100vw, 46vw"
-                     alt="4-Door Sliding Mirror Wardrobe — Wardrobes by Redefine Interiors" loading="eager" decoding="async">
-              </div>
-            </div>
-            <div class="hero__slide">
-              <div class="hero__media">
-                <img src="assets/img/d-walkin-closet.jpg"
-                     srcset="assets/img/sm/d-walkin-closet-480.jpg 480w, assets/img/sm/d-walkin-closet-760.jpg 760w, assets/img/d-walkin-closet.jpg 1200w"
-                     sizes="(max-width: 900px) 100vw, 46vw"
-                     alt="Luxury Walk-In Closet — Wardrobes by Redefine Interiors" loading="eager" decoding="async">
-              </div>
-            </div>
-          </div>
+          <!-- filled by js/main.js → renderHeroSlides() with the featured Designs Gallery photos -->
+          <div class="hero__slides"></div>
         </div>
 
-        <div class="hero__controls">
-          <div class="hero__dots" role="tablist" aria-label="Choose a featured project">
-            <button class="hero__dot is-active" type="button" role="tab" aria-selected="true" aria-label="Show Modern L-Shaped Kitchen Cabinets"></button>
-            <button class="hero__dot" type="button" role="tab" aria-selected="false" aria-label="Show White Gloss Kitchen and Breakfast Bar"></button>
-            <button class="hero__dot" type="button" role="tab" aria-selected="false" aria-label="Show U-Shaped Family Kitchen + Pantry"></button>
-            <button class="hero__dot" type="button" role="tab" aria-selected="false" aria-label="Show 4-Door Sliding Mirror Wardrobe"></button>
-            <button class="hero__dot" type="button" role="tab" aria-selected="false" aria-label="Show Luxury Walk-In Closet"></button>
-          </div>
+      <div class="hero__controls">
+          <div class="hero__dots" role="tablist" aria-label="Choose a featured project"></div>
           <div class="hero__timer">
-            <span class="hero__count" data-hero-count><b>01</b> / 05</span>
+            <span class="hero__count" data-hero-count><b>00</b> / 00</span>
             <div class="hero__arrows">
               <button class="arrow-btn" type="button" data-hero-prev aria-label="Previous project"><span class="i" data-icon="arrowLeft"></span></button>
               <button class="arrow-btn" type="button" data-hero-next aria-label="Next project"><span class="i" data-icon="arrowRight"></span></button>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== REQUEST A QUOTATION (expands from the hero button) =====================
+       A compact version of the contact-page form. Stays folded until "Request a
+       quotation" is pressed, then folds away again once the request is sent —
+       on WhatsApp, or by e-mail to info@redefineinteriorsandmaterialssupply.co.ke. -->
+  <section class="quote-panel" id="quote" data-quote-panel aria-hidden="true">
+    <div class="container">
+      <div class="quote-panel__inner">
+        <div class="form-card form-card--compact" id="quote-panel">
+          <div class="quote-panel__head">
+            <div>
+              <span class="eyebrow">Quotation request</span>
+              <h2 class="display-m">Tell us what you need</h2>
+              <p class="muted">Fill this in and send it on WhatsApp or by e-mail — we quote accurately the first time.</p>
+            </div>
+            <button class="quote-panel__close" type="button" data-quote-close aria-label="Close the quotation form"><span class="i" data-icon="x"></span></button>
+          </div>
+
+          <form data-quote-form novalidate>
+            <div class="form-grid">
+              <div class="field">
+                <label for="q-name">Your name</label>
+                <input id="q-name" name="name" type="text" placeholder="e.g. Brian Otieno" required>
+                <span class="field__error"></span>
+              </div>
+              <div class="field">
+                <label for="q-phone">Phone / WhatsApp</label>
+                <input id="q-phone" name="phone" type="tel" placeholder="07xx xxx xxx" required>
+                <span class="field__error"></span>
+              </div>
+              <div class="field field--full">
+                <label for="q-location">Project location</label>
+                <input id="q-location" name="location" type="text" placeholder="e.g. Kiambu Road, Kiambu" required>
+                <span class="field__error"></span>
+              </div>
+              <div class="field field--full">
+                <label for="q-details">Project details</label>
+                <textarea id="q-details" name="details" placeholder="Room sizes, what you want done, finishes you like, whether you already have materials…"></textarea>
+              </div>
+              <div class="field field--full quote-panel__actions">
+                <button class="btn btn--wa" type="submit" data-send="wa"><span class="i" data-icon="whatsapp"></span> Send my request on WhatsApp</button>
+                <button class="btn btn--gold" type="submit" data-send="email"><span class="i" data-icon="mail"></span> Request on email</button>
+              </div>
+              <div class="field field--full">
+                <span class="field__error" data-form-note hidden></span>
+                <p class="form-note"><span class="i" data-icon="shield"></span> WhatsApp opens with your request written out; e-mail opens your mail app addressed to <a href="mailto:info@redefineinteriorsandmaterialssupply.co.ke">info@redefineinteriorsandmaterialssupply.co.ke</a>. We never share your details.</p>
+              </div>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -307,13 +303,14 @@
       </div>
 
       <div class="media-stack reveal">
-        <!-- data-why-design: this frame always shows the CURRENT photo of that
-             Designs Gallery design (js/main.js → hydrateWhyImage), so a photo
-             uploaded or replaced in the gallery appears here automatically.
-             The static picture below is the no-JavaScript fallback. -->
-        <div class="media-frame media-frame--tall" data-why-design="d03">
-          <img src="assets/img/d-kitchen-ushape.jpg" alt="U-shaped family kitchen with island and pendant lighting installed in Ruiru" loading="lazy" decoding="async">
-        </div>
+        <!-- data-why-design: this frame shows ONE photo from the Designs Gallery,
+             pulled live from Supabase (js/main.js → hydrateWhyImage). Which
+             design is shown is chosen by the administrator: in admin mode a
+             pencil appears on this photo and opens a picker of every gallery
+             design; the choice is saved in Supabase (site_settings.why_design).
+             Until a choice is made the design with code d03 — or the first
+             design with a photo — is used. No photo file lives in this page. -->
+        <div class="media-frame media-frame--tall" data-why-design="d03"></div>
         <div class="media-stack__badge"><strong data-count="480" data-suffix="+">480+</strong><span>Projects completed</span></div>
       </div>
     </div>
@@ -426,8 +423,8 @@
   <section class="section section--tight section--cream2">
     <div class="container text-center reveal">
       <span class="eyebrow" style="justify-content:center">Let's build it</span>
-      <h2 class="display-l" style="max-width:22ch;margin-inline:auto">Your quotation is one WhatsApp message away</h2>
-      <p class="lead" style="max-width:60ch;margin:1.1rem auto 2rem">Call or WhatsApp <strong>0703 142 874</strong> — or send us your measurements now and we will have your quotation ready.</p>
+      <h2 class="display-l" style="max-width:22ch;margin-inline:auto">Your quotation is one message away</h2>
+      <p class="lead" style="max-width:60ch;margin:1.1rem auto 2rem">Call or WhatsApp <strong>0703 142 874</strong>, e-mail <a href="mailto:info@redefineinteriorsandmaterialssupply.co.ke">info@redefineinteriorsandmaterialssupply.co.ke</a> — or send us your measurements now and we will have your quotation ready.</p>
       <div class="hero__actions" style="justify-content:center">
         <a class="btn btn--wa btn--lg" data-wa="Hello Redefine Interiors 👋 I would like to request a quotation."><span class="i" data-icon="whatsapp"></span> Start on WhatsApp</a>
         <a class="btn btn--call btn--lg" href="tel:+254703142874"><span class="i" data-icon="phone"></span> Call 0703 142 874</a>
@@ -462,6 +459,7 @@
         <h4>Get in touch</h4>
         <ul class="footer__contact">
           <li><span class="i" data-icon="whatsapp"></span><span>WhatsApp / Call<br><a href="tel:+254703142874">0703 142 874</a></span></li>
+          <li><span class="i" data-icon="mail"></span><span>E-mail<br><a href="mailto:info@redefineinteriorsandmaterialssupply.co.ke">info@redefineinteriorsandmaterialssupply.co.ke</a></span></li>
           <li><span class="i" data-icon="pin"></span><span>Nairobi, Kenya — serving all 47 counties</span></li>
           <li><span class="i" data-icon="clock"></span><span>Mon – Sat: 8:00am – 6:00pm</span></li>
         </ul>
@@ -484,11 +482,11 @@
 <!-- built-in content: what the site shows if Supabase is unreachable -->
 <script src="js/data.js"></script>
 <!-- the browser-only draft board used by the built-in admin account -->
-<script src="js/store.js?v=20260920b"></script>
+<script src="js/store.js?v=20260924a"></script>
 <!-- pulls the live content out of Supabase (or from the draft board) -->
-<script src="js/content.js?v=20260920b"></script>
+<script src="js/content.js?v=20260924a"></script>
 <!-- the website itself -->
-<script src="js/main.js?v=20260920b"></script>
+<script src="js/main.js?v=20260924a"></script>
 <!-- ghost mode: five taps on the logo opens the admin sign-in -->
 <script src="js/ghost.js"></script>
 </body>

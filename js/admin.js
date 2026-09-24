@@ -56,7 +56,7 @@
     editing: null,      // { kind, id }
     dirty: false,
     catsKind: 'design', // which tab the Categories panel shows
-    panel: null         // 'categories' | 'slideshow' | null
+    panel: null         // 'categories' | 'slideshow' | 'why' | null
   };
 
   /* typed at sign-in, kept only in memory so a device-only session can still
@@ -349,6 +349,31 @@
       '  </div>',
       '</div>',
 
+      /* ---- "Why us" photo ---------------------------------------------
+         The picture under "Book a site visit" on the home page. Every
+         Designs Gallery photo is listed; the one showing now is marked.
+         Tapping stages the choice — "Save" writes it (site_settings). */
+      '<div class="admin-modal" data-admin-why role="dialog" aria-modal="true" aria-label="Home page photo" aria-hidden="true">',
+      '  <div class="admin-modal__panel">',
+      '    <div class="admin-modal__head">',
+      '      <div>',
+      '        <span class="admin-eyebrow">' + icon('image') + ' Home page</span>',
+      '        <h3>Photo under “Book a site visit”</h3>',
+      '      </div>',
+      '      <button class="admin-x" type="button" data-why-close aria-label="Close">' + icon('x') + '</button>',
+      '    </div>',
+      '    <p class="admin-modal__lead">Choose which <b>Designs Gallery</b> photo the home page shows in the “Why Redefine Interiors” ',
+      '      section. Tap a photo, then press <b>Save</b>. To use a brand-new picture, add it to the Designs Gallery first.</p>',
+      '    <div class="admin-modal__body" data-why-body></div>',
+      '    <p class="admin-modal__status" data-why-status></p>',
+      '    <div class="admin-modal__foot admin-slides__foot">',
+      '      <span class="admin-slides__count" data-why-count></span>',
+      '      <button class="btn btn--light" type="button" data-why-cancel>Cancel</button>',
+      '      <button class="btn btn--gold" type="button" data-why-save disabled>' + icon('check') + ' <span>Save photo</span></button>',
+      '    </div>',
+      '  </div>',
+      '</div>',
+
       /* ---- categories ------------------------------------------------- */
       '<div class="admin-modal" data-admin-cats role="dialog" aria-modal="true" aria-label="Categories" aria-hidden="true">',
       '  <div class="admin-modal__panel">',
@@ -511,7 +536,16 @@
     $('[data-bar="discard"]', shell).addEventListener('click', () => discardDraft());
 
     $('[data-slides-close]', shell).addEventListener('click', closePanels);
+    $('[data-why-close]', shell).addEventListener('click', closePanels);
     $('[data-cats-close]', shell).addEventListener('click', closePanels);
+
+    /* "Why us" photo: tapping only stages the choice — Save writes it */
+    $('[data-why-body]', shell).addEventListener('change', (e) => {
+      const box = e.target.closest('[data-why-id]');
+      if (box) whyStage(box.dataset.whyId);
+    });
+    $('[data-why-save]', shell).addEventListener('click', saveWhyPhoto);
+    $('[data-why-cancel]', shell).addEventListener('click', () => renderWhyPanel());
     $('[data-bulk-close]', shell).addEventListener('click', () => { if (!bulk.busy) closePanels(); });
     wireBulk();
 
@@ -641,8 +675,10 @@
       showCatTab(kind || state.catsKind || 'design', true);
     } else if (which === 'slideshow') {
       renderSlidesPanel();
+    } else if (which === 'why') {
+      renderWhyPanel();
     }
-    const box = $('[data-admin-' + (which === 'categories' ? 'cats' : which === 'bulk' ? 'bulk' : 'slides') + ']', shell);
+    const box = $('[data-admin-' + (which === 'categories' ? 'cats' : which === 'bulk' ? 'bulk' : which === 'why' ? 'why' : 'slides') + ']', shell);
     box.classList.add('is-open');
     box.setAttribute('aria-hidden', 'false');
     $('[data-admin-scrim]', shell).classList.add('is-open');
@@ -652,7 +688,7 @@
   function closePanels() {
     if (!shell) return;
     state.panel = null;
-    $$('[data-admin-slides], [data-admin-cats], [data-admin-bulk]', shell).forEach((el) => {
+    $$('[data-admin-slides], [data-admin-cats], [data-admin-bulk], [data-admin-why]', shell).forEach((el) => {
       el.classList.remove('is-open');
       el.setAttribute('aria-hidden', 'true');
     });
@@ -1033,6 +1069,7 @@
     });
     if (!ok) return;
     store.clear();
+    if (window.SiteContent && SiteContent.clearLocalSettings) SiteContent.clearLocalSettings();
     if (store.pauseDraft) store.pauseDraft(false);
     if (window.SiteContent && SiteContent.restore) SiteContent.restore();
     if (window.SiteContent && SiteContent.load) await SiteContent.load();
@@ -1173,6 +1210,24 @@
         }
       }
 
+      /* the "Why us" photo chosen on this device: published by the design's
+         code, because a device-only design gets a new id in the cloud */
+      const sc = window.SiteContent;
+      const localWhy = sc && sc.settings ? sc.settings()[whyKey()] : null;
+      if (localWhy) {
+        say('home page photo…');
+        const code = String(localWhy.code || '');
+        let cloudId = String(localWhy.design || '');
+        if (code) {
+          const { data: hit } = await sb.from('designs').select('id').eq('code', code).maybeSingle();
+          if (hit && hit.id) cloudId = String(hit.id);
+        }
+        const { error: whyErr } = await sb.from('site_settings')
+          .upsert({ key: whyKey(), value: { design: cloudId, code: code } }, { onConflict: 'key' });
+        if (whyErr && !/site_settings|schema cache|does not exist/i.test(whyErr.message || '')) throw whyErr;
+        if (sc.clearLocalSettings) sc.clearLocalSettings();
+      }
+
       store.clear();
       if (store.pauseDraft) store.pauseDraft(false);
       if (window.SiteContent && SiteContent.load) await SiteContent.load();
@@ -1269,6 +1324,7 @@
     }
     updateBar();
     if (state.panel === 'slideshow') renderSlidesPanel();
+    if (state.panel === 'why') renderWhyPanel();
     if (state.panel === 'categories') renderCatPanel();
     decorate();
   }
@@ -1345,6 +1401,20 @@
       if (hidden) el.classList.add('admin-hidden-item');
     });
 
+    /* the photo under "Book a site visit": one pencil → pick any gallery design */
+    const whyFrame = $('[data-why-design]');
+    if (whyFrame && !whyFrame.__adminTools) {
+      const bar = document.createElement('div');
+      bar.className = 'admin-tools';
+      bar.innerHTML =
+        '<span class="admin-tools__tag">Home page photo</span>' +
+        '<button class="admin-tool" type="button" data-admin-act="why-photo" title="Edit — choose a different Designs Gallery photo for this spot" aria-label="Edit — choose a different Designs Gallery photo for this spot">' +
+        icon('pencil') + '</button>';
+      whyFrame.appendChild(bar);
+      whyFrame.__adminTools = bar;
+      whyFrame.classList.add('admin-editable');
+    }
+
     addTiles();
   }
 
@@ -1405,6 +1475,7 @@
       return openPanel('categories', k);
     }
     if (act === 'slideshow') return openPanel('slideshow');
+    if (act === 'why-photo') return openPanel('why');
     if (act === 'new') return openEditor(kind, null);
     if (act === 'bulk') return openBulk(kind);
     if (act === 'edit') return openEditor(kind, id);
@@ -2460,6 +2531,104 @@
       updateSlidesStatus(false);
     } finally {
       slidesSyncControls();
+    }
+  }
+
+  /* ======================================================================
+     10b. "WHY US" PHOTO — the picture under "Book a site visit" (home page)
+     The frame shows ONE Designs Gallery photo. The administrator picks it
+     here; the choice is saved as site_settings.why_design = {design: uuid}
+     (cloud account) or on this device only (built-in account).
+     ====================================================================== */
+  let whySel = null;        // staged choice — a design uuid/code
+  let whyCurrent = null;    // the one showing right now
+
+  const whyKey = () => (window.Site && window.Site.whySetting) || 'why_design';
+
+  function whySyncControls() {
+    const save = $('[data-why-save]', shell);
+    const count = $('[data-why-count]', shell);
+    const status = $('[data-why-status]', shell);
+    const dirty = !!whySel && whySel !== whyCurrent;
+    if (save) save.disabled = !dirty;
+    const d = whySel ? findDesign(whySel) : null;
+    if (count) count.textContent = d ? 'Selected: ' + (d.title || d.category || 'photo') : '';
+    if (status) {
+      status.innerHTML = dirty
+        ? 'Press <b>Save photo</b> to show this picture on the home page.'
+        : (d ? icon('check') + ' This is the photo showing on the home page now.' : '');
+    }
+  }
+
+  function renderWhyPanel() {
+    ensureShell();
+    const body = $('[data-why-body]', shell);
+    const designs = slideOrder().filter((d) => d && d.image);
+    const now = window.Site && window.Site.whyDesign ? window.Site.whyDesign() : null;
+    whyCurrent = now ? String(now.uuid || now.id) : null;
+    whySel = whyCurrent;
+
+    if (!designs.length) {
+      body.innerHTML = '<p class="admin-empty">No design photos yet. Add photos to the Designs Gallery first and they will appear here.</p>';
+      whySyncControls();
+      return;
+    }
+
+    body.innerHTML = designs.map((d) => {
+      const id = String(d.uuid || d.id);
+      const on = id === whySel;
+      const hidden = d.active === false;
+      return '<label class="admin-slide' + (on ? ' is-on' : '') + (hidden ? ' is-draft' : '') + '">' +
+        '<input type="radio" name="admin-why-pick" data-why-id="' + esc(id) + '"' + (on ? ' checked' : '') + '>' +
+        '<span class="admin-slide__thumb"><img src="' + esc(d.image) + '" alt="" loading="lazy"></span>' +
+        '<span class="admin-slide__text"><b>' + esc(d.title || 'Design (no name yet)') + '</b>' +
+          '<small>' + esc(d.category || 'No category') +
+          (hidden ? ' · hidden from visitors' : '') +
+          (on ? ' · showing now' : '') + '</small></span>' +
+        '</label>';
+    }).join('');
+    whySyncControls();
+  }
+
+  function whyStage(id) {
+    whySel = String(id);
+    $$('[data-why-id]', $('[data-why-body]', shell)).forEach((box) => {
+      const row = box.closest('.admin-slide');
+      if (row) row.classList.toggle('is-on', box.checked);
+    });
+    whySyncControls();
+  }
+
+  async function saveWhyPhoto() {
+    if (!whySel || whySel === whyCurrent) return;
+    const d = findDesign(whySel);
+    if (!d) return;
+    const saveBtn = $('[data-why-save]', shell);
+    if (saveBtn) saveBtn.disabled = true;
+    const value = { design: String(d.uuid || d.id), code: String(d.code || d.id || '') };
+    const sc = window.SiteContent;
+    try {
+      if (writePath() === 'cloud') {
+        const { error } = await sb.from('site_settings').upsert({ key: whyKey(), value: value }, { onConflict: 'key' });
+        if (error) throw error;
+        if (sc && sc.setSetting) sc.setSetting(whyKey(), value);
+        if (sc && sc.setLocalSetting) sc.setLocalSetting(whyKey(), undefined);   // the cloud copy now rules
+      } else if (sc && sc.setLocalSetting) {
+        sc.setLocalSetting(whyKey(), value);
+      } else {
+        throw new Error('Nowhere to save the choice on this device.');
+      }
+      whyCurrent = whySel;
+      if (window.Site) window.Site.refresh();
+      whySyncControls();
+      toast('Home page photo updated — “' + (d.title || d.category || 'the selected design') + '” now shows under “Book a site visit”');
+      closePanels();
+    } catch (err) {
+      const msg = err && /site_settings|schema cache|does not exist/i.test(err.message || '')
+        ? 'The site_settings table is missing — run supabase/schema.sql (§6c) once, then try again.'
+        : writeError(err);
+      toast(msg, 'warn');
+      whySyncControls();
     }
   }
 
